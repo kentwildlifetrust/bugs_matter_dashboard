@@ -132,6 +132,34 @@ ui <- fluidPage(
                           )
                         )
                       )
+             ),
+             
+             tabPanel("Participation",
+                      sidebarLayout(
+                        sidebarPanel(
+                          selectizeInput("country_user", "Select a Country:", choices = NULL,
+                                         options = list(
+                                           placeholder = 'Please select an option',
+                                           onInitialize = I('function() { this.setValue(""); }')
+                                         )
+                          ),
+                          selectInput("region_user", "Select a Region:", choices = NULL),
+                          br(),
+                          textOutput("us_text")
+                        ),
+                        
+                        mainPanel(
+                          fluidRow(
+                            column(6, plotOutput("userPlot1", height = '40vh') |> tooltip("This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.", placement = "auto")),
+                            column(6, plotOutput("userPlot2", height = '40vh') |> tooltip("This boxplot with jittered data points shows the spread of the insect splat rate (splats per cm per mile) data. The boxes indicate the interquartile range (central 50% of the data), either side of the median splat rate which is shown by the horizontal line inside the box. The vertical lines extend out by 1.5 times the interquartile range, and the data points themselves are ‘horizontally jittered’ so they do not overlap to improve visualization. The thick green line at y = 0 are the data points for journeys where no bug splats were recorded.", placement = "auto"))
+                          ),
+                          br(),  # Add space
+                          fluidRow(
+                            column(6, plotOutput("userPlot3", height = '40vh') |> tooltip("This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.", placement = "auto")),
+                            column(6, plotOutput("userPlot4", height = '40vh') |> tooltip("This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.", placement = "auto"))
+                          )
+                        )
+                      )
              )
   ),
   # Add the logo at the bottom-left of the page
@@ -148,9 +176,11 @@ server <- function(input, output, session) {
   pool <- dbPool(drv = RPostgres::Postgres(), 
                  host = "kwt-postgresql-azdb-1.postgres.database.azure.com", 
                  port = 5432, dbname = "shared", 
-                 user = Sys.getenv("user"), 
+                 user = Sys.getenv("user"),
                  password = Sys.getenv("password"),
                  sslmode = "prefer")
+  
+  #test <- st_read(pool, query = "SELECT * FROM bugs_matter.user_data1")
   
   #### Data Explorer ####
   
@@ -530,7 +560,6 @@ server <- function(input, output, session) {
               text = element_text(family = "Rubik"))
     })
     
-    
     # Plot 3 - Forest plot
     output$trendPlot3 <- renderPlot({
       plot_model(mod,
@@ -572,6 +601,70 @@ server <- function(input, output, session) {
     
     resetLoadingButton("calculate_trend")
     
+  })
+  
+  #### Participation ####
+  
+  # Populate country dropdown
+  observe({
+    query <- "SELECT DISTINCT country FROM bugs_matter.regionboundaries"
+    countries <- sort(dbGetQuery(pool, query)$country)
+    updateSelectInput(session, "country_user", choices = countries)
+  })
+  
+  # Update regions based on selected country
+  observeEvent(input$country_user, {
+    req(input$country_user)
+    query <- paste0("SELECT DISTINCT nuts118nm FROM bugs_matter.regionboundaries 
+    WHERE country = '", input$country_user, "'")
+    regions <- dbGetQuery(pool, query)$nuts118nm
+    regions <- gsub(" *\\[.*?\\]| *\\(.*?\\)", "", regions)
+    # Add "All" only if there are multiple regions
+    if (length(regions) > 1) {
+      regions <- c("All", regions)
+    }
+    updateSelectInput(session, "region_user", choices = regions, selected = ifelse("All" %in% regions, "All", regions[1]))
+  })
+  
+  
+  output$userPlot1 <- renderPlot({
+    req(input$region_user, input$country_user)  # Ensure inputs are available
+    query <- if(input$region_user == "All") {  # Fetch specific data for Plot based on selected filters
+      sprintf(
+        "SELECT user_id, sign_up_date, region, country FROM bugs_matter.user_data2 
+        WHERE country = '%s'",
+        input$country_user
+      )
+    }
+    else{
+      sprintf(
+        "SELECT user_id, sign_up_date, region, country FROM bugs_matter.user_data2
+        WHERE (region = '%s' OR region IS NULL) AND country = '%s'",
+        input$region_user, input$country_user
+      )
+    }
+    
+    plot_data <- dbGetQuery(pool, query)
+    
+    # Calculate cumulative sum
+    plot_data <- plot_data %>% 
+      arrange(sign_up_date) %>%  # Correct column reference
+      group_by(sign_up_date) %>% # Group by date before summarizing
+      summarise(n = n(), .groups = "drop") %>%  # Count sign-ups per day
+      mutate(cumulative_n = cumsum(n))  # Calculate cumulative sum
+    
+    # Cumulative count of user registration
+    ggplot(plot_data, aes(x=sign_up_date, y=cumulative_n)) + 
+      geom_line(lwd=0.5, color = "black") + 
+      labs(title = "Cumulative Count of Sign-ups", x = "Sign-up Date", y = "Count of Sign-ups") +
+      # scale_x_continuous(breaks = c(1,32,60,91,121,152,182,213,244,274,305,335), 
+      #                    minor_breaks = c(1,32,60,91,121,152,182,213,244,274,305,335),
+      #                    labels = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")) +
+      theme_minimal(base_size = 12) + 
+      theme(plot.margin = margin(rep(10,4)),
+            plot.background = element_rect(color = "black", size = 1),
+            panel.border = element_blank(),
+            text = element_text(family = "Rubik"))
   })
   
 }
