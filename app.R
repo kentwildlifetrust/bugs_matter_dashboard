@@ -2,16 +2,16 @@ library(shiny)
 library(leaflet)
 library(sf)
 library(dplyr)
+library(tidyr)
 library(pool)
 library(RPostgres)
 library(ggplot2)
 library(MASS)
-#library(performance)
-#library(lubridate)
 library(sjPlot)
 library(scales)
 library(shinycssloaders)
 library(shinyFeedback)
+library(shinydashboard)
 library(bslib)
 
 kwt_portal_theme <- function(){
@@ -122,14 +122,16 @@ ui <- fluidPage(
                         
                         mainPanel(
                           fluidRow(
-                            column(6, plotOutput("trendPlot1", height = '40vh') |> tooltip("This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.", placement = "auto")),
-                            column(6, plotOutput("trendPlot2", height = '40vh') |> tooltip("This boxplot with jittered data points shows the spread of the insect splat rate (splats per cm per mile) data. The boxes indicate the interquartile range (central 50% of the data), either side of the median splat rate which is shown by the horizontal line inside the box. The vertical lines extend out by 1.5 times the interquartile range, and the data points themselves are ‘horizontally jittered’ so they do not overlap to improve visualization. The thick green line at y = 0 are the data points for journeys where no bug splats were recorded.", placement = "auto"))
-                          ),
+                            column(5, plotOutput("trendPlot1", height = '40vh') |> tooltip("This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.", placement = "auto")),
+                            column(5, plotOutput("trendPlot2", height = '40vh') |> tooltip("This boxplot with jittered data points shows the spread of the insect splat rate (splats per cm per mile) data. The boxes indicate the interquartile range (central 50% of the data), either side of the median splat rate which is shown by the horizontal line inside the box. The vertical lines extend out by 1.5 times the interquartile range, and the data points themselves are ‘horizontally jittered’ so they do not overlap to improve visualization. The thick green line at y = 0 are the data points for journeys where no bug splats were recorded.", placement = "auto")),
+                            column(2, valueBoxOutput("trendStat1", width = NULL))
+                            ),
                           br(),  # Add space
                           fluidRow(
-                            column(6, plotOutput("trendPlot3", height = '40vh') |> tooltip("This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.", placement = "auto")),
-                            column(6, plotOutput("trendPlot4", height = '40vh') |> tooltip("This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.", placement = "auto"))
-                          )
+                            column(5, plotOutput("trendPlot3", height = '40vh') |> tooltip("This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.", placement = "auto")),
+                            column(5, plotOutput("trendPlot4", height = '40vh') |> tooltip("This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.", placement = "auto")),
+                            column(2, valueBoxOutput("trendStat2", width = NULL))
+                            )
                         )
                       )
              ),
@@ -149,14 +151,14 @@ ui <- fluidPage(
                         ),
                         
                         mainPanel(
-                          fluidRow(
-                            column(6, plotOutput("userPlot1", height = '40vh') |> tooltip("This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.", placement = "auto")),
-                            column(6, plotOutput("userPlot2", height = '40vh') |> tooltip("This boxplot with jittered data points shows the spread of the insect splat rate (splats per cm per mile) data. The boxes indicate the interquartile range (central 50% of the data), either side of the median splat rate which is shown by the horizontal line inside the box. The vertical lines extend out by 1.5 times the interquartile range, and the data points themselves are ‘horizontally jittered’ so they do not overlap to improve visualization. The thick green line at y = 0 are the data points for journeys where no bug splats were recorded.", placement = "auto"))
-                          ),
+                          # Wrap the leafletOutput in a div with the custom class
+                          tags$div(class = "bordered-map", 
+                                   leafletOutput("usermap", height = "50vh")),  # Leaflet map
                           br(),  # Add space
-                          fluidRow(
-                            column(6, plotOutput("userPlot3", height = '40vh') |> tooltip("This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.", placement = "auto")),
-                            column(6, plotOutput("userPlot4", height = '40vh') |> tooltip("This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.", placement = "auto"))
+                          fluidRow(column(4, plotOutput("userPlot1", height = '30vh') |> tooltip("This line plot shows the increase in registered citizen scientists over time.", placement = "auto") %>% 
+                                     withSpinner(type=7, color = "#75DA40")),
+                                   column(4, valueBoxOutput("userStat1", width = NULL)),
+                                   column(4, valueBoxOutput("userStat2", width = NULL))
                           )
                         )
                       )
@@ -179,8 +181,6 @@ server <- function(input, output, session) {
                  user = Sys.getenv("user"),
                  password = Sys.getenv("password"),
                  sslmode = "prefer")
-  
-  #test <- st_read(pool, query = "SELECT * FROM bugs_matter.user_data1")
   
   #### Data Explorer ####
   
@@ -320,15 +320,28 @@ server <- function(input, output, session) {
     # Cumulative journey counts 
     ggplot(plot_data, aes(x=dayofyear, y=cumulative_n)) + 
       geom_line(lwd=0.5, color = "black") + 
-      labs(title = "Cumulative Count of Journeys", x = "Journey date", y = "Count of journeys") +
+      labs(title = "Number of Recorded Journeys", x = "Journey Date", y = "Number of Journeys") +
       scale_x_continuous(breaks = c(1,32,60,91,121,152,182,213,244,274,305,335), 
                          minor_breaks = c(1,32,60,91,121,152,182,213,244,274,305,335),
                          labels = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")) +
       theme_minimal(base_size = 12) + 
-      theme(plot.margin = margin(rep(10,4)),
-            plot.background = element_rect(color = "black", size = 1),
-            panel.border = element_blank(),
-            text = element_text(family = "Rubik"))
+      theme(
+        plot.margin = margin(rep(10,4)),
+        plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+        panel.background = element_blank(),  # No panel background
+        panel.border = element_blank(),  # Remove panel border
+        text = element_text(family = "Rubik"),
+        # Add space between title and plot
+        plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+        # Make axis tick labels bold
+        axis.text.x = element_text(face = "bold", color = "black"),
+        axis.text.y = element_text(face = "bold", color = "black"),
+        # Remove grid lines and background for minor axis
+        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.minor = element_blank(),  # Remove minor gridlines
+        axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+        axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+      )
   })
   
   output$plot2 <- renderPlot({
@@ -353,13 +366,26 @@ server <- function(input, output, session) {
     
     # Histogram of journey distances
     ggplot(plot_data, aes(x=distance)) + 
-      geom_histogram(binwidth = 5, fill = "#75DA40") +
-      labs(title = "Histogram of Journey Distances", x = "Distance (miles)", y = "Frequency") +
+      geom_histogram(binwidth = 5, fill = "black") +
+      labs(title = "Journey Distances", x = "Distance (miles)", y = "Number of Journeys") +
       theme_minimal(base_size = 12) + 
-      theme(plot.margin = margin(rep(10,4)),
-            plot.background = element_rect(color = "black", size = 1),
-            panel.border = element_blank(),
-            text = element_text(family = "Rubik"))
+      theme(
+        plot.margin = margin(rep(10,4)),
+        plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+        panel.background = element_blank(),  # No panel background
+        panel.border = element_blank(),  # Remove panel border
+        text = element_text(family = "Rubik"),
+        # Add space between title and plot
+        plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+        # Make axis tick labels bold
+        axis.text.x = element_text(face = "bold", color = "black"),
+        axis.text.y = element_text(face = "bold", color = "black"),
+        # Remove grid lines and background for minor axis
+        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.minor = element_blank(),  # Remove minor gridlines
+        axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+        axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+      )
     
   })
   
@@ -390,14 +416,26 @@ server <- function(input, output, session) {
     
     # Create the bar chart
     ggplot(journey_counts, aes(x = vehicle_cl, y = journey_count, fill = vehicle_cl)) +
-      geom_bar(stat = "identity", fill = c("#C6E5E8")) +  # Use 'identity' to use the actual journey count values
-      labs(title = "Journey Count by Vehicle Type", x = "Vehicle Type", y = "Journey Count") +
+      geom_bar(stat = "identity", fill = c("black")) +  # Use 'identity' to use the actual journey count values
+      labs(title = "Vehicle Types", x = "Vehicle Type", y = "Number of journeys") +
       theme_minimal(base_size = 12) + 
-      theme(plot.margin = margin(rep(10,4)),
-            plot.background = element_rect(color = "black", size = 1),
-            panel.border = element_blank(),
-            legend.position = "none",
-            text = element_text(family = "Rubik"))
+      theme(
+        plot.margin = margin(rep(10,4)),
+        plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+        panel.background = element_blank(),  # No panel background
+        panel.border = element_blank(),  # Remove panel border
+        text = element_text(family = "Rubik"),
+        # Add space between title and plot
+        plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+        # Make axis tick labels bold
+        axis.text.x = element_text(face = "bold", color = "black"),
+        axis.text.y = element_text(face = "bold", color = "black"),
+        # Remove grid lines and background for minor axis
+        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.minor = element_blank(),  # Remove minor gridlines
+        axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+        axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+      )
 
   })
   
@@ -520,20 +558,35 @@ server <- function(input, output, session) {
     # print(summary(mod))
     # VIFtable <- check_collinearity(mod, component = "count")
     # print(VIFtable)
-    # est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
-    # print(est)
+    est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
+    comparison_year_coefs <- est[grepl(input$year_comparison, rownames(est)), ]
+    comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
+    comparison_year_coefs1 <- ifelse(comparison_year_coefs1 > 0, paste("+", comparison_year_coefs1), paste("-", abs(comparison_year_coefs1)))
     
     # Plot 1 - Mean splat rate over time
     output$trendPlot1 <- renderPlot({
       ggplot(data = mod_data, aes(x = midpoint_time)) + 
-        geom_line(lwd=0.5, data = mod_data, aes(y=cummean(splat_rate)), color="#75DA40") + 
+        geom_line(lwd=0.5, data = mod_data, aes(y=cummean(splat_rate)), color="black") + 
         scale_color_manual(values=c(colorBlind7), name="Year") + 
         theme_minimal(base_size = 12) +
-        labs(title = "Mean Splat Rate Over Time", x = "Journey date", y = "Splat rate") +
-        theme(plot.margin = margin(rep(10,4)),
-              plot.background = element_rect(color = "black", size = 1),
-              panel.border = element_blank(),
-              text = element_text(family = "Rubik"))
+        labs(title = "Average Splat Rate Over Time", x = "Journey date", y = "Splat rate (splats/cm/mile)") +
+        theme(
+          plot.margin = margin(rep(10,4)),
+          plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+          panel.background = element_blank(),  # No panel background
+          panel.border = element_blank(),  # Remove panel border
+          text = element_text(family = "Rubik"),
+          # Add space between title and plot
+          plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+          # Make axis tick labels bold
+          axis.text.x = element_text(face = "bold"),
+          axis.text.y = element_text(face = "bold"),
+          # Remove grid lines and background for minor axis
+          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.minor = element_blank(),  # Remove minor gridlines
+          axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+          axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+        )
     })
     
     # Plot 2 - Boxplot with jittered data points
@@ -547,17 +600,30 @@ server <- function(input, output, session) {
       # Generate the plot with the custom transformation applied to y-axis
       ggplot(mod_data, aes(x = Year, y = splat_rate, fill = Year)) +
         stat_boxplot(geom = 'errorbar', width = 0.5) +
-        geom_boxplot(outlier.shape = NA, fill = "grey") +
-        geom_jitter(position = position_jitter(width = 0.2, height = 0), alpha = 0.3, color = "#79C255") +
+        geom_boxplot(outlier.shape = NA, fill = NA) +
+        geom_jitter(position = position_jitter(width = 0.2, height = 0), alpha = 0.3, color = "black") +
         scale_y_continuous(trans = mysqrt_trans()) + 
         theme_minimal(base_size = 12) +
-        labs(title = "Splat Rate Boxplots and Data Points", x = "Year", y = "Splat rate (sqrt transformation)") +
+        labs(title = "Splat Rate by Year", x = "Year", y = "Splat rate (sqrt transformation)") +
         expand_limits(y = 0) + 
-        theme(plot.margin = margin(rep(10, 4)),
-              plot.background = element_rect(color = "black", size = 1),
-              panel.border = element_blank(),
-              legend.position = "none",
-              text = element_text(family = "Rubik"))
+        theme(
+          legend.position="none",
+          plot.margin = margin(rep(10,4)),
+          plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+          panel.background = element_blank(),  # No panel background
+          panel.border = element_blank(),  # Remove panel border
+          text = element_text(family = "Rubik"),
+          # Add space between title and plot
+          plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+          # Make axis tick labels bold
+          axis.text.x = element_text(face = "bold"),
+          axis.text.y = element_text(face = "bold"),
+          # Remove grid lines and background for minor axis
+          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.minor = element_blank(),  # Remove minor gridlines
+          axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+          axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+        )
     })
     
     # Plot 3 - Forest plot
@@ -579,10 +645,23 @@ server <- function(input, output, session) {
                  dot.size=1) +
         theme_minimal(base_size = 12) + 
         labs(title = "Change in splats in response to variables", x = "Explanatory variable") +
-        theme(plot.margin = margin(rep(10,4)),
-              plot.background = element_rect(color = "black", size = 1),
-              panel.border = element_blank(),
-              text = element_text(family = "Rubik"))
+        theme(
+          plot.margin = margin(rep(10,4)),
+          plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+          panel.background = element_blank(),  # No panel background
+          panel.border = element_blank(),  # Remove panel border
+          text = element_text(family = "Rubik"),
+          # Add space between title and plot
+          plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+          # Make axis tick labels bold
+          axis.text.x = element_text(face = "bold"),
+          axis.text.y = element_text(face = "bold"),
+          # Remove grid lines and background for minor axis
+          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.minor = element_blank(),  # Remove minor gridlines
+          axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+          axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+        )
     })
     
     # Plot 4 - Change in splat count over time
@@ -590,14 +669,45 @@ server <- function(input, output, session) {
       plot_model(mod, 
                  type="pred", 
                  terms="Year", 
-                 colors = "#79C255") +
+                 colors = "black") +
         theme_minimal(base_size = 12) +
         labs(title = "Model predictions of splat count", y = "Splat count") +
-        theme(plot.margin = margin(rep(10,4)),
-              plot.background = element_rect(color = "black", size = 1),
-              panel.border = element_blank(),
-              text = element_text(family = "Rubik"))
+        theme(
+          plot.margin = margin(rep(10,4)),
+          plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+          panel.background = element_blank(),  # No panel background
+          panel.border = element_blank(),  # Remove panel border
+          text = element_text(family = "Rubik"),
+          # Add space between title and plot
+          plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+          # Make axis tick labels bold
+          axis.text.x = element_text(face = "bold"),
+          axis.text.y = element_text(face = "bold"),
+          # Remove grid lines and background for minor axis
+          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.minor = element_blank(),  # Remove minor gridlines
+          axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+          axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+        )
     })
+    
+    output$trendStat1 <- renderValueBox({
+      valueBox(
+        value = paste0(comparison_year_coefs1[1], "%"),
+        subtitle = HTML(paste0("Upper confidence interval: ", comparison_year_coefs1[2], "%", "<br>", 
+                          "Lower confidence interval: ", comparison_year_coefs1[3], "%")),
+        icon = icon("arrow-trend-down"),
+      )
+    })
+    
+    output$trendStat2 <- renderValueBox({
+      valueBox(
+        value = "Test",
+        subtitle = "Test subtitle",
+        icon = icon("trophy"),
+      )
+    })
+    
     
     resetLoadingButton("calculate_trend")
     
@@ -624,6 +734,71 @@ server <- function(input, output, session) {
       regions <- c("All", regions)
     }
     updateSelectInput(session, "region_user", choices = regions, selected = ifelse("All" %in% regions, "All", regions[1]))
+  })
+  
+  # Run the query and fetch the results as a dataframe
+  query <- "
+  SELECT country, region, COUNT(*) AS user_count
+  FROM bugs_matter.user_data2
+  GROUP BY country, region
+  ORDER BY country, region;
+  "
+  user_counts <- dbGetQuery(pool, query) %>% mutate(region = coalesce(region, country))
+  
+  query <- "
+  SELECT nuts118nm, country, ST_Transform(ST_MakeValid(ST_Simplify(geometry, 1000)), 4326) AS geom FROM bugs_matter.regionboundaries
+  "
+  region_boundaries <- st_read(pool, query = query)
+  region_boundaries$nuts118nm <- gsub(" *\\[.*?\\]| *\\(.*?\\)", "", region_boundaries$nuts118nm)
+  region_user_counts <- left_join(region_boundaries %>% rename(region = nuts118nm), user_counts, by = c("country", "region"))
+  region_user_counts$user_count <- as.numeric(region_user_counts$user_count)
+  region_user_counts_centroids <- region_user_counts %>% mutate(geom = st_centroid(geom))  # Replace multipolygons with their centroids
+  
+  # Render Leaflet map
+  output$usermap <- renderLeaflet({
+    pal <- colorNumeric(palette = "viridis", domain = region_user_counts$user_count)
+    # Render the map
+    leaflet() %>%
+      addProviderTiles("CartoDB.Positron") %>%
+      addPolygons(data = region_user_counts,
+                  color = "#000000",  # Border color of polygons
+                  weight = 2,
+                  fillOpacity = 0.7,   # Fill opacity
+                  fillColor = ~pal(user_count)) %>%  # Fill color based on 'user_count'
+      addLegend(position = "bottomright",  # Position of the legend
+                pal = pal,
+                values = region_user_counts$user_count,
+                title = "User Count",
+                opacity = 0.7) %>%
+      addLabelOnlyMarkers(data = region_user_counts_centroids,  # Use centroids for labeling
+                          lng = ~st_coordinates(geom)[,1],  # Longitude of centroid
+                          lat = ~st_coordinates(geom)[,2],  # Latitude of centroid
+                          label = ~as.character(user_count),  # Label user count
+                          labelOptions = labelOptions(noHide = TRUE, 
+                                                      direction = "center", 
+                                                      textOnly = TRUE, 
+                                                      style = list("font-weight" = "bold", "color" = "black"))) %>%
+      setView(lng = 0, lat = 50, zoom = 3)  # Default view
+  })
+  
+  # Update map when a region is selected
+  observeEvent(c(input$region_user), {
+    req(input$region_user, input$country_user)  # Ensure all inputs are selected
+
+    # Get the bounding box of the polygon
+    bbox <- if(input$region_user == "All") {
+      st_bbox(subset(region_user_counts, country == input$country_user)) %>% as.list()
+    } 
+    else { 
+      st_bbox(subset(region_user_counts, region == input$region_user)) %>% as.list()  # Bounding box: xmin, ymin, xmax, ymax
+    }
+    
+    # Update map with region boundary
+    leafletProxy("usermap") %>%
+      fitBounds(
+        lng1 = bbox$xmin, lat1 = bbox$ymin,
+        lng2 = bbox$xmax, lat2 = bbox$ymax
+      )
   })
   
   
@@ -657,14 +832,90 @@ server <- function(input, output, session) {
     ggplot(plot_data, aes(x=sign_up_date, y=cumulative_n)) + 
       geom_line(lwd=0.5, color = "black") + 
       labs(title = "Cumulative Count of Sign-ups", x = "Sign-up Date", y = "Count of Sign-ups") +
-      # scale_x_continuous(breaks = c(1,32,60,91,121,152,182,213,244,274,305,335), 
-      #                    minor_breaks = c(1,32,60,91,121,152,182,213,244,274,305,335),
-      #                    labels = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")) +
       theme_minimal(base_size = 12) + 
-      theme(plot.margin = margin(rep(10,4)),
-            plot.background = element_rect(color = "black", size = 1),
-            panel.border = element_blank(),
-            text = element_text(family = "Rubik"))
+      theme(
+        plot.margin = margin(rep(10,4)),
+        plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+        panel.background = element_blank(),  # No panel background
+        panel.border = element_blank(),  # Remove panel border
+        text = element_text(family = "Rubik"),
+        # Add space between title and plot
+        plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+        # Make axis tick labels bold
+        axis.text.x = element_text(face = "bold"),
+        axis.text.y = element_text(face = "bold"),
+        # Remove grid lines and background for minor axis
+        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.minor = element_blank(),  # Remove minor gridlines
+        axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
+        axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+      )
+  })
+  
+  
+  output$userStat1 <- renderValueBox({
+    req(input$region_user, input$country_user)  # Ensure inputs are available
+    query <- if(input$region_user == "All") {  # Fetch specific data for output based on selected filters
+      sprintf(
+        "SELECT user_id, sign_up_date, region, country, journeys FROM bugs_matter.user_data2
+        WHERE country = '%s'",
+        input$country_user
+      )
+    }
+    else{
+      sprintf(
+        "SELECT user_id, sign_up_date, region, country, journeys FROM bugs_matter.user_data2
+        WHERE (region = '%s' OR region IS NULL) AND country = '%s'",
+        input$region_user, input$country_user
+      )
+    }
+
+    statbox_data <- dbGetQuery(pool, query)
+
+    #participant_count <- sum(is.na(statbox_data$journeys))
+    #lazyuser_count <- sum(!is.na(statbox_data$journeys))
+    conversion_rate <- sum(!is.na(statbox_data$journeys)) / nrow(statbox_data)
+    conversion_rate1 <- paste0(round(conversion_rate*100, 1), "%")
+    
+    valueBox(
+      value = conversion_rate1,
+      subtitle = HTML("Participation rate <br> <br> This is the percentage of users that have recorded one or more journeys."),
+      icon = icon("users"),
+    )
+  })
+  
+  output$userStat2 <- renderValueBox({
+    req(input$region_user, input$country_user)  # Ensure inputs are available
+    query <- if(input$region_user == "All") {  # Fetch specific data for Plot based on selected filters
+      sprintf(
+        "SELECT user_id, sign_up_date, region, country, journeys FROM bugs_matter.user_data2
+        WHERE country = '%s'",
+        input$country_user
+      )
+    }
+    else{
+      sprintf(
+        "SELECT user_id, sign_up_date, region, country, journeys FROM bugs_matter.user_data2
+        WHERE (region = '%s' OR region IS NULL) AND country = '%s'",
+        input$region_user, input$country_user
+      )
+    }
+    
+    statbox_data <- dbGetQuery(pool, query)
+    
+    toprecorders <- sort(statbox_data$journeys, decreasing=TRUE)[1:3]
+    
+    top3_text <- paste0(
+      "1st: ", toprecorders[1], " journeys<br>",
+      "2nd: ", toprecorders[2], " journeys<br>",
+      "3rd: ", toprecorders[3], " journeys"
+    )
+    
+    valueBox(
+      value = HTML(top3_text),
+      subtitle = "Top recorders",
+      icon = icon("trophy"),
+    )
   })
   
 }
