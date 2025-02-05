@@ -801,7 +801,6 @@ server <- function(input, output, session) {
       )
   })
   
-  
   output$userPlot1 <- renderPlot({
     req(input$region_user, input$country_user)  # Ensure inputs are available
     query <- if(input$region_user == "All") {  # Fetch specific data for Plot based on selected filters
@@ -824,6 +823,7 @@ server <- function(input, output, session) {
     # Calculate cumulative sum
     plot_data <- plot_data %>% 
       arrange(sign_up_date) %>%  # Correct column reference
+      filter(sign_up_date > "2021-01-01") %>%
       group_by(sign_up_date) %>% # Group by date before summarizing
       summarise(n = n(), .groups = "drop") %>%  # Count sign-ups per day
       mutate(cumulative_n = cumsum(n))  # Calculate cumulative sum
