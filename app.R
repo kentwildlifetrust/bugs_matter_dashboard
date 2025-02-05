@@ -124,13 +124,13 @@ ui <- fluidPage(
                           fluidRow(
                             column(5, plotOutput("trendPlot1", height = '40vh') |> tooltip("This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.", placement = "auto")),
                             column(5, plotOutput("trendPlot2", height = '40vh') |> tooltip("This boxplot with jittered data points shows the spread of the insect splat rate (splats per cm per mile) data. The boxes indicate the interquartile range (central 50% of the data), either side of the median splat rate which is shown by the horizontal line inside the box. The vertical lines extend out by 1.5 times the interquartile range, and the data points themselves are ‘horizontally jittered’ so they do not overlap to improve visualization. The thick green line at y = 0 are the data points for journeys where no bug splats were recorded.", placement = "auto")),
-                            column(2, valueBoxOutput("trendStat1", width = NULL))
+                            column(2, valueBoxOutput("trendStat2", width = NULL))
                             ),
                           br(),  # Add space
                           fluidRow(
                             column(5, plotOutput("trendPlot3", height = '40vh') |> tooltip("This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.", placement = "auto")),
                             column(5, plotOutput("trendPlot4", height = '40vh') |> tooltip("This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.", placement = "auto")),
-                            column(2, valueBoxOutput("trendStat2", width = NULL))
+                            column(2, valueBoxOutput("trendStat1", width = NULL))
                             )
                         )
                       )
@@ -693,18 +693,18 @@ server <- function(input, output, session) {
     
     output$trendStat1 <- renderValueBox({
       valueBox(
-        value = paste0(comparison_year_coefs1[1], "%"),
-        subtitle = HTML(paste0("Upper confidence interval: ", comparison_year_coefs1[2], "%", "<br>", 
-                          "Lower confidence interval: ", comparison_year_coefs1[3], "%")),
+        value = HTML(paste0("<b>", comparison_year_coefs1[1], "%", "</b>", "<br>", "between", "<br>", input$year_baseline, "-", input$year_comparison)),
+        subtitle = HTML(paste0("Confidence Interval (CI 95%): ", "<br>", comparison_year_coefs1[3], "%", 
+                          " to ", comparison_year_coefs1[2], "%")),
         icon = icon("arrow-trend-down"),
       )
     })
     
     output$trendStat2 <- renderValueBox({
       valueBox(
-        value = "Test",
-        subtitle = "Test subtitle",
-        icon = icon("trophy"),
+        value = paste0(format(sum(mod_data$splatcount), big.mark = ",", scientific = FALSE), " bug splats"),
+        subtitle = paste0("over ", format(round(sum(mod_data$Distance), 0), big.mark = ",", scientific = FALSE), " miles"),
+        icon = icon("car"),
       )
     })
     
