@@ -12,6 +12,7 @@ library(scales)
 library(shinycssloaders)
 library(shinyFeedback)
 library(shinydashboard)
+library(shinyjs)
 library(bslib)
 
 kwt_portal_theme <- function(){
@@ -45,7 +46,7 @@ colorBlind7  <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E0
 
 # Define UI
 ui <- fluidPage(
-  shinyjs::useShinyjs(),
+  useShinyjs(),
   theme = kwt_portal_theme(),  # Apply the custom theme
   
   # Custom CSS to add border around the Leaflet map
@@ -177,7 +178,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   
   observeEvent(c(input$tabs), {
-    shinyjs::runjs("window.dispatchEvent(new Event('resize'));")
+    runjs("window.dispatchEvent(new Event('resize'));")
   })
   
   # set up pool for postgis connections
