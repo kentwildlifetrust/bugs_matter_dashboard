@@ -45,6 +45,7 @@ colorBlind7  <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E0
 
 # Define UI
 ui <- fluidPage(
+  shinyjs::useShinyjs(),
   theme = kwt_portal_theme(),  # Apply the custom theme
   
   # Custom CSS to add border around the Leaflet map
@@ -64,7 +65,8 @@ ui <- fluidPage(
   ")),
   
   # Navbar with tabs
-  navbarPage("Bugs Matter Results Dashboard",
+  navbarPage(id = "tabs",
+             title = "Bugs Matter Results Dashboard",
              tabPanel("Welcome", 
                       h2("Welcome to the Bugs Matter Dashboard!"),
                       p("Here you can explore the Bugs Matter data and analyze trends. You can pan and zoom the map and hover over plots to learn more. ")
@@ -173,6 +175,10 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output, session) {
+  
+  observeEvent(c(input$tabs), {
+    shinyjs::runjs("window.dispatchEvent(new Event('resize'));")
+  })
   
   # set up pool for postgis connections
   pool <- dbPool(drv = RPostgres::Postgres(), 
