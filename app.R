@@ -188,8 +188,8 @@ server <- function(input, output, session) {
   pool <- dbPool(drv = RPostgres::Postgres(), 
                  host = "kwt-postgresql-azdb-1.postgres.database.azure.com", 
                  port = 5432, dbname = "shared", 
-                 user = Sys.getenv("user"),
-                 password = Sys.getenv("password"),
+                 user = Sys.getenv("BUGS_MATTER_USER"),
+                 password = Sys.getenv("BUGS_MATTER_PASSWORD"),
                  sslmode = "prefer")
   
   #### Data Explorer ####
