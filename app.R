@@ -17,6 +17,7 @@ library(shinyFeedback)
 library(shinydashboard)
 library(shinyjs)
 library(bslib)
+library(slickR)
 
 kwt_portal_theme <- function(){
   bslib::bs_theme(
@@ -40,10 +41,21 @@ kwt_portal_theme <- function(){
     "dropdown-bg" = "#FFFFFF"
   ) %>%
     bslib::bs_add_rules(
-      readLines(system.file("www", "bs_rules.css", package = "shinyHelper")) %>%
-        paste(collapse = "")
+      paste0(
+        readLines(system.file("www", "bs_rules.css", package = "shinyHelper")) %>%
+          paste(collapse = ""),
+        "
+        .navbar-brand { 
+          font-family: 'Adelle', sans-serif !important; 
+          font-size: 1.4rem !important;
+          font-weight: bold !important;
+          color: #0F0F0F !important; 
+        }
+        "
+      )
     )
 }
+
 
 colorBlind7  <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
@@ -68,12 +80,27 @@ ui <- fluidPage(
     }
   ")),
   
+tags$head(
+  tags$style(HTML("
+    body {
+      background-image: url('Bugs_matter_footer.jpg'); /* Image file */
+      background-size: 100% auto; /* Full width, automatic height */
+      background-repeat: no-repeat; /* Prevent tiling */
+      background-position: bottom center; /* Align at the top center */
+      background-attachment: fixed; /* Keep it fixed while scrolling */
+    }
+  "))
+),
+  
   # Navbar with tabs
   navbarPage(id = "tabs",
-             title = "Bugs Matter Results Dashboard",
+             title = tagList(
+               tags$img(src = "bm_bug_icon2.png", height = "50px", style = "margin-right: 10px;"),
+               "Bugs Matter ", tags$b("Dashboard")
+             ),
+             windowTitle = "Bugs Matter Dashboard",  # Clean browser tab title
              tabPanel("Welcome", 
-                      h2("Welcome to the Bugs Matter Dashboard!"),
-                      p("Here you can explore the Bugs Matter data and analyze trends. You can pan and zoom the map and hover over plots to learn more. ")
+                      slickROutput("slick_output", width='50%',height='500px')
              ),
              
              tabPanel("Data Explorer",
@@ -170,11 +197,7 @@ ui <- fluidPage(
                       )
              )
   ),
-  # Add the logo at the bottom-left of the page
-  tags$div(
-    id = "logo", 
-    tags$img(src = "https://cdn.buglife.org.uk/2022/04/Bugs-Matter-Landscape.png", height = "150px")  # Adjust height as needed
-  )
+
 )
 
 # Define server logic
@@ -192,7 +215,162 @@ server <- function(input, output, session) {
                  password = Sys.getenv("BUGS_MATTER_PASSWORD"),
                  sslmode = "prefer")
   
-  #### Data Explorer ####
+  #### Welcome Page ####
+  
+  output$slick_output <- renderSlickR({
+    text_slides <- list(
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "Welcome to the Bugs Matter Dashboard"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("Here, you can keep up-to-date with the findings of Bugs Matter, the global citizen science 
+            survey of ‘bug splats’ on vehicle number plates to monitor flying insect abundance. You can explore 
+            where and how many journeys have been recorded, and see information about the lengths of journeys, 
+            and the types of vehicles used. You can explore trends in the number of bugs splatted by location and over different time periods. 
+            You can also find information on the numbers of users in different parts of the world and how many journeys have been recorded by our top recorders!"))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "What is Bugs Matter?"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("The Bugs Matter citizen science survey uses an innovative 
+method for large-scale indiscriminate monitoring of flying 
+insect populations. Citizen scientists record the number 
+of insect splats on their vehicle number plates following 
+a journey, having first removed any residual insects from 
+previous journeys. It has the potential to provide an efficient, 
+standardised and scalable approach to monitor trends in 
+insect abundance across local, regional and global scales. The sampling technique is based on the ‘windscreen 
+phenomenon’, a term given to the anecdotal observation that fewer insect splats appear on 
+the windscreens of cars now compared to a decade or 
+several decades ago. These observations, which have also 
+been reported from empirical data (Møller, 2019), have been 
+interpreted as an indicator of major global declines in insect 
+abundance. "))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "Global insect declines"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("A growing body of evidence (Fox et al., 2013; Hallmann et al., 
+2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas 
+et al., 2019; van der Sluijs, 2020; Macadam et al., 2020; 
+Outhwaite, McCann and Newbold, 2022) highlights population 
+declines in insects and other invertebrates at UK and global 
+scales. These declines, which are evident across all functional 
+groups of insects (herbivores, detritivores, parasitoids, 
+predators and pollinators), could have catastrophic impacts 
+on the Earth’s natural systems and human survivability 
+on our planet. Invertebrates are functionally of greater 
+importance than large-bodied fauna, and in terms of biomass, 
+bioabundance and species diversity, they make up the 
+greatest proportion of life on Earth."))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "Drivers of insect declines"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("Habitat loss and fragmentation has caused declines in 
+biodiversity across the world. The conversion of natural 
+habitats into agriculture, urban areas, and infrastructure 
+development leads to the loss of suitable habitats for insects, 
+making it difficult for them to feed and reproduce. The 
+widespread use of chemical pesticides, including insecticides, 
+herbicides, and fungicides, can have detrimental effects on 
+insect populations. Climate change alters weather patterns, 
+affecting insect life cycles, behaviour, and distribution. Some 
+insects may struggle to adapt to rapidly changing conditions 
+or may lose suitable habitats due to shifting climate zones."))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "How can you help?"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("Using alternatives to peat fertilizer can help reduce CO2 emissions and slow the impact 
+            of climate change on insects and our environment. By eliminating or reducing our use of pesticides, 
+            we can stop the decline of thousands of insects in an instant. You can help the insects in your garden 
+            by letting the grass grow longer,  sowing wildflowers, and generally being less tidy. Climate change is 
+            a growing threat to a wide range of wildlife, including insects. The two best things you can do is eat 
+            less meat and make fewer vehicle journeys. Join an organisation such as your local Wildlife Trust or 
+            Buglife. Charities like these do vital work to protect and restore our most important wildlife sites, 
+            restore lost habitats at scale and reconnect our countryside. Most importantly, make every journey count, 
+                 by taking part in Bugs Matter!"))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "When did the survey start?"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("The Bugs Matter citizen science survey took place throughout the UK between 1st June and 31st 
+            August in 2021, 2022 and 2023, and between 1st May and 30th September in 2024, using the Bugs Matter 
+            mobile application. In 2021 and 2022, users received a standardised sampling grid, 
+            termed a ‘splatometer’, in the post after they had signed up in the application. 
+            However, in 2023 the whole number plate was used to count insect splats."))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "The Bugs Matter mobile app"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("The Bugs Matter app is available to download for free from the Apple App Store and Google Play. 
+            The app was built by Natural Apptitude and uses the Coreo data collection system. Within the app, 
+            users add details about the vehicle used for sampling, and are asked to confirm whether their number 
+            plate measures to standard UK dimensions, and if not, asked to manually input the 
+            dimensions of their number plate. Multiple vehicles can be added by a single user. Vehicle specification 
+            information is used in the analysis to determine if different types of vehicles sample insects differently."))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "How do you record a journey?"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("Prior to commencing a journey, citizen scientists clean the front number plate of their vehicle to 
+            remove any residual insects. The app requests a checkbox confirmation that the number plate has been 
+            cleaned. Upon starting a journey, citizen scientists tap a button in the app to begin recording the 
+            journey route using the mobile device’s GPS. This provides crucial data on the length, duration, 
+            location, and average speed of the journey. Insects are then sampled when they collide with the number 
+            plate throughout the duration of a journey. Upon completing a journey, citizen scientists tap a 
+            button in the app to finish recording the journey route. They record the number of insect splats on 
+            the front number plate of their vehicle. The journey route, the number of insect splats, and a photograph 
+            of the number plate are submitted via the app. Citizen scientists are asked to participate only on 
+            essential journeys and not to make journeys specifically to take part in the survey."))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "How is the data analysed? Part I"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("Prior to the analysis, some steps are taken to clean the data and remove outliers. Journeys with 
+            GPS errors are removed from the dataset. These errors are caused by a drop-out of background tracking 
+            due to GPS signal being lost by the device, and they appear as long straight lines between distant 
+                 locations. Very short journeys, very fast journeys, very slow journeys, or journeys with over 500 
+                 insect splats are removed from the dataset.  Finally, all journeys during which rainfall occurred 
+                 were omitted from the dataset due to the high chance that rainfall could dislodge insects from 
+                 number plates and create inaccurate splat counts."))
+      ),
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "How is the data analysed? Part II"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("To begin exploring the data and calculate simple summary statistics, insect splat counts 
+            recorded by citizen scientists are converted to a ‘splat rate’ by dividing the insect splat count by 
+            the number plate sampling area and the journey distance, expressed in a unit of ‘splats per cm2 per mile’. 
+            This metric makes the data comparable between journeys and is defined as the number of insects sampled 
+            per cm2 of the number plate every mile. The response variable (insect count) shows a heavily right-skewed 
+            distribution due to the high number of zero and low values, as is typical for count-derived data. 
+            Therefore, a negative binomial generalized linear model (NB) was used to examine the relative effects 
+            of survey year, time of day of the journey, calendar date of the journey, average journey temperature, 
+            average journey speed, journey distance, vehicle type, elevation, local land cover, and road type, on 
+                 splat count."))
+      ),
+      
+      div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
+          h3(style = "text-align: center; color: #0F0F0F;", "How is the data analysed? Part III"),
+          p(style = "font-size: 18px; text-align: center; color: #0F0F0F;", 
+            HTML("The analysis was performed using the MASS package (Venables and Ripley, 2002) in RStudio 
+            (R Core Team, 2022), following established techniques (Sokal and Rolf, 1995; Crawley, 2007). After 
+            running the model, variance inflation factor (VIF) scores were calculated to check for multicollinearity 
+            between independent variables. Comparisons of the number of insect splats between different timescales 
+            is achieved by rerunning the models with different reference years. The results of the ZINB model show 
+            the quantity of change in the response variable given a one-unit change in the independent variable, 
+            while holding other variables in the model constant. These values are called incidence rate ratios 
+            and they can be visualised effectively in a forest plot. Also presented, are plots of adjusted 
+            predictions of splat count across years, corrected for number plate sampling area and journey distance."))
+      )
+    )
+    
+    
+    slickR(text_slides, slideId = 'slick1', height = 500, width = '50%') + 
+      settings(dots = TRUE, slidesToShow = 1, centerMode = F)
+  })
+  
+    #### Data Explorer ####
   
   # Populate country dropdown
   observe({
