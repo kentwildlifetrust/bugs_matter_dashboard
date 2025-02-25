@@ -39,7 +39,7 @@ WORKDIR /build
 # Install required R packages
 RUN R -q -e "options(warn=2); install.packages(c('shiny', 'leaflet', 'sf', 'dplyr', 'tidyr', 'pool', 'RPostgres', \
                                                  'ggplot2', 'MASS', 'sjPlot', 'scales', 'shinycssloaders', \
-                                                 'shinyFeedback', 'shinydashboard', 'shinyjs', 'bslib'))"
+                                                 'shinyFeedback', 'shinydashboard', 'shinyjs', 'bslib', slickR))"
 
 # install R code
 COPY . /app_pkg
