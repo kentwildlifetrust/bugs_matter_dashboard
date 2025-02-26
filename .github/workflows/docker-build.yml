@@ -16,7 +16,7 @@ jobs:
 
       - name: Stop and remove old containers
         run: | 
-          OLD_CONTAINERS=$(docker ps -q --filter ancestor=bugs_matter_dashboard)
+          OLD_CONTAINERS=$(docker ps -q --filter ancestor=bugs_matter_dashboard:new)
           if [ ! -z "$OLD_CONTAINERS" ]; then 
             docker stop $OLD_CONTAINERS 
             docker rm $OLD_CONTAINERS 
