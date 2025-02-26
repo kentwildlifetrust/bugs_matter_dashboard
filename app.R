@@ -244,7 +244,9 @@ the windscreens of cars now compared to a decade or
 several decades ago. These observations, which have also 
 been reported from empirical data (Møller, 2019), have been 
 interpreted as an indicator of major global declines in insect 
-abundance. "))
+abundance. ")),
+          div("Invisible test",style="display:none;",id="test-div")
+          
       ),
       div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
           h3(style = "text-align: center; color: #0F0F0F;", "Global insect declines"),

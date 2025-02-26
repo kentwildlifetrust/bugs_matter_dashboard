@@ -9,6 +9,26 @@ jobs:
     runs-on: [self-hosted, linux, X64] 
     steps: 
       - uses: actions/checkout@v4 
-      - name: Build Docker Image 
+
+      - name: Build new Docker image 
         run: | 
-          docker build --no-cache --progress=plain -t bugs_matter_dashboard . 
+          docker build --no-cache --progress=plain -t bugs_matter_dashboard:new .
+
+      - name: Stop and remove old containers
+        run: | 
+          OLD_CONTAINERS=$(docker ps -q --filter ancestor=bugs_matter_dashboard)
+          if [ ! -z "$OLD_CONTAINERS" ]; then 
+            docker stop $OLD_CONTAINERS 
+            docker rm $OLD_CONTAINERS 
+          fi 
+
+      - name: Remove old image 
+        run: | 
+          if docker images | grep -q bugs_matter_dashboard; then 
+            docker rmi -f bugs_matter_dashboard
+          fi
+
+      - name: Retag new image as latest 
+        run: | 
+          docker tag bugs_matter_dashboard:new bugs_matter_dashboard
+          docker rmi bugs_matter_dashboard:new
