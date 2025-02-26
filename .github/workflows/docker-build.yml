@@ -12,23 +12,19 @@ jobs:
 
       - name: Build new Docker image 
         run: | 
-          docker build --no-cache --progress=plain -t bugs_matter_dashboard:new .
+          docker build --no-cache --progress=plain -t bugs_matter_dashboard .
 
-      - name: Stop and remove old containers
-        run: | 
-          OLD_CONTAINERS=$(docker ps -q --filter ancestor=bugs_matter_dashboard:new)
-          if [ ! -z "$OLD_CONTAINERS" ]; then 
-            docker stop $OLD_CONTAINERS 
-            docker rm $OLD_CONTAINERS 
-          fi 
-
-      - name: Remove old image 
-        run: | 
-          if docker images | grep -q bugs_matter_dashboard; then 
-            docker rmi -f bugs_matter_dashboard
+      - name: Remove containers using dangling images and delete them
+        run: |
+          DANGLING_IMAGES=$(docker images -q --filter "dangling=true")
+          if [ ! -z "$DANGLING_IMAGES" ]; then
+            for IMAGE_ID in $DANGLING_IMAGES; do
+              CONTAINERS=$(docker ps -q --filter "ancestor=$IMAGE_ID")
+              if [ ! -z "$CONTAINERS" ]; then
+                docker stop $CONTAINERS
+                docker rm $CONTAINERS
+              fi
+              docker rmi -f $IMAGE_ID
+            done
           fi
 
-      - name: Retag new image as latest 
-        run: | 
-          docker tag bugs_matter_dashboard:new bugs_matter_dashboard
-          docker rmi bugs_matter_dashboard:new
