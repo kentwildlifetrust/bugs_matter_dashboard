@@ -95,7 +95,7 @@ tags$head(
   # Navbar with tabs
   navbarPage(id = "tabs",
              title = tagList(
-               tags$img(src = "bm_bug_icon2.png", height = "50px", style = "margin-right: 10px;"),
+               tags$img(src = "bm_bug_icon1.png", height = "50px", style = "margin-right: 10px;"),
                "Bugs Matter ", tags$b("Dashboard")
              ),
              windowTitle = "Bugs Matter Dashboard",  # Clean browser tab title
