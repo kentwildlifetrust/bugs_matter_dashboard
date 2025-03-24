@@ -1,0 +1,2 @@
+linters: linters_with_defaults(line_length_linter(400), indentation_linter = NULL, pipe_operator_linter = NULL)
+encoding: "UTF-8"

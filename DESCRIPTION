@@ -1,0 +1,39 @@
+Package: bugsMatterDashboard
+Title: Bugs Matter Dashboard
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Lawrence", "Ball", , "lawrence.ball@kentwildlife.org.uk", role = c("aut", "cre")),
+    person("Euan", "Mckenzie", , "euan.mckenzie@kentwildlife.org.uk", role = "aut")
+  )
+Description: Car number plate insect splat counts as a measure of invertebrate abundance change over time.
+License: MIT + file LICENSE
+Imports: 
+    AzureStor,
+    bslib,
+    DBI,
+    dplyr,
+    glue,
+    golem,
+    htmltools,
+    jsonlite,
+    leafgl,
+    leaflet,
+    magrittr,
+    plotly,
+    RPostgres,
+    sf,
+    shiny,
+    shinyalert,
+    shinyjs
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
+URL: https://github.com/kentwildlifetrust/bugs_matter_dashboard
+BugReports: https://github.com/kentwildlifetrust/bugs_matter_dashboard/issues
+Suggests:
+    spelling,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Language: en-US
+Depends: 
+    R (>= 3.5)
