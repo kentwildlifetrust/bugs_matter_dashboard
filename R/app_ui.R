@@ -12,6 +12,10 @@ app_ui <- function(request) {
     bslib::page_navbar(
       title = "Bugs Matter Dashboard",
       bslib::nav_panel(
+        title = "Welcome",
+        mod_welcome_ui("welcome_1")
+      ),
+      bslib::nav_panel(
         title = "Journeys",
         mod_journeys_map_ui("journeys_map_1")
       ),

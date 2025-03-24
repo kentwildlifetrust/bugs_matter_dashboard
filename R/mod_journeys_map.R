@@ -29,7 +29,7 @@ mod_journeys_map_ui <- function(id) {
         plotly::plotlyOutput(ns("plot"))
       )
     ),
-    shiny::sliderInput(
+    shinyjs::disabled(shiny::sliderInput(
       ns("date"),
       label = "Date",
       min = as.Date(sprintf("%s-05-01", 2024)),
@@ -41,7 +41,7 @@ mod_journeys_map_ui <- function(id) {
       animate = shiny::animationOptions(
         interval = 25
       )
-    ),
+    )),
   )
 }
 
@@ -75,6 +75,7 @@ mod_journeys_map_server <- function(id, conn) {
           )
       }
       shinyjs::enable("year")
+      shinyjs::enable("date")
     })
 
     values <- shiny::reactiveValues()

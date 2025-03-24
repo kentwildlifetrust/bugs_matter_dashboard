@@ -744,6 +744,7 @@ or may lose suitable habitats due to shifting climate zones."))
                       return(NULL)
                     }
     )
+    browser()
     
     # print(summary(mod))
     # VIFtable <- check_collinearity(mod, component = "count")
@@ -882,6 +883,7 @@ or may lose suitable habitats due to shifting climate zones."))
     })
     
     output$trendStat1 <- renderValueBox({
+      browser()
       valueBox(
         value = HTML(paste0("<b>", comparison_year_coefs1[1], "%", "</b>", "<br>", "between", "<br>", input$year_baseline, "-", input$year_comparison)),
         subtitle = HTML(paste0("Confidence Interval (CI 95%): ", "<br>", comparison_year_coefs1[3], "%", 

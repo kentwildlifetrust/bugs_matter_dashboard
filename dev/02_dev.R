@@ -54,7 +54,7 @@ renv::snapshot()
 ## Break down into logical components, like one module per page on a dashboard
 ## If there is any sort of sequence to the modules, it can be really nice to add numbered prefixes to the file names
 golem::add_module(name = "journeys_map") # Name of the module
-golem::add_module(name = "name_of_module2") # Name of the module
+golem::add_module(name = "welcome") # Name of the module
 
 ## External resources ---------------------------------------------------------
 ## Creates .css file in inst/app/www
@@ -198,6 +198,63 @@ ORDER BY all_dates.date;
           dplyr::mutate(date = as.Date(date))
 
 usethis::use_data(cumulative_count, overwrite = TRUE)
+
+
+## model
+regions <- "SELECT DISTINCT region FROM bugs_matter.regionboundaries WHERE region IS NOT NULL;" %>%
+  DBI::dbGetQuery(conn, .) %>%
+  dplyr::pull("region")
+
+region <- "South East (England)"
+
+mod_data <- "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset 
+FROM bugs_matter.journeys5 
+WHERE year >= '2021' AND year <= '2024' AND region = {region}" %>%
+  glue::glue_sql(.con = conn) %>%
+  DBI::dbGetQuery(conn, .)
+
+#4404
+
+  mod_data <- mod_data %>% rename(
+    Year = year,
+    Distance = distance,
+    Average.speed = avg_speed,
+    Vehicle.type = vehicle_cl,
+    Vehicle.height = vehicle_he,
+    Vehicle.width = vehicle_wi, 
+    Day.of.year = dayofyear, 
+    Longitude = X,
+    Latitude = Y
+  )
+    mod_data$Time.of.day <- as.numeric(difftime(mod_data$midpoint_time, trunc(mod_data$midpoint_time, units="days"), units="hours"))
+    mod_data$Year <- relevel(as.factor(mod_data$Year), ref="2021")
+    mod <- tryCatch({
+      MASS::glm.nb(
+        splatcount ~ Year + 
+        Distance + 
+        Average.speed + 
+        Time.of.day +
+        Day.of.year +
+        #Vehicle.type +
+        Vehicle.height +
+        Vehicle.width +
+        Longitude +
+        Latitude +
+        offset(log_cm_miles_offset), data = mod_data)
+    },
+    error = function(e) {
+      warning(paste("Model failed for region:", region, "Error:", e$message))
+      return(NULL)
+    })
+    
+    # print(summary(mod))
+    # VIFtable <- check_collinearity(mod, component = "count")
+    # print(VIFtable)
+    est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
+    comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
+    comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
+    comparison_year_coefs1 <- ifelse(comparison_year_coefs1 > 0, paste("+", comparison_year_coefs1), paste("-", abs(comparison_year_coefs1)))
+    
 
 
 

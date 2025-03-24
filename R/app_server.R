@@ -22,6 +22,7 @@ app_server <- function(input, output, session) {
   })
 
   mod_journeys_map_server("journeys_map_1", conn)
+  mod_welcome_server("welcome_1", conn)
 
 
 }
