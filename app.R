@@ -1,6 +1,5 @@
 # app colours to match mobile app
 # find some journeys from other countries? 
-
 library(shiny)
 library(leaflet)
 library(sf)
@@ -100,10 +99,10 @@ tags$head(
              ),
              windowTitle = "Bugs Matter Dashboard",  # Clean browser tab title
              tabPanel("Welcome", 
-                      slickROutput("slick_output", width='50%',height='500px')
+                      slickROutput("welcome_slick_output", width='50%',height='500px')
              ),
              
-             tabPanel("Data Explorer",
+             tabPanel("Journeys",
                       sidebarLayout(
                         sidebarPanel(
                           selectizeInput("country", "Select a Country:", choices = NULL,
@@ -135,7 +134,7 @@ tags$head(
                       )
              ),
              
-             tabPanel("Trend Analysis",
+             tabPanel("Bug Splats",
                       sidebarLayout(
                         sidebarPanel(
                           selectizeInput("country_trend", "Select a Country:", choices = NULL,
@@ -195,6 +194,9 @@ tags$head(
                           )
                         )
                       )
+             ),
+             tabPanel("Science", 
+                      ("This is a test sentence")
              )
   ),
 
@@ -217,7 +219,7 @@ server <- function(input, output, session) {
   
   #### Welcome Page ####
   
-  output$slick_output <- renderSlickR({
+  output$welcome_slick_output <- renderSlickR({
     text_slides <- list(
       div(style = "padding: 20px; background-color: #C6E5E8; border-radius: 0px;",
           h3(style = "text-align: center; color: #0F0F0F;", "Welcome to the Bugs Matter Dashboard"),
@@ -527,7 +529,7 @@ or may lose suitable habitats due to shifting climate zones."))
         axis.text.x = element_text(face = "bold", color = "black"),
         axis.text.y = element_text(face = "bold", color = "black"),
         # Remove grid lines and background for minor axis
-        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.major = element_line(color = "#9FC8B8", linewidth  = 0.5),
         panel.grid.minor = element_blank(),  # Remove minor gridlines
         axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
         axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
@@ -571,7 +573,7 @@ or may lose suitable habitats due to shifting climate zones."))
         axis.text.x = element_text(face = "bold", color = "black"),
         axis.text.y = element_text(face = "bold", color = "black"),
         # Remove grid lines and background for minor axis
-        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
         panel.grid.minor = element_blank(),  # Remove minor gridlines
         axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
         axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
@@ -621,7 +623,7 @@ or may lose suitable habitats due to shifting climate zones."))
         axis.text.x = element_text(face = "bold", color = "black"),
         axis.text.y = element_text(face = "bold", color = "black"),
         # Remove grid lines and background for minor axis
-        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
         panel.grid.minor = element_blank(),  # Remove minor gridlines
         axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
         axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
@@ -772,7 +774,7 @@ or may lose suitable habitats due to shifting climate zones."))
           axis.text.x = element_text(face = "bold"),
           axis.text.y = element_text(face = "bold"),
           # Remove grid lines and background for minor axis
-          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
           panel.grid.minor = element_blank(),  # Remove minor gridlines
           axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
           axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
@@ -809,7 +811,7 @@ or may lose suitable habitats due to shifting climate zones."))
           axis.text.x = element_text(face = "bold"),
           axis.text.y = element_text(face = "bold"),
           # Remove grid lines and background for minor axis
-          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
           panel.grid.minor = element_blank(),  # Remove minor gridlines
           axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
           axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
@@ -847,7 +849,7 @@ or may lose suitable habitats due to shifting climate zones."))
           axis.text.x = element_text(face = "bold"),
           axis.text.y = element_text(face = "bold"),
           # Remove grid lines and background for minor axis
-          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
           panel.grid.minor = element_blank(),  # Remove minor gridlines
           axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
           axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
@@ -874,7 +876,7 @@ or may lose suitable habitats due to shifting climate zones."))
           axis.text.x = element_text(face = "bold"),
           axis.text.y = element_text(face = "bold"),
           # Remove grid lines and background for minor axis
-          panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+          panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
           panel.grid.minor = element_blank(),  # Remove minor gridlines
           axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
           axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
@@ -1035,7 +1037,7 @@ or may lose suitable habitats due to shifting climate zones."))
         axis.text.x = element_text(face = "bold"),
         axis.text.y = element_text(face = "bold"),
         # Remove grid lines and background for minor axis
-        panel.grid.major = element_line(color = "#9FC8B8", size = 0.5),
+        panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
         panel.grid.minor = element_blank(),  # Remove minor gridlines
         axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
         axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
