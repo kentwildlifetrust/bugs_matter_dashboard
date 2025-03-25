@@ -4,7 +4,6 @@
 * {
   font-family: 'Rubik', Helvetica, Sans-Serif;
 }
-
 .tab-pane.active.html-fill-item.html-fill-container.bslib-gap-spacing {
   padding: 0 !important;
 }
@@ -102,7 +101,9 @@ h1 {
 }
 
 .welcome-body-text {
+  flex: 1;
   max-width: 52.5rem;
+  min-width: 30rem;
 }
 
 p {
@@ -111,13 +112,16 @@ p {
 
 .welcome-figures {
   flex-grow: 1;
-  min-width: 400px;
+  min-width: 370px;
 }
 
 .row.welcome-value-row {
-  --bs-gutter-x: 12px !important;
+  --bs-gutter-x: 0px !important;
+  gap: 10px;
 }
-
+.row.welcome-value-row > .col-sm {
+  min-width: 150px;
+}
 .welcome-value-box {
   height: 100%;
 }
@@ -137,6 +141,11 @@ p {
   padding: 0.5rem 1rem 1rem;
 }
 
-.bslib-value-box:not(.showcase-bottom) .value-box-grid {
-  grid-template-columns: 1fr 25% !important;
+.nav-underline .nav-link.active, .nav-underline .nav-tabs>li>a.active, .nav-underline .nav-pills>li>a.active, .nav-underline :where(ul.nav.navbar-nav > li)>a.active, .nav-underline .show>.nav-link, .nav-underline .in>.nav-link, .nav-underline .nav-tabs>li.show>a, .nav-underline .nav-tabs>li.in>a, .nav-underline .nav-pills>li.show>a, .nav-underline .nav-pills>li.in>a, .nav-underline .show:where(ul.nav.navbar-nav > li)>a, .nav-underline .in:where(ul.nav.navbar-nav > li)>a {
+  border: none !important;
+  border-bottom: 2px solid #58A732 !important;
+}
+
+.nav-underline .nav-link:not(:empty).active, .nav-underline :where(ul.nav.navbar-nav > li)>a:not(:empty).active, .nav-underline .nav-tabs>li>a:not(:empty).active, .nav-underline .nav-pills>li>a:not(:empty).active {
+  font-weight: 600;
 }

@@ -25,9 +25,12 @@ theme <- function() {
     "table-bg" = "#FFFFFF",
     "dropdown-padding-x" = ".5rem",
     "dropdown-bg" = "#FFFFFF",
-    "navbar-light-bg" = "#C6E5E8",
-    "card-border-width" = "4px",
-    "card-border-color" = "#58A732"
+    "navbar-bg" = "#C6E5E8",
+    "card-border-width" = "2px",
+    "card-border-color" = "#58A732",
+    "navbar-light-active-color" = "#142D18",
+    "navbar-dark-active-color" = "#142D18",
+    "nav-link-active-font-weight" = 600
   ) |>
     bslib::bs_add_rules(
         "

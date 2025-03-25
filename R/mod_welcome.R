@@ -65,8 +65,8 @@ abundance."
                 class = "col-sm",
                 bslib::value_box(
                   class = "welcome-value-box",
-                  title = "Kilometres travelled",
-                  value = format(123456, big.mark = ","),
+                  title = "Sampling distance",
+                  value = paste(format(123456, big.mark = ","), "km"),
                   showcase = shiny::icon("fa fa-route fa-solid"),
                   theme = bslib::value_box_theme(
                     bg = "#3C91E6",
@@ -79,8 +79,8 @@ abundance."
                 class = "col-sm",
                 bslib::value_box(
                   class = "welcome-value-box",
-                  title = "Years sampled",
-                  value = "2021 - 2024",
+                  title = "Survey duration",
+                  value = "4 years",
                   showcase = shiny::icon("fa fa-calendar-days fa-solid"),
                   theme = bslib::value_box_theme(
                     bg = "#58A732",
@@ -93,7 +93,7 @@ abundance."
                 class = "col-sm",
                 bslib::value_box(
                   class = "welcome-value-box",
-                  title = "Change in splat rate over 3 years",
+                  title = "Change in splat rate 2021 - 2024",
                   value = "- 55%",
                   showcase = shiny::icon("fa fa-chart-line-down fa-solid"),
                   theme = bslib::value_box_theme(
