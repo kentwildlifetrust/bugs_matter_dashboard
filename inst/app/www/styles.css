@@ -48,13 +48,11 @@
 }
 
 .welcome-page-content {
+  max-width: 60rem;
   z-index: 1;
   position: relative;
-  margin: 200px 80px 0 80px;
-}
-
-.welcome-header {
-  max-width: 60rem;
+  margin: 200px auto 0 auto;
+  padding: 0px 40px;
 }
 
 .welcome-message {
@@ -92,18 +90,6 @@ h1 {
   .welcome-lead {
     font-size: 1rem;
   }
-}
-
-.welcome-body {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.welcome-body-text {
-  flex: 1;
-  max-width: 52.5rem;
-  min-width: 30rem;
 }
 
 p {
@@ -159,4 +145,20 @@ p {
 
 .ref-link-nospace {
   margin-right: -0.2rem;
+}
+
+.map-stat-large {
+  font-family: 'Adelle';
+  font-size: 1.43rem;
+  line-height: 1.43rem;
+  font-weight: 600;
+}
+
+.popup-title {
+  font-weight: 600;
+}
+hr.popup-hr {
+  border-top: 2px solid #58A732;
+  margin: 10px -19px 12px;
+  opacity: 1;
 }

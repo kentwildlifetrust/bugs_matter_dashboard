@@ -38,10 +38,8 @@ mod_welcome_ui <- function(id) {
         ),
         shiny::div(
           class = "welcome-body",
-          shiny::div(
-            class = "welcome-body-text",
-            shiny::p(
-              "The Bugs Matter citizen science survey uses an innovative
+          shiny::p(
+            "The Bugs Matter citizen science survey uses an innovative
 method for large-scale indiscriminate monitoring of flying
 insect populations. Citizen scientists record the number
 of insect splats on their vehicle number plates following
@@ -53,18 +51,18 @@ phenomenon’, a term given to the anecdotal observation that fewer insect splat
 the windscreens of cars now compared to a decade or
 several decades ago. These observations, which have also
 been reported from empirical data",
-bslib::tooltip(shiny::a("[1]", class = "ref-link ref-link-nospace"), "Møller, 2019",placement = "top"),
-", have been
+            bslib::tooltip(shiny::a("[1]", class = "ref-link ref-link-nospace"), "Møller, 2019", placement = "top"),
+            ", have been
 interpreted as an indicator of major global declines in insect
 abundance."
-            ),
-            shiny::p(
-              "A growing body of evidence",
-              bslib::tooltip(shiny::a("[2]", class = "ref-link"), "Fox et al., 2013; Hallmann et al.,
+          ),
+          shiny::p(
+            "A growing body of evidence",
+            bslib::tooltip(shiny::a("[2]", class = "ref-link"), "Fox et al., 2013; Hallmann et al.,
 2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas
 et al., 2019; van der Sluijs, 2020; Macadam et al., 2020;
 Outhwaite, McCann and Newbold, 2022", placement = "top"),
-"highlights population
+            "highlights population
 declines in insects and other invertebrates at UK and global
 scales. These declines, which are evident across all functional
 groups of insects (herbivores, detritivores, parasitoids,
@@ -74,9 +72,9 @@ on our planet. Invertebrates are functionally of greater
 importance than large-bodied fauna, and in terms of biomass,
 bioabundance and species diversity, they make up the
 greatest proportion of life on Earth."
-            ),
-            shiny::p(
-              "Habitat loss and fragmentation has caused declines in
+          ),
+          shiny::p(
+            "Habitat loss and fragmentation has caused declines in
 biodiversity across the world. The conversion of natural
 habitats into agriculture, urban areas, and infrastructure
 development leads to the loss of suitable habitats for insects,
@@ -87,67 +85,67 @@ insect populations. Climate change alters weather patterns,
 affecting insect life cycles, behaviour, and distribution. Some
 insects may struggle to adapt to rapidly changing conditions
 or may lose suitable habitats due to shifting climate zones."
-            )
-          ),
+          )
+        ),
+        shiny::div(
+          class = "welcome-figures",
           shiny::div(
-            class = "welcome-figures",
+            class = "row welcome-value-row",
             shiny::div(
-              class = "row welcome-value-row",
-              shiny::div(
-                class = "col-sm",
-                bslib::value_box(
-                  class = "welcome-value-box",
-                  title = "Sampling distance",
-                  value = paste(format(123456, big.mark = ","), "km"),
-                  showcase = shiny::icon("fa fa-route fa-solid"),
-                  theme = bslib::value_box_theme(
-                    bg = "#3C91E6",
-                    fg = "#FFF"
-                  ),
-                  showcase_layout = "top right"
-                )
-              ),
-              shiny::div(
-                class = "col-sm",
-                bslib::value_box(
-                  class = "welcome-value-box",
-                  title = "Survey duration",
-                  value = "4 years",
-                  showcase = shiny::icon("fa fa-calendar-days fa-solid"),
-                  theme = bslib::value_box_theme(
-                    bg = "#58A732",
-                    fg = "#FFF"
-                  ),
-                  showcase_layout = "top right"
-                )
-              ),
-              shiny::div(
-                class = "col-sm",
-                bslib::value_box(
-                  class = "welcome-value-box",
-                  title = "Change in splat rate 2021 - 2024",
-                  value = "- 55%",
-                  showcase = shiny::icon("fa fa-chart-line-down fa-solid"),
-                  theme = bslib::value_box_theme(
-                    bg = "#F46036",
-                    fg = "#FFF"
-                  ),
-                  showcase_layout = "top right"
-                )
+              class = "col-sm",
+              bslib::value_box(
+                class = "welcome-value-box",
+                title = "Sampling distance",
+                value = paste(format(123456, big.mark = ","), "km"),
+                showcase = shiny::icon("fa fa-route fa-solid"),
+                theme = bslib::value_box_theme(
+                  bg = "#3C91E6",
+                  fg = "#FFF"
+                ),
+                showcase_layout = "top right"
               )
             ),
-            br(),
-            bslib::card(
-              min_height = 500,
-              bslib::card_header(
-                "Change in Count Rates, 2021 to 2024"
-              ),
-              bslib::card_body(
-                class = "p-0",
-                leaflet::leafletOutput(ns("map"), height = "100%")
+            shiny::div(
+              class = "col-sm",
+              bslib::value_box(
+                class = "welcome-value-box",
+                title = "Survey duration",
+                value = "4 years",
+                showcase = shiny::icon("fa fa-calendar-days fa-solid"),
+                theme = bslib::value_box_theme(
+                  bg = "#58A732",
+                  fg = "#FFF"
+                ),
+                showcase_layout = "top right"
+              )
+            ),
+            shiny::div(
+              class = "col-sm",
+              bslib::value_box(
+                class = "welcome-value-box",
+                title = "Change in splat rate 2021 - 2024",
+                value = "- 55%",
+                showcase = shiny::icon("fa fa-chart-line-down fa-solid"),
+                theme = bslib::value_box_theme(
+                  bg = "#F46036",
+                  fg = "#FFF"
+                ),
+                showcase_layout = "top right"
               )
             )
-          )
+          ),
+          br(),
+          bslib::card(
+            min_height = 600,
+            bslib::card_header(
+              "Change in Count Rates, 2021 to 2024"
+            ),
+            bslib::card_body(
+              class = "p-0",
+              leaflet::leafletOutput(ns("map"), height = "100%")
+            )
+          ),
+          shiny::br(),shiny::br(),shiny::br(),shiny::br(),
         )
       )
     )
@@ -174,19 +172,54 @@ mod_welcome_server <- function(id, conn) {
           opacity = 1,
           fillOpacity = 0.5,
           fillColor = ~ pal(estimate),
-          popup = ~ paste0(estimate, ", ", low, " to ", high)
+          popup = ~mapply(
+            function(
+              region_name,
+              estimate,
+              low,
+              high
+            ){
+              if (!is.na(estimate)) {
+                return(sprintf(
+                  '<div class="popup-title">%s</div>
+                  <hr class="popup-hr" />
+                  <div class="map-stat-large">%s%%</div>
+                  <div class="map-stat-small">%s%% to %s%%</div>',
+                region_name,
+                estimate,
+                low,
+                high
+              ))
+            } else {
+              return(sprintf(
+                '<div class="popup-title">%s</div>
+                <hr class="popup-hr" />
+                <div class="map-stat-small">Insufficient data</div>',
+                region_name
+              ))
+            }
+          },
+          region_name,
+          estimate,
+          low,
+          high,
+          SIMPLIFY = FALSE
         ) %>%
+          unname()
+      ) %>%
         leaflet::addLabelOnlyMarkers(
           lat = bugsMatterDashboard::region_centres$lat,
           lng = bugsMatterDashboard::region_centres$lng,
           label = mapply(
             function(low, high) {
-              if (is.na(low) | is.na(high)) return()
+              if (is.na(low) | is.na(high)) {
+                return()
+              }
               if (low < 0 & high < 0) {
-                return('<i class="fa fa-solid fa-arrow-down map-data-icon" style="font-size: 2rem; color: #F46036"></i>')
+                return('<i class="fa fa-solid fa-down map-data-icon" style="font-size: 2rem; color: #F46036"></i>')
               }
               if (low > 0 & high > 0) {
-                return('<i class="fa fa-solid fa-arrow-up map-data-icon" style="font-size: 2rem; color: #58A732"></i>')
+                return('<i class="fa fa-solid fa-up map-data-icon" style="font-size: 2rem; color: #58A732"></i>')
               }
               return('<i class="fa fa-solid fa-grip-lines map-data-icon" style="font-size: 2rem; color: #818181"></i>')
             },
@@ -196,7 +229,7 @@ mod_welcome_server <- function(id, conn) {
           ) %>%
             lapply(htmltools::HTML),
           labelOptions = leaflet::labelOptions(
-            noHide = TRUE,      # Show label all the time
+            noHide = TRUE, # Show label all the time
             direction = "center",
             textOnly = TRUE
           )
