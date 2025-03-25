@@ -1,8 +1,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Rubik&display=swap');
 
-
-
 * {
   font-family: 'Rubik', Helvetica, Sans-Serif;
 }
@@ -114,4 +112,31 @@ p {
 .welcome-figures {
   flex-grow: 1;
   min-width: 400px;
+}
+
+.row.welcome-value-row {
+  --bs-gutter-x: 12px !important;
+}
+
+.welcome-value-box {
+  height: 100%;
+}
+
+.value-box-title {
+  font-size: 0.875rem !important;
+  margin-bottom: 0.3rem !important;
+}
+
+.value-box-value {
+  font-family: 'Adelle';
+  font-weight: 700 !important;
+  font-size: 2.5rem !important;
+}
+
+.bslib-value-box .value-box-area {
+  padding: 0.5rem 1rem 1rem;
+}
+
+.bslib-value-box:not(.showcase-bottom) .value-box-grid {
+  grid-template-columns: 1fr 25% !important;
 }

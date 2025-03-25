@@ -59,6 +59,52 @@ abundance."
           ),
           shiny::div(
             class = "welcome-figures",
+            shiny::div(
+              class = "row welcome-value-row",
+              shiny::div(
+                class = "col-sm",
+                bslib::value_box(
+                  class = "welcome-value-box",
+                  title = "Kilometres travelled",
+                  value = format(123456, big.mark = ","),
+                  showcase = shiny::icon("fa fa-route fa-solid"),
+                  theme = bslib::value_box_theme(
+                    bg = "#3C91E6",
+                    fg = "#FFF"
+                  ),
+                  showcase_layout = "top right"
+                )
+              ),
+              shiny::div(
+                class = "col-sm",
+                bslib::value_box(
+                  class = "welcome-value-box",
+                  title = "Years sampled",
+                  value = "2021 - 2024",
+                  showcase = shiny::icon("fa fa-calendar-days fa-solid"),
+                  theme = bslib::value_box_theme(
+                    bg = "#58A732",
+                    fg = "#FFF"
+                  ),
+                  showcase_layout = "top right"
+                )
+              ),
+              shiny::div(
+                class = "col-sm",
+                bslib::value_box(
+                  class = "welcome-value-box",
+                  title = "Change in splat rate over 3 years",
+                  value = "- 55%",
+                  showcase = shiny::icon("fa fa-chart-line-down fa-solid"),
+                  theme = bslib::value_box_theme(
+                    bg = "#F46036",
+                    fg = "#FFF"
+                  ),
+                  showcase_layout = "top right"
+                )
+              )
+            ),
+            br(),
             bslib::card(
               min_height = 500,
               bslib::card_header(
