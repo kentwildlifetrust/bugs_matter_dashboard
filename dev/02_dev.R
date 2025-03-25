@@ -286,6 +286,22 @@ region_trends <- regions %>%
 
 usethis::use_data(region_trends, overwrite = TRUE)
 
+region_centres <- "SELECT nuts118nm AS region_name,
+                    st_centroid(st_transform(geometry, 4326)) AS geom
+                  FROM bugs_matter.regionboundaries" %>%
+  sf::st_read(conn, query = .) %>%
+  dplyr::left_join(
+    sf::st_drop_geometry(bugsMatterDashboard::region_trends),
+    by = "region_name"
+  )
+
+coords <- region_centres %>%
+  sf::st_coordinates()
+region_centres$lng <- coords[, 1]
+region_centres$lat <- coords[, 2]
+
+usethis::use_data(region_centres, overwrite = TRUE)
+
 
 ## Your data can be accessed anywhere in the package code using
 packageName::dataName

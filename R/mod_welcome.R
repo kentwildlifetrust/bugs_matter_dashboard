@@ -176,6 +176,31 @@ mod_welcome_server <- function(id, conn) {
           fillColor = ~ pal(estimate),
           popup = ~ paste0(estimate, ", ", low, " to ", high)
         ) %>%
+        leaflet::addLabelOnlyMarkers(
+          lat = bugsMatterDashboard::region_centres$lat,
+          lng = bugsMatterDashboard::region_centres$lng,
+          label = mapply(
+            function(low, high) {
+              if (is.na(low) | is.na(high)) return()
+              if (low < 0 & high < 0) {
+                return('<i class="fa fa-solid fa-arrow-down map-data-icon" style="font-size: 2rem; color: #F46036"></i>')
+              }
+              if (low > 0 & high > 0) {
+                return('<i class="fa fa-solid fa-arrow-up map-data-icon" style="font-size: 2rem; color: #58A732"></i>')
+              }
+              return('<i class="fa fa-solid fa-grip-lines map-data-icon" style="font-size: 2rem; color: #818181"></i>')
+            },
+            low = bugsMatterDashboard::region_centres$low,
+            high = bugsMatterDashboard::region_centres$high,
+            SIMPLIFY = FALSE
+          ) %>%
+            lapply(htmltools::HTML),
+          labelOptions = leaflet::labelOptions(
+            noHide = TRUE,      # Show label all the time
+            direction = "center",
+            textOnly = TRUE
+          )
+        ) %>%
         leaflet::addLegend(
           pal = pal,
           values = bugsMatterDashboard::region_trends$estimate,
