@@ -96,3 +96,22 @@ h1 {
     font-size: 1rem;
   }
 }
+
+.welcome-body {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.welcome-body-text {
+  max-width: 52.5rem;
+}
+
+p {
+  font-size: 0.875rem;
+}
+
+.welcome-figures {
+  flex-grow: 1;
+  min-width: 400px;
+}

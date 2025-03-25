@@ -7,9 +7,9 @@
 #' @noRd
 theme <- function() {
   bslib::bs_theme(
-    bg = "#C6E5E8",
+    bg = "#F1F6F4",
     fg = "#0F0F0F",
-    primary = "#2374FF",
+    primary = "#58A732",
     secondary = "#02606F",
     success = "#00A36A",
     warning = "#FFAB00",
@@ -24,7 +24,10 @@ theme <- function() {
     "card-bg" = "#FFFFFF",
     "table-bg" = "#FFFFFF",
     "dropdown-padding-x" = ".5rem",
-    "dropdown-bg" = "#FFFFFF"
+    "dropdown-bg" = "#FFFFFF",
+    "navbar-light-bg" = "#C6E5E8",
+    "card-border-width" = "4px",
+    "card-border-color" = "#58A732"
   ) |>
     bslib::bs_add_rules(
         "
