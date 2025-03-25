@@ -149,3 +149,14 @@ p {
 .nav-underline .nav-link:not(:empty).active, .nav-underline :where(ul.nav.navbar-nav > li)>a:not(:empty).active, .nav-underline .nav-tabs>li>a:not(:empty).active, .nav-underline .nav-pills>li>a:not(:empty).active {
   font-weight: 600;
 }
+
+.ref-link {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--bs-primary);
+  text-decoration: none;
+}
+
+.ref-link-nospace {
+  margin-right: -0.2rem;
+}

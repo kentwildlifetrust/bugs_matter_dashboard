@@ -52,9 +52,41 @@ insect abundance across local, regional and global scales. The sampling techniqu
 phenomenon’, a term given to the anecdotal observation that fewer insect splats appear on
 the windscreens of cars now compared to a decade or
 several decades ago. These observations, which have also
-been reported from empirical data (Møller, 2019), have been
+been reported from empirical data",
+bslib::tooltip(shiny::a("[1]", class = "ref-link ref-link-nospace"), "Møller, 2019",placement = "top"),
+", have been
 interpreted as an indicator of major global declines in insect
 abundance."
+            ),
+            shiny::p(
+              "A growing body of evidence",
+              bslib::tooltip(shiny::a("[2]", class = "ref-link"), "Fox et al., 2013; Hallmann et al.,
+2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas
+et al., 2019; van der Sluijs, 2020; Macadam et al., 2020;
+Outhwaite, McCann and Newbold, 2022", placement = "top"),
+"highlights population
+declines in insects and other invertebrates at UK and global
+scales. These declines, which are evident across all functional
+groups of insects (herbivores, detritivores, parasitoids,
+predators and pollinators), could have catastrophic impacts
+on the Earth’s natural systems and human survivability
+on our planet. Invertebrates are functionally of greater
+importance than large-bodied fauna, and in terms of biomass,
+bioabundance and species diversity, they make up the
+greatest proportion of life on Earth."
+            ),
+            shiny::p(
+              "Habitat loss and fragmentation has caused declines in
+biodiversity across the world. The conversion of natural
+habitats into agriculture, urban areas, and infrastructure
+development leads to the loss of suitable habitats for insects,
+making it difficult for them to feed and reproduce. The
+widespread use of chemical pesticides, including insecticides,
+herbicides, and fungicides, can have detrimental effects on
+insect populations. Climate change alters weather patterns,
+affecting insect life cycles, behaviour, and distribution. Some
+insects may struggle to adapt to rapidly changing conditions
+or may lose suitable habitats due to shifting climate zones."
             )
           ),
           shiny::div(
