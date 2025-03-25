@@ -194,68 +194,97 @@ FROM all_dates
 LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
 ORDER BY all_dates.date;
           " %>%
-          DBI::dbGetQuery(conn, .) %>%
-          dplyr::mutate(date = as.Date(date))
+  DBI::dbGetQuery(conn, .) %>%
+  dplyr::mutate(date = as.Date(date))
 
 usethis::use_data(cumulative_count, overwrite = TRUE)
 
 
 ## model
-regions <- "SELECT DISTINCT region FROM bugs_matter.regionboundaries WHERE region IS NOT NULL;" %>%
+regions <- "SELECT DISTINCT nuts118nm AS name FROM bugs_matter.regionboundaries WHERE nuts118nm IS NOT NULL;" %>%
   DBI::dbGetQuery(conn, .) %>%
-  dplyr::pull("region")
+  dplyr::pull("name")
 
-region <- "South East (England)"
+coefs <- list()
 
-mod_data <- "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset 
-FROM bugs_matter.journeys5 
-WHERE year >= '2021' AND year <= '2024' AND region = {region}" %>%
-  glue::glue_sql(.con = conn) %>%
-  DBI::dbGetQuery(conn, .)
+for (region in regions) {
+  tryCatch({
+    mod_data <- "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset
+                  FROM bugs_matter.journeys5
+                  WHERE year >= '2021' AND year <= '2024' AND region = {region}" %>%
+      glue::glue_sql(.con = conn) %>%
+      DBI::dbGetQuery(conn, .)
 
-#4404
+    mod_data <- mod_data %>% dplyr::rename(
+      Year = year,
+      Distance = distance,
+      Average.speed = avg_speed,
+      Vehicle.type = vehicle_cl,
+      Vehicle.height = vehicle_he,
+      Vehicle.width = vehicle_wi,
+      Day.of.year = dayofyear,
+      Longitude = X,
+      Latitude = Y
+    )
+    mod_data$Time.of.day <- as.numeric(difftime(mod_data$midpoint_time, trunc(mod_data$midpoint_time, units = "days"), units = "hours"))
+    mod_data$Year <- relevel(as.factor(mod_data$Year), ref = "2021")
+    mod <- MASS::glm.nb(
+          splatcount ~ Year +
+            Distance +
+            Average.speed +
+            Time.of.day +
+            Day.of.year +
+            # Vehicle.type +
+            Vehicle.height +
+            Vehicle.width +
+            Longitude +
+            Latitude +
+            offset(log_cm_miles_offset),
+          data = mod_data
+        )
 
-  mod_data <- mod_data %>% rename(
-    Year = year,
-    Distance = distance,
-    Average.speed = avg_speed,
-    Vehicle.type = vehicle_cl,
-    Vehicle.height = vehicle_he,
-    Vehicle.width = vehicle_wi, 
-    Day.of.year = dayofyear, 
-    Longitude = X,
-    Latitude = Y
-  )
-    mod_data$Time.of.day <- as.numeric(difftime(mod_data$midpoint_time, trunc(mod_data$midpoint_time, units="days"), units="hours"))
-    mod_data$Year <- relevel(as.factor(mod_data$Year), ref="2021")
-    mod <- tryCatch({
-      MASS::glm.nb(
-        splatcount ~ Year + 
-        Distance + 
-        Average.speed + 
-        Time.of.day +
-        Day.of.year +
-        #Vehicle.type +
-        Vehicle.height +
-        Vehicle.width +
-        Longitude +
-        Latitude +
-        offset(log_cm_miles_offset), data = mod_data)
-    },
-    error = function(e) {
-      warning(paste("Model failed for region:", region, "Error:", e$message))
-      return(NULL)
-    })
-    
     # print(summary(mod))
     # VIFtable <- check_collinearity(mod, component = "count")
     # print(VIFtable)
     est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
     comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
     comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
-    comparison_year_coefs1 <- ifelse(comparison_year_coefs1 > 0, paste("+", comparison_year_coefs1), paste("-", abs(comparison_year_coefs1)))
-    
 
+    coefs <- c(
+      coefs,
+      list(
+        data.frame(
+          region_name = region,
+          baseline_year = 2021,
+          comparison_year = 2024,
+          estimate = unname(comparison_year_coefs1["Estimate"]),
+          low = unname(comparison_year_coefs1["2.5 %"]),
+          high = unname(comparison_year_coefs1["97.5 %"])
+        )
+      )
+    )
+  }, error = function(e) {
+    warning(e$message)
+  })
+}
+
+trends <- coefs %>%
+  dplyr::bind_rows() %>%
+  dplyr::distinct()
+
+# DBI::dbAppendTable(conn, DBI::Id("bugs_matter", "trends_app"), trends)
+
+regions <- "SELECT r.nuts118nm AS region_name,
+    public.st_astext(public.st_transform(public.st_simplify(geometry, 200), 4326)) AS geom
+  FROM bugs_matter.regionboundaries r;" %>%
+  DBI::dbGetQuery(conn, .) %>%
+  dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
+  sf::st_as_sf(crs = 4326)
+
+region_trends <- regions %>%
+  dplyr::left_join(trends, by = "region_name")
+
+usethis::use_data(region_trends, overwrite = TRUE)
 
 
 ## Your data can be accessed anywhere in the package code using

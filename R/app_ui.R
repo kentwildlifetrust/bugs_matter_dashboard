@@ -41,6 +41,7 @@ golem_add_external_resources <- function() {
 
   shiny::tags$head(
     golem::favicon(),
+    shiny::HTML('<script crossorigin="anonymous" src="https://kit.fontawesome.com/82bb623444.js"></script>'),
     shinyjs::useShinyjs(),
     golem::bundle_resources(
       path = app_sys("app/www"),

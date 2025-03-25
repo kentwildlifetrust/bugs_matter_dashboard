@@ -6,3 +6,93 @@
 * {
   font-family: 'Rubik', Helvetica, Sans-Serif;
 }
+
+.tab-pane.active.html-fill-item.html-fill-container.bslib-gap-spacing {
+  padding: 0 !important;
+}
+
+.welcome-page {
+  position: relative;
+}
+
+.welcome-background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  width: 100%;
+  height: 300px;
+  background-image: url('Blue Shieldbug (Zicronia caerulea).JPG');
+  background-size: cover;
+  background-position: center;
+
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 50%,
+    rgba(0,0,0,0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0,0,0,1) 0%,
+    rgba(0,0,0,1) 50%,
+    rgba(0,0,0,0) 100%
+  );
+
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  padding-left: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+}
+
+.welcome-page-content {
+  z-index: 1;
+  position: relative;
+  margin: 200px 80px 0 80px;
+}
+
+.welcome-header {
+  max-width: 60rem;
+}
+
+.welcome-message {
+  text-shadow: 0px 0px 2px rgba(41, 49, 51, 0.14), 0px 2px 4px rgba(41, 49, 51, 0.16);
+  font-size: 1.75rem;
+  font-family: 'Adelle';
+  font-weight: 700;
+  color: black;
+}
+
+h1 {
+  font-family: 'Adelle';
+  font-weight: 700;
+  font-size: 3rem;
+  text-shadow: 0px 0px 2px rgba(41, 49, 51, 0.14), 0px 2px 4px rgba(41, 49, 51, 0.16);
+  color: black;
+}
+
+.welcome-lead {
+  font-family: 'Adelle';
+  font-size: 1.14rem;
+  font-weight: 600;
+}
+
+@media only screen and (max-width: 800px) {
+  .welcome-page-content {
+    margin: 200px 20px 0 20px;
+  }
+  h1 {
+    font-size: 1.8rem;
+  }
+  .welcome-message {
+    font-size: 1.14rem;
+  }
+  .welcome-lead {
+    font-size: 1rem;
+  }
+}
