@@ -1,0 +1,25 @@
+{
+  "name": "journey-tiles",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "npm test",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kentwildlifetrust/bugs_matter_dashboard.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kentwildlifetrust/bugs_matter_dashboard/issues"
+  },
+  "homepage": "https://github.com/kentwildlifetrust/bugs_matter_dashboard#readme",
+  "description": "",
+  "dependencies": {
+    "@mapbox/mbtiles": "^0.12.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  }
+}

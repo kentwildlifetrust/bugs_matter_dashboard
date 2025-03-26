@@ -72,23 +72,44 @@ mod_journeys_map_server <- function(id, conn) {
     ns <- session$ns
 
     output$map <- leaflet::renderLeaflet({
-      lines <- "SELECT
-            j.id,
-            public.st_astext(public.st_transform(public.ST_Simplify(j.geometry, 100), 4326)) AS geom
-        FROM bugs_matter.journeys5 j;" %>%
-        DBI::dbGetQuery(conn, .) %>%
-      dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
-      sf::st_as_sf(crs = 4326)
+      # lines <- "SELECT
+      #       j.id,
+      #       public.st_astext(public.st_transform(public.ST_Simplify(j.geometry, 100), 4326)) AS geom
+      #   FROM bugs_matter.journeys5 j;" %>%
+      #   DBI::dbGetQuery(conn, .) %>%
+      # dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
+      # sf::st_as_sf(crs = 4326)
+      options(mapbox.accessToken = NA)
 
-      leaflet::leaflet() %>%
-        leaflet::addProviderTiles("CartoDB.Positron") %>%
-        leaflet::setView(lng = -3.244293, lat = 54.350497, zoom = 6) %>%
-          leaflet::addPolylines(
-            data = lines,
-            color = "#147331",
-            weight = 3,
-            opacity = 0.2
-          )
+    leaflet::leaflet(options = leaflet::leafletOptions(maxZoom = 12)) %>%
+      leaflet::addProviderTiles("CartoDB.Positron") %>%
+      leaflet::setView(lng = 1, lat = 51, zoom = 6) %>%
+      htmlwidgets::onRender("
+        function(el, x) {
+          // Ensure Leaflet.VectorGrid is loaded (you might need to include it in your HTML header)
+          // For example, include the following script in your UI:
+
+          // Create the vector grid layer using the URL template from your Express tile server
+          var vectorGrid = L.vectorGrid.protobuf('http://localhost:3000/tiles/{z}/{x}/{y}.pbf', {
+              // Specify the layer name that matches what was used during tile generation (lines in our example)
+              vectorTileLayerStyles: {
+                  lines: function(properties, zoom) {
+                      return {
+                          weight: 2,
+                          color: '#1D763B',
+                          opacity: 0.2
+                      };
+                  }
+              },
+              maxZoom: 12, // Use your max zoom level
+              rendererFactory: L.canvas.tile // Use canvas renderer for better performance with many features
+          });
+
+          // Add the vector grid layer to the map
+          vectorGrid.addTo(this);
+        }
+      ")
+
     })
 
 
