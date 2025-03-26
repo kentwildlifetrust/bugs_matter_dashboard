@@ -11,6 +11,22 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_app AS (
     WHERE j.end > '2021-05-20'
 ) WITH DATA;
 
+
+DROP MATERIALIZED VIEW bugs_matter.journeys_server;
+CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
+    SELECT
+        j.id,
+        j.start,
+        j.end,
+        r.objectid AS region_id,
+        public.st_transform(public.ST_Simplify(j.geometry, 100), 4326) AS geom
+    FROM bugs_matter.journeys5 j
+    JOIN admin_boundaries.uk_boundary b ON public.st_intersects(j.geometry, b.geom)
+    LEFT JOIN bugs_matter.regionboundaries r ON j.region = r.nuts118nm
+) WITH DATA;
+
+GRANT SELECT ON bugs_matter.journeys_server TO "BugsMatterReadOnly";
+
 -- DROP TABLE bugs_matter.trends_app;
 -- CREATE TABLE bugs_matter.trends_app (
 --   region_name VARCHAR(255),

@@ -20,6 +20,12 @@ mod_journeys_map_ui <- function(id) {
         "Year",
         choices = c("All", bugsMatterDashboard::years),
         selected = "All"
+      ),
+      shiny::selectInput(
+        ns("region_id"),
+        "Year",
+        choices = c(bugsMatterDashboard::region_choices),
+        selected = "All"
       )
     ),
     shiny::div(
@@ -81,17 +87,14 @@ mod_journeys_map_server <- function(id, conn) {
       # sf::st_as_sf(crs = 4326)
       options(mapbox.accessToken = NA)
 
-    leaflet::leaflet(options = leaflet::leafletOptions(maxZoom = 12)) %>%
-      leaflet::addProviderTiles("CartoDB.Positron") %>%
-      leaflet::setView(lng = 1, lat = 51, zoom = 6) %>%
-      htmlwidgets::onRender("
+      leaflet::leaflet(options = leaflet::leafletOptions(maxZoom = 12)) %>%
+        leaflet::addProviderTiles("CartoDB.Positron") %>%
+        leaflet::setView(lng = 1, lat = 51, zoom = 6) %>%
+        htmlwidgets::onRender(sprintf("
         function(el, x) {
-          // Ensure Leaflet.VectorGrid is loaded (you might need to include it in your HTML header)
-          // For example, include the following script in your UI:
-
-          // Create the vector grid layer using the URL template from your Express tile server
-          var vectorGrid = L.vectorGrid.protobuf('http://localhost:3000/tiles/{z}/{x}/{y}.pbf', {
-              // Specify the layer name that matches what was used during tile generation (lines in our example)
+          // Leaflet.VectorGrid is loaded in header
+          var vectorGrid = L.vectorGrid.protobuf(
+            'http://localhost:3000/regions/%s/tiles/{z}/{x}/{y}.pbf', {
               vectorTileLayerStyles: {
                   lines: function(properties, zoom) {
                       return {
@@ -102,14 +105,14 @@ mod_journeys_map_server <- function(id, conn) {
                   }
               },
               maxZoom: 12, // Use your max zoom level
-              rendererFactory: L.canvas.tile // Use canvas renderer for better performance with many features
+              // Use canvas renderer for better performance with many features
+              rendererFactory: L.canvas.tile
           });
 
           // Add the vector grid layer to the map
           vectorGrid.addTo(this);
         }
-      ")
-
+      ", input$region_id))
     })
 
 

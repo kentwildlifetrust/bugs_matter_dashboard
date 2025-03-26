@@ -20,6 +20,8 @@
   "dependencies": {
     "@mapbox/mbtiles": "^0.12.1",
     "cors": "^2.8.5",
-    "express": "^4.21.2"
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.14.1"
   }
 }

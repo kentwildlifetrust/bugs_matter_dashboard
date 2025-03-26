@@ -1,46 +1,123 @@
 const express = require('express');
-const MBTiles = require('@mapbox/mbtiles');
+//const MBTiles = require('@mapbox/mbtiles');
 const cors = require('cors');
+const { Pool } = require('pg');
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config({ path: '.env' });
+}
+
 
 const app = express();
-const PORT = 3000;
+const port = process.env.PORT || 3000;
+
+pool = new Pool({
+  // Add your database configuration here
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_DATABASE,
+  password: process.env.DB_PASSWORD,
+  port: process.env.DB_PORT,
+  ssl: {
+      rejectUnauthorized: false,
+  },
+});
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || 'http://127.0.0.1:3838',
-    methods: ['GET']       // Specify allowed HTTP methods
+  origin: process.env.FRONTEND_URL || 'http://127.0.0.1:3838',
+  methods: ['GET']       // Specify allowed HTTP methods
 }));
 
-// Open your MBTiles file
-new MBTiles('./.data/journeys-2021-to-2024.mbtiles', (err, mbtiles) => {
-  if (err) {
-    console.error('Error opening MBTiles:', err);
-    process.exit(1);
+
+// All regions
+app.get('/tiles/:z/:x/:y.pbf', async (req, res) => {
+  const { z, x, y } = req.params;
+
+  // Build the SQL query with parameter substitution (using template literals or parameterized queries)
+  const sql = `
+    WITH
+      -- Compute tile envelope once and transform it to EPSG:4326
+      bounds AS (
+        SELECT public.ST_Transform(public.ST_TileEnvelope(${z}, ${x}, ${y}), 4326) AS geom
+      ),
+      mvt_data AS (
+        SELECT
+          public.ST_AsMVTGeom(
+            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
+            public.ST_TileEnvelope(${z}, ${x}, ${y}),      -- use the original tile envelope in 3857
+            4096, 64, true
+          ) AS geom,
+          r.id
+        FROM bugs_matter.journeys_server r, bounds
+        -- Now use the pre-transformed bounds (in 4326) for intersection test
+        WHERE public.ST_Intersects(r.geom, bounds.geom)
+      )
+    SELECT public.ST_AsMVT(mvt_data.*, 'lines', 4096, 'geom') AS tile
+    FROM mvt_data;
+  `;
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(sql);
+    client.release();
+
+    if (result.rows.length > 0 && result.rows[0].tile) {
+      res.setHeader('Content-Type', 'application/x-protobuf');
+      res.send(result.rows[0].tile);
+    } else {
+      res.status(204).send(); // No content if nothing matches
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Tile generation error");
   }
-
-  // Define a route to serve the vector tiles
-  app.get('/tiles/:z/:x/:y.pbf', (req, res) => {
-    const z = parseInt(req.params.z, 10);
-    const x = parseInt(req.params.x, 10);
-    let y = parseInt(req.params.y, 10);
-
-    // If using the Google/Bing (XYZ) scheme, flip the y coordinate:
-    // y = (1 << z) - 1 - y;
-
-    mbtiles.getTile(z, x, y, (err, tile, headers) => {
-      if (err) {
-        res.status(404).send('Tile not found');
-      } else {
-        res.set({
-          'Content-Type': 'application/x-protobuf',
-          'Content-Encoding': 'gzip',
-          ...headers,
-        });
-        res.send(tile);
-      }
-    });
-  });
-
-  app.listen(PORT, () => {
-    console.log(`Tile server is running on port ${PORT}`);
-  });
 });
+
+// Region
+app.get('/regions/:regionId/tiles/:z/:x/:y.pbf', async (req, res) => {
+  const { regionId, z, x, y } = req.params;
+
+  // ChatGPT made this optimised query to generate .pbf tiles dynamically
+  const query = `
+    WITH
+      -- Compute tile envelope once and transform it to EPSG:4326
+      bounds AS (
+        SELECT public.ST_Transform(public.ST_TileEnvelope($1, $2, $3), 4326) AS geom
+      ),
+      mvt_data AS (
+        SELECT
+          public.ST_AsMVTGeom(
+            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
+            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            4096, 64, true
+          ) AS geom,
+          r.id
+        FROM bugs_matter.journeys_server r, bounds
+        -- Now use the pre-transformed bounds (in 4326) for intersection test
+        WHERE public.ST_Intersects(r.geom, bounds.geom) AND
+        r.region_id = $4
+      )
+    SELECT public.ST_AsMVT(mvt_data.*, 'lines', 4096, 'geom') AS tile
+    FROM mvt_data;
+  `;
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(query, [z, x, y, regionId]);
+    client.release();
+
+    if (result.rows.length > 0 && result.rows[0].tile) {
+      res.setHeader('Content-Type', 'application/x-protobuf');
+      res.send(result.rows[0].tile);
+    } else {
+      res.status(204).send(); // No content if nothing matches
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Tile generation error");
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Live tile server listening at http://localhost:${port}`);
+});
+

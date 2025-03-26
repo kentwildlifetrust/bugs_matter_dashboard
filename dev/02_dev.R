@@ -303,6 +303,14 @@ region_centres$lat <- coords[, 2]
 usethis::use_data(region_centres, overwrite = TRUE)
 
 
+region_choices <- "SELECT objectid AS id, nuts118nm AS name FROM bugs_matter.regionboundaries WHERE nuts118nm IS NOT NULL GROUP BY objectid, nuts118nm ORDER BY nuts118nm;" %>%
+  DBI::dbGetQuery(conn, .)
+
+region_choices <- as.list(region_choices$id) %>%
+  setNames(region_choices$name)
+
+usethis::use_data(region_choices, overwrite = TRUE)
+
 ## Your data can be accessed anywhere in the package code using
 packageName::dataName
 ## This will be very quick to load
