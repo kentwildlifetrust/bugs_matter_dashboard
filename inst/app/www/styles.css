@@ -78,6 +78,7 @@ h3 {
   z-index: 1;
   position: relative;
   margin: 200px auto 0 auto;
+  padding: 0px 20px;
 }
 
 .welcome-message {
@@ -103,9 +104,6 @@ h1 {
 }
 
 @media only screen and (max-width: 800px) {
-  .welcome-page-content {
-    margin: 200px 20px 0 20px;
-  }
   h1 {
     font-size: 1.8rem;
   }
