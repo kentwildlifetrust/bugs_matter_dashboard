@@ -8,6 +8,12 @@
   padding: 0 !important;
 }
 
+h2 {
+  font-family: 'Adelle';
+  font-size: 1.7rem;
+  font-weight: 600;
+}
+
 h3 {
   font-size: 1.5rem;
   font-family: 'Adelle';
@@ -72,7 +78,6 @@ h3 {
   z-index: 1;
   position: relative;
   margin: 200px auto 0 auto;
-  padding: 0px 40px;
 }
 
 .welcome-message {
@@ -114,11 +119,6 @@ h1 {
 
 p {
   font-size: 0.875rem;
-}
-
-.welcome-figures {
-  flex-grow: 1;
-  min-width: 370px;
 }
 
 .row.welcome-value-row {
@@ -182,4 +182,23 @@ hr.popup-hr {
   border-top: 2px solid #58A732;
   margin: 10px -19px 12px;
   opacity: 1;
+}
+
+.data-header {
+  margin: 40px 60px 0px;
+}
+
+@media only screen and (max-width: 800px) {
+  .data-header {
+    margin: 30px 12px 10px;
+  }
+}
+
+.data-lead {
+  font-weight: 300;
+  max-width: 60rem;
+}
+
+.data-header-hr {
+  margin: 1rem 0;
 }
