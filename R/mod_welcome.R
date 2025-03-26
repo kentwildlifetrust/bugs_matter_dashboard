@@ -36,8 +36,72 @@ mod_welcome_ui <- function(id) {
             You can also find information on the numbers of users in different parts of the world and how many journeys have been recorded by our top recorders!"
           )
         ),
+        shiny::br(),
         shiny::div(
           class = "welcome-body",
+          shiny::h3("At a Glance"),
+          shiny::div(
+            class = "welcome-figures",
+            shiny::div(
+              class = "row welcome-value-row",
+              shiny::div(
+                class = "col-sm",
+                bslib::value_box(
+                  class = "welcome-value-box",
+                  title = "Distance sampled",
+                  value = shiny::textOutput(ns("distance")),
+                  showcase = shiny::icon("fa fa-route fa-solid"),
+                  theme = bslib::value_box_theme(
+                    bg = "#3C91E6",
+                    fg = "#FFF"
+                  ),
+                  showcase_layout = "top right"
+                )
+              ),
+              shiny::div(
+                class = "col-sm",
+                bslib::value_box(
+                  class = "welcome-value-box",
+                  title = "Splats counted",
+                  value = shiny::textOutput(ns("splats")),
+                  showcase = shiny::icon("fa fa-mosquito fa-solid"),
+                  theme = bslib::value_box_theme(
+                    bg = "#58A732",
+                    fg = "#FFF"
+                  ),
+                  showcase_layout = "top right"
+                )
+              ),
+              shiny::div(
+                class = "col-sm",
+                bslib::value_box(
+                  class = "welcome-value-box",
+                  title = "Change in splat rate 2021 - 2024",
+                  value = shiny::textOutput(ns("trend")),
+                  showcase = shiny::icon("fa fa-chart-line-down fa-solid"),
+                  theme = bslib::value_box_theme(
+                    bg = "#F46036",
+                    fg = "#FFF"
+                  ),
+                  showcase_layout = "top right"
+                )
+              )
+            ),
+            br(),
+            bslib::card(
+              min_height = 600,
+              bslib::card_header(
+                "Modelled change in splat rate, 2021 to 2024"
+              ),
+              bslib::card_body(
+                class = "p-0",
+                leaflet::leafletOutput(ns("map"), height = "100%")
+              ),
+              full_screen = TRUE
+            ),
+          ),
+          shiny::br(),
+          shiny::h3("About the Project"),
           shiny::p(
             "The Bugs Matter citizen science survey uses an innovative
 method for large-scale indiscriminate monitoring of flying
@@ -86,66 +150,6 @@ affecting insect life cycles, behaviour, and distribution. Some
 insects may struggle to adapt to rapidly changing conditions
 or may lose suitable habitats due to shifting climate zones."
           )
-        ),
-        shiny::div(
-          class = "welcome-figures",
-          shiny::div(
-            class = "row welcome-value-row",
-            shiny::div(
-              class = "col-sm",
-              bslib::value_box(
-                class = "welcome-value-box",
-                title = "Sampling distance",
-                value = paste(format(123456, big.mark = ","), "km"),
-                showcase = shiny::icon("fa fa-route fa-solid"),
-                theme = bslib::value_box_theme(
-                  bg = "#3C91E6",
-                  fg = "#FFF"
-                ),
-                showcase_layout = "top right"
-              )
-            ),
-            shiny::div(
-              class = "col-sm",
-              bslib::value_box(
-                class = "welcome-value-box",
-                title = "Survey duration",
-                value = "4 years",
-                showcase = shiny::icon("fa fa-calendar-days fa-solid"),
-                theme = bslib::value_box_theme(
-                  bg = "#58A732",
-                  fg = "#FFF"
-                ),
-                showcase_layout = "top right"
-              )
-            ),
-            shiny::div(
-              class = "col-sm",
-              bslib::value_box(
-                class = "welcome-value-box",
-                title = "Change in splat rate 2021 - 2024",
-                value = "- 55%",
-                showcase = shiny::icon("fa fa-chart-line-down fa-solid"),
-                theme = bslib::value_box_theme(
-                  bg = "#F46036",
-                  fg = "#FFF"
-                ),
-                showcase_layout = "top right"
-              )
-            )
-          ),
-          br(),
-          bslib::card(
-            min_height = 600,
-            bslib::card_header(
-              "Change in Count Rates, 2021 to 2024"
-            ),
-            bslib::card_body(
-              class = "p-0",
-              leaflet::leafletOutput(ns("map"), height = "100%")
-            )
-          ),
-          shiny::br(),shiny::br(),shiny::br(),shiny::br(),
         )
       )
     )
@@ -161,6 +165,25 @@ mod_welcome_server <- function(id, conn) {
 
     pal <- leaflet::colorNumeric("Spectral", -100:100)
 
+    output$distance <- shiny::renderText({
+      "SELECT ROUND(SUM(st_length(geometry) / 1000)::NUMERIC, 0) AS length FROM bugs_matter.journeys5;" %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("length") %>%
+        format(big.mark = ",") %>%
+        paste("km")
+    })
+
+    output$splats <- shiny::renderText({
+      "SELECT SUM(count) AS n_splats FROM bugs_matter.journeys5;" %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("n_splats") %>%
+        format(big.mark = ",")
+    })
+
+    output$trend <- shiny::renderText({
+      "-55%"
+    })
+
     output$map <- leaflet::renderLeaflet({
       leaflet::leaflet() %>%
         leaflet::addProviderTiles("CartoDB.Positron") %>%
@@ -172,41 +195,40 @@ mod_welcome_server <- function(id, conn) {
           opacity = 1,
           fillOpacity = 0.5,
           fillColor = ~ pal(estimate),
-          popup = ~mapply(
-            function(
-              region_name,
-              estimate,
-              low,
-              high
-            ){
+          popup = ~ mapply(
+            function(region_name,
+                     estimate,
+                     low,
+                     high) {
               if (!is.na(estimate)) {
                 return(sprintf(
                   '<div class="popup-title">%s</div>
                   <hr class="popup-hr" />
                   <div class="map-stat-large">%s%%</div>
-                  <div class="map-stat-small">%s%% to %s%%</div>',
-                region_name,
-                estimate,
-                low,
-                high
-              ))
-            } else {
-              return(sprintf(
-                '<div class="popup-title">%s</div>
+                  <div class="map-stat-small">Change in splat rate between 2021 and 2024.<div><br>
+                  <div class="map-stat-small">95%% confidence interval: %s%% to %s%%</div>',
+                  region_name,
+                  estimate,
+                  low,
+                  high
+                ))
+              } else {
+                return(sprintf(
+                  '<div class="popup-title">%s</div>
                 <hr class="popup-hr" />
                 <div class="map-stat-small">Insufficient data</div>',
-                region_name
-              ))
-            }
-          },
-          region_name,
-          estimate,
-          low,
-          high,
-          SIMPLIFY = FALSE
+                  region_name
+                ))
+              }
+            },
+            region_name,
+            estimate,
+            low,
+            high,
+            SIMPLIFY = FALSE
+          ) %>%
+            unname()
         ) %>%
-          unname()
-      ) %>%
         leaflet::addLabelOnlyMarkers(
           lat = bugsMatterDashboard::region_centres$lat,
           lng = bugsMatterDashboard::region_centres$lng,
@@ -216,12 +238,12 @@ mod_welcome_server <- function(id, conn) {
                 return()
               }
               if (low < 0 & high < 0) {
-                return('<i class="fa fa-solid fa-down map-data-icon" style="font-size: 2rem; color: #F46036"></i>')
+                return('<i class="fa fa-solid fa-down map-data-icon" style="font-size: 2rem; color: #000"></i>')
               }
               if (low > 0 & high > 0) {
-                return('<i class="fa fa-solid fa-up map-data-icon" style="font-size: 2rem; color: #58A732"></i>')
+                return('<i class="fa fa-solid fa-up map-data-icon" style="font-size: 2rem; color: #000"></i>')
               }
-              return('<i class="fa fa-solid fa-grip-lines map-data-icon" style="font-size: 2rem; color: #818181"></i>')
+              return('<i class="fa fa-solid fa-minus map-data-icon" style="font-size: 2rem; color: #000"></i>')
             },
             low = bugsMatterDashboard::region_centres$low,
             high = bugsMatterDashboard::region_centres$high,

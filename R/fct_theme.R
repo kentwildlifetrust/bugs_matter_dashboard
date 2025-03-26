@@ -31,15 +31,5 @@ theme <- function() {
     "navbar-light-active-color" = "#142D18",
     "navbar-dark-active-color" = "#142D18",
     "nav-link-active-font-weight" = 600
-  ) |>
-    bslib::bs_add_rules(
-        "
-            .navbar-brand {
-            font-family: 'Adelle', sans-serif !important;
-            font-size: 1.4rem !important;
-            font-weight: bold !important;
-            color: #0F0F0F !important;
-            }
-        "
-    )
+  )
 }

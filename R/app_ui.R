@@ -10,7 +10,11 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     bslib::page_navbar(
-      title = "Bugs Matter Dashboard",
+      title = shiny::tagList(
+        tags$img(src = "www/bm_bug_icon1.png", height = "36px"),
+        "Bugs",
+        shiny::span("Matter")
+      ),
       bslib::nav_panel(
         title = "Welcome",
         mod_welcome_ui("welcome_1")
