@@ -15,12 +15,12 @@ mod_journeys_map_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::page_sidebar(
     sidebar = bslib::sidebar(
-      shinyjs::disabled(shiny::selectInput(
+      shiny::selectInput(
         ns("year"),
         "Year",
-        choices = bugsMatterDashboard::years,
-        selected = "2024"
-      ))
+        choices = c("All", bugsMatterDashboard::years),
+        selected = "All"
+      )
     ),
     shiny::div(
       class = "data-header",
@@ -30,12 +30,15 @@ mod_journeys_map_ui <- function(id) {
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
       ),
     ),
-    shiny::hr(class = "data-header-hr"),
+    # shiny::hr(class = "data-header-hr"),
     bslib::layout_column_wrap(
       bslib::card(
         bslib::card_header(
           "Map"
         ),
+        bslib::card_body(
+          leaflet::leafletOutput(ns("map"))
+        )
       ),
       shiny::div(
         bslib::card(
@@ -67,6 +70,27 @@ mod_journeys_map_ui <- function(id) {
 mod_journeys_map_server <- function(id, conn) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    output$map <- leaflet::renderLeaflet({
+      lines <- "SELECT
+            j.id,
+            public.st_astext(public.st_transform(public.ST_Simplify(j.geometry, 100), 4326)) AS geom
+        FROM bugs_matter.journeys5 j;" %>%
+        DBI::dbGetQuery(conn, .) %>%
+      dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
+      sf::st_as_sf(crs = 4326)
+
+      leaflet::leaflet() %>%
+        leaflet::addProviderTiles("CartoDB.Positron") %>%
+        leaflet::setView(lng = -3.244293, lat = 54.350497, zoom = 6) %>%
+          leaflet::addPolylines(
+            data = lines,
+            color = "#147331",
+            weight = 3,
+            opacity = 0.2
+          )
+    })
+
 
     # output$map <- leaflet::renderLeaflet({
     #   map <- leaflet::leaflet() %>%
