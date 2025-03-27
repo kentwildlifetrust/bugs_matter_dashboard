@@ -18,8 +18,9 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
         j.id,
         j.start,
         j.end,
-        EXTRACT(year FROM j.end) AS year,
-        r.objectid AS region_id,
+        j.distance,
+        EXTRACT(year FROM j.end)::integer AS year,
+        r.objectid::integer AS region_id,
         public.st_transform(public.ST_Simplify(j.geometry, 100), 4326) AS geom
     FROM bugs_matter.journeys5 j
     JOIN admin_boundaries.uk_boundary b ON public.st_intersects(j.geometry, b.geom)
