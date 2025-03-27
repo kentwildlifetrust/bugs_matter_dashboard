@@ -95,7 +95,7 @@ years <- "SELECT DISTINCT EXTRACT(YEAR FROM j.end) AS year
           FROM bugs_matter.journeys_app j;" %>%
   DBI::dbGetQuery(conn, .) %>%
   dplyr::pull("year") %>%
-  sort()
+  sort(decreasing = TRUE)
 years <- years
 usethis::use_data(years, overwrite = TRUE)
 
