@@ -36,7 +36,6 @@ mod_journeys_map_ui <- function(id) {
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
       ),
     ),
-    shiny::br(),
     # shiny::hr(class = "data-header-hr"),
     bslib::layout_column_wrap(
       bslib::card(
@@ -175,6 +174,20 @@ mod_journeys_map_server <- function(id, conn) {
     #---------------------cumulative frequency plot-----------------------#
 
     output$cumulative_journeys_plot <- plotly::renderPlotly({
+      min_date <- if (input$year == "2021 to 2024") {
+        "2021-05-01"
+      } else if (input$year == "2024") {
+        sprintf("%s-04-01", input$year)
+      } else {
+        sprintf("%s-05-01", input$year)
+      }
+      max_date <- if (input$year == "2021 to 2024") {
+        "2024-11-01"
+      } else if (input$year == "2024") {
+        sprintf("%s-11-01", input$year)
+      } else {
+        sprintf("%s-10-01", input$year)
+      }
       counts <- "
         WITH daily_counts AS (
         SELECT
@@ -185,8 +198,8 @@ mod_journeys_map_server <- function(id, conn) {
         GROUP BY j.end::DATE
       ), date_bounds AS (
         SELECT
-          '2021-05-01'::DATE AS min_date,
-          '2024-11-01'::DATE AS max_date
+          {min_date}::DATE AS min_date,
+          {max_date}::DATE AS max_date
       ),  -- No need to select FROM the table here
       all_dates AS (
         SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
@@ -203,29 +216,22 @@ mod_journeys_map_server <- function(id, conn) {
       LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
       ORDER BY all_dates.date;" %>%
         glue::glue_data_sql(
-          list(region_ids = if (input$area == "uk") {
+          list(
+            region_ids = if (input$area == "uk") {
             c(11, 10, 12, 4, 6, 7, 1, 2, 8, 9, 5, 3)
           } else if (input$area == "england") {
             c(4, 6, 1, 2, 8, 9, 5, 3, 7)
           } else {
             as.numeric(input$area)
-          }),
+          },
+          min_date = min_date,
+          max_date = max_date
+          ),
           .,
           .con = conn
         ) %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::mutate(date = as.Date(date))
-
-      x_range <- if (input$year == "2021 to 2024") {
-        as.Date(c("2021-05-01", "2024-11-01"))
-      } else {
-        as.Date(
-          c(
-            sprintf("%s-05-01", input$year),
-            sprintf("%s-11-01", input$year)
-          )
-        )
-      }
 
       plotly::plot_ly(
         type = "scatter",
@@ -241,8 +247,6 @@ mod_journeys_map_server <- function(id, conn) {
           )
         ) %>%
         plotly::layout(
-          yaxis = list(range = c(0, max(counts$cumulative_count) * 1.05 )),
-          staticplot = TRUE,
           dragmode = FALSE
         ) %>%
         plotly::config(
