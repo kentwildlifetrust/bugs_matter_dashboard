@@ -166,11 +166,12 @@ mod_welcome_server <- function(id, conn) {
     pal <- leaflet::colorNumeric("Spectral", -100:100)
 
     output$distance <- shiny::renderText({
-      "SELECT ROUND(SUM(st_length(geometry) / 1000)::NUMERIC, 0) AS length FROM bugs_matter.journeys5;" %>%
+      # "SELECT ROUND(SUM(st_length(geometry) / 1000)::NUMERIC, 0) AS length FROM bugs_matter.journeys5;" %>%
+        "SELECT ROUND(SUM(DISTANCE)::NUMERIC, 0) AS length FROM bugs_matter.journeys5;" %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("length") %>%
         format(big.mark = ",") %>%
-        paste("km")
+        paste("miles")
     })
 
     output$splats <- shiny::renderText({

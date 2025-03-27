@@ -14,6 +14,7 @@ library(magrittr)
 mod_journeys_map_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::page_sidebar(
+    fillable = TRUE,
     sidebar = bslib::sidebar(
       shiny::selectInput(
         ns("year"),
@@ -29,46 +30,71 @@ mod_journeys_map_ui <- function(id) {
       )
     ),
     shiny::div(
-      class = "data-header",
-      shiny::h2("Data Collection"),
+      style = "height: calc(100svh - 70px); display: flex; flex-direction: column;",
+
       shiny::div(
-        class = "data-lead",
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
-      ),
-    ),
-    # shiny::hr(class = "data-header-hr"),
-    bslib::layout_column_wrap(
-      bslib::card(
-        bslib::card_header(
-          "Routes"
+        class = "data-header",
+        shiny::h2("Data Collection"),
+        shiny::div(
+          class = "data-lead",
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
         ),
-        bslib::card_body(
-          class = "p-0",
-          leaflet::leafletOutput(ns("map"))
-        )
       ),
+      # shiny::hr(class = "data-header-hr"),
       shiny::div(
-        bslib::card(
-          bslib::card_header(
-            "Cumulative number of journeys"
-          ),
-          bslib::card_body(
-            class = "p-0",
-            plotly::plotlyOutput(ns("cumulative_journeys_plot"))
+        style = "display: flex; gap: var(--_padding); height: 100%;",
+        shiny::div(
+          style = "width: 66.67%; height: 100%; padding-bottom: var(--_padding);",
+          bslib::card(
+            height = "100%",
+            full_screen = TRUE,
+            bslib::card_header(
+              "Routes"
+            ),
+            bslib::card_body(
+              class = "p-0",
+              leaflet::leafletOutput(ns("map"))
+            )
           )
-          # shiny::actionButton(
-          #   ns("open_animation"),
-          #   "Animate"
-          # )
         ),
-        bslib::navset_card_pill(
-          title = "Journey characteristics",
-          bslib::nav_panel(
-            "Length"
+        shiny::div(
+          style = "width: 33.33%; height: 100%; display: flex; flex-direction: column;",
+          bslib::card(
+            style = "flex: 1;",
+            # full_screen = TRUE, #causes page layout to break slightly :(
+            bslib::card_header(
+              "Cumulative number of journeys"
+            ),
+            bslib::card_body(
+              class = "p-0",
+              plotly::plotlyOutput(
+                ns("cumulative_journeys_plot"),
+                height = "100%"
+              )
+            )
+            # shiny::actionButton(
+            #   ns("open_animation"),
+            #   "Animate"
+            # )
           ),
-          bslib::nav_panel(
-            "Vehicle type"
-          )
+          bslib::navset_card_tab(
+            title = "Journey characteristics",
+            # full_screen = TRUE,
+            bslib::nav_panel(
+              "Distance",
+              bslib::card_body(
+                class = "p-0",
+                plotly::plotlyOutput(
+                  ns("distance_histogram"),
+                  height = "100%"
+                )
+              )
+            ),
+            bslib::nav_panel(
+              "Vehicle type"
+            )
+          ) %>%
+            htmltools::tagAppendAttributes(style = "flex: 1;")
         )
       )
     )
@@ -247,11 +273,34 @@ mod_journeys_map_server <- function(id, conn) {
           )
         ) %>%
         plotly::layout(
-          dragmode = FALSE
+          dragmode = FALSE,
+          yaxis = list(title = "Number of Journeys"),
+          xaxis = list(title = "Date")
         ) %>%
         plotly::config(
           displayModeBar = FALSE
         )
+    })
+
+    #---------------------distance histogram -----------------------#
+
+    output$distance_histogram <- plotly::renderPlotly({
+      distances <- "SELECT distance FROM bugs_matter.journeys5 j;" %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("distance")
+      plotly::plot_ly(
+        x = distances,
+        type = "histogram",
+        marker = list(color = "#147331")
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(title = "Number of Journeys"),
+        xaxis = list(title = "Distance (miles)")
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
     })
 
 
