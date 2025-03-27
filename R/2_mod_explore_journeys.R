@@ -11,7 +11,7 @@
 library(magrittr)
 . <- ""
 
-mod_journeys_map_ui <- function(id) {
+mod_explore_journeys_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::page_sidebar(
     fillable = TRUE,
@@ -44,7 +44,7 @@ mod_journeys_map_ui <- function(id) {
       shiny::div(
         style = "display: flex; gap: var(--_padding); height: 100%;",
         shiny::div(
-          style = "width: 66.67%; height: 100%; padding-bottom: var(--_padding);",
+          style = "width: 60%; height: 100%; padding-bottom: var(--_padding);",
           bslib::card(
             height = "100%",
             full_screen = TRUE,
@@ -58,7 +58,7 @@ mod_journeys_map_ui <- function(id) {
           )
         ),
         shiny::div(
-          style = "width: 33.33%; height: 100%; display: flex; flex-direction: column;",
+          style = "width: 40%; height: 100%; display: flex; flex-direction: column;",
           bslib::card(
             style = "flex: 1;",
             # full_screen = TRUE, #causes page layout to break slightly :(
@@ -104,7 +104,7 @@ mod_journeys_map_ui <- function(id) {
 #' journeys_map Server Functions
 #'
 #' @noRd
-mod_journeys_map_server <- function(id, conn) {
+mod_explore_journeys_server <- function(id, conn) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 

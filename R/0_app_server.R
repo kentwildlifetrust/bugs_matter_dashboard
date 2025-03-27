@@ -21,7 +21,7 @@ app_server <- function(input, output, session) {
     handle_error(e, "app_server.R", alert_title = "Database error")
   })
 
-  mod_journeys_map_server("journeys_map_1", conn)
+  mod_explore_journeys_server("explore_journeys_1", conn)
   mod_welcome_server("welcome_1", conn)
 
 

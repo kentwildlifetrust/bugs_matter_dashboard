@@ -21,7 +21,7 @@ app_ui <- function(request) {
       ),
       bslib::nav_panel(
         title = "Explore Journeys",
-        mod_journeys_map_ui("journeys_map_1")
+        mod_explore_journeys_ui("explore_journeys_1")
       ),
       theme = theme()
     )
