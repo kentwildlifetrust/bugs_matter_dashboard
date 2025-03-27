@@ -43,17 +43,15 @@ CREATE MATERIALIZED VIEW bugs_matter.regions_app AS (
 
 GRANT SELECT ON bugs_matter.regions_server TO "BugsMatterReadOnly";
 
+CREATE MATERIALIZED VIEW bugs_matter.users_app AS (
+    SELECT
+        u.sign_up_date,
+        r.objectid::integer AS region_id
+    FROM bugs_matter.user_data2 u
+    LEFT JOIN bugs_matter.regionboundaries r ON u.region = r.nuts118nm
+) WITH DATA;
 
-CREATE TEMP TABLE a (
-  id SERIAL PRIMARY KEY,
-  name TEXT
-);
-
-CREATE TEMP TABLE b (
-  id SERIAL PRIMARY KEY,
-  a_id INT,
-  hobby TEXT
-);
+GRANT SELECT ON bugs_matter.users_app TO "BugsMatterReadOnly";
 
 
 
