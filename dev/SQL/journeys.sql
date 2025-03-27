@@ -28,6 +28,19 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
 
 GRANT SELECT ON bugs_matter.journeys_server TO "BugsMatterReadOnly";
 
+DROP MATERIALIZED VIEW bugs_matter.regions_app;
+
+CREATE MATERIALIZED VIEW bugs_matter.regions_app AS (
+    SELECT
+        r.objectid AS id,
+        r.nuts118nm AS name,
+        -- public.st_astext(public.st_boundary(public.st_transform(public.ST_Simplify(r.geometry, 50), 4326))) AS geom
+        public.st_astext(public.st_transform(public.ST_Simplify(r.geometry, 100), 4326)) AS geom
+    FROM bugs_matter.regionboundaries r
+) WITH DATA;
+
+GRANT SELECT ON bugs_matter.regions_server TO "BugsMatterReadOnly";
+
 -- DROP TABLE bugs_matter.trends_app;
 -- CREATE TABLE bugs_matter.trends_app (
 --   region_name VARCHAR(255),

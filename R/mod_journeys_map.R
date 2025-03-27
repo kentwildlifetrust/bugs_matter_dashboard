@@ -79,19 +79,60 @@ mod_journeys_map_server <- function(id, conn) {
     ns <- session$ns
 
     output$map <- leaflet::renderLeaflet({
-      map <- leaflet::leaflet(options = leaflet::leafletOptions(maxZoom = 12)) %>%
-        leaflet::addProviderTiles("CartoDB.Positron") %>%
-        leaflet::setView(lng = 1, lat = 51, zoom = 6)
+      map <- leaflet::leaflet(
+        options = leaflet::leafletOptions(maxZoom = 12)
+      ) %>%
+        leaflet::addProviderTiles("CartoDB.Positron")
 
-        url_param <- if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) == "2021 to 2024") {
-          tolower(input$area)
-        } else if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) != "2021 to 2024") {
-          paste0(input$area, "/years/", input$year)
-        } else if (tolower(input$year) == "2021 to 2024") {
-          paste0("regions/", input$area)
-        } else if (tolower(input$year) != "2021 to 2024") {
-          paste0("regions/", input$area, "/years/", input$year)
+      region_query <- if (tolower(input$area) %in% c("uk")) {
+        "SELECT id, geom FROM bugs_matter.regions_app
+            WHERE id IN (11, 10, 12, 4, 6, 7, 1, 2, 8, 9, 5, 3);"
+        } else if (tolower(input$area) %in% c("england")) {
+          "SELECT id, geom FROM bugs_matter.regions_app
+            WHERE id IN (4, 6, 1, 2, 8, 9, 5, 3);"
+        } else {
+          glue::glue_data_sql(
+            list(
+              id = as.numeric(input$area)
+            ),
+            "SELECT id, geom FROM bugs_matter.regions_app
+              WHERE id = {id};",
+            .con = conn
+          )
         }
+
+        region_boundaries <- region_query %>%
+          DBI::dbGetQuery(conn, .) %>%
+          dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
+          sf::st_as_sf(crs = 4326)
+
+        bbox <- sf::st_bbox(region_boundaries) %>%
+          as.list()
+
+        map <- map %>%
+          leaflet::addPolygons(
+            data = region_boundaries,
+            weight = 0,
+            fillOpacity = 0.1,
+            color = "#75DA40"
+          ) %>%
+          leaflet::fitBounds(
+            lng1 = bbox$xmin,
+            lng2 = bbox$xmax,
+            lat1 = bbox$ymin,
+            lat2 = bbox$ymax
+          )
+
+
+      url_param <- if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) == "2021 to 2024") {
+        tolower(input$area)
+      } else if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) != "2021 to 2024") {
+        paste0(input$area, "/years/", input$year)
+      } else if (tolower(input$year) == "2021 to 2024") {
+        paste0("regions/", input$area)
+      } else if (tolower(input$year) != "2021 to 2024") {
+        paste0("regions/", input$area, "/years/", input$year)
+      }
 
       vector_grid_js <- sprintf(
         "
@@ -104,7 +145,7 @@ mod_journeys_map_server <- function(id, conn) {
                       return {
                           weight: 2,
                           color: '#1D763B',
-                          opacity: 0.2
+                          opacity: 0.3
                       };
                   }
               },

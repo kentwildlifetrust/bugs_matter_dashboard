@@ -311,11 +311,11 @@ usethis::use_data(region_centres, overwrite = TRUE)
 
 region_choices <- list(
   "United Kingdom" = "uk",
-  "England" = "england",
   "Scotland" = 11,
   "Wales" = 10,
   "Northern Ireland" = 12,
-  "English Regions" = list(
+  "England" = list(
+    "England" = "england",
     "East Midlands" = 4,
     "East of England" = 6,
     "London" = 7,
