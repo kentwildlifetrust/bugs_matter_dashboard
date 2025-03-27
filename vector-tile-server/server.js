@@ -136,7 +136,7 @@ app.get('/tiles/england/:z/:x/:y.pbf', async (req, res) => {
         FROM bugs_matter.journeys_server r, bounds
         -- Now use the pre-transformed bounds (in 4326) for intersection test
         WHERE public.ST_Intersects(r.geom, bounds.geom) AND
-        r.region_id IN (4, 6, 1, 2, 8, 9, 5, 3)
+        r.region_id IN (4, 6, 1, 2, 8, 9, 5, 3, 7)
       )
     SELECT public.ST_AsMVT(mvt_data.*, 'lines', 4096, 'geom') AS tile
     FROM mvt_data;
@@ -181,7 +181,7 @@ app.get('/tiles/england/years/:year/:z/:x/:y.pbf', async (req, res) => {
         FROM bugs_matter.journeys_server r, bounds
         -- Now use the pre-transformed bounds (in 4326) for intersection test
         WHERE public.ST_Intersects(r.geom, bounds.geom) AND
-        r.region_id IN (4, 6, 1, 2, 8, 9, 5, 3) AND
+        r.region_id IN (4, 6, 1, 2, 8, 9, 5, 3, 7) AND
         r.year = $4
       )
     SELECT public.ST_AsMVT(mvt_data.*, 'lines', 4096, 'geom') AS tile

@@ -41,6 +41,20 @@ CREATE MATERIALIZED VIEW bugs_matter.regions_app AS (
 
 GRANT SELECT ON bugs_matter.regions_server TO "BugsMatterReadOnly";
 
+
+CREATE TEMP TABLE a (
+  id SERIAL PRIMARY KEY,
+  name TEXT
+);
+
+CREATE TEMP TABLE b (
+  id SERIAL PRIMARY KEY,
+  a_id INT,
+  hobby TEXT
+);
+
+
+
 -- DROP TABLE bugs_matter.trends_app;
 -- CREATE TABLE bugs_matter.trends_app (
 --   region_name VARCHAR(255),

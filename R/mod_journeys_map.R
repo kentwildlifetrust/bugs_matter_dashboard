@@ -36,11 +36,12 @@ mod_journeys_map_ui <- function(id) {
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
       ),
     ),
+    shiny::br(),
     # shiny::hr(class = "data-header-hr"),
     bslib::layout_column_wrap(
       bslib::card(
         bslib::card_header(
-          "Map"
+          "Routes"
         ),
         bslib::card_body(
           class = "p-0",
@@ -50,12 +51,16 @@ mod_journeys_map_ui <- function(id) {
       shiny::div(
         bslib::card(
           bslib::card_header(
-            "Cumulative journeys"
+            "Cumulative number of journeys"
           ),
-          shiny::actionButton(
-            ns("open_animation"),
-            "Animate"
+          bslib::card_body(
+            class = "p-0",
+            plotly::plotlyOutput(ns("cumulative_journeys_plot"))
           )
+          # shiny::actionButton(
+          #   ns("open_animation"),
+          #   "Animate"
+          # )
         ),
         bslib::navset_card_pill(
           title = "Journey characteristics",
@@ -78,6 +83,8 @@ mod_journeys_map_server <- function(id, conn) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    #---------------------journeys map-----------------------#
+
     output$map <- leaflet::renderLeaflet({
       map <- leaflet::leaflet(
         options = leaflet::leafletOptions(maxZoom = 12)
@@ -87,41 +94,41 @@ mod_journeys_map_server <- function(id, conn) {
       region_query <- if (tolower(input$area) %in% c("uk")) {
         "SELECT id, geom FROM bugs_matter.regions_app
             WHERE id IN (11, 10, 12, 4, 6, 7, 1, 2, 8, 9, 5, 3);"
-        } else if (tolower(input$area) %in% c("england")) {
+      } else if (tolower(input$area) %in% c("england")) {
+        "SELECT id, geom FROM bugs_matter.regions_app
+            WHERE id IN (4, 6, 1, 2, 8, 9, 5, 3, 7);"
+      } else {
+        glue::glue_data_sql(
+          list(
+            id = as.numeric(input$area)
+          ),
           "SELECT id, geom FROM bugs_matter.regions_app
-            WHERE id IN (4, 6, 1, 2, 8, 9, 5, 3);"
-        } else {
-          glue::glue_data_sql(
-            list(
-              id = as.numeric(input$area)
-            ),
-            "SELECT id, geom FROM bugs_matter.regions_app
               WHERE id = {id};",
-            .con = conn
-          )
-        }
+          .con = conn
+        )
+      }
 
-        region_boundaries <- region_query %>%
-          DBI::dbGetQuery(conn, .) %>%
-          dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
-          sf::st_as_sf(crs = 4326)
+      region_boundaries <- region_query %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
+        sf::st_as_sf(crs = 4326)
 
-        bbox <- sf::st_bbox(region_boundaries) %>%
-          as.list()
+      bbox <- sf::st_bbox(region_boundaries) %>%
+        as.list()
 
-        map <- map %>%
-          leaflet::addPolygons(
-            data = region_boundaries,
-            weight = 0,
-            fillOpacity = 0.1,
-            color = "#75DA40"
-          ) %>%
-          leaflet::fitBounds(
-            lng1 = bbox$xmin,
-            lng2 = bbox$xmax,
-            lat1 = bbox$ymin,
-            lat2 = bbox$ymax
-          )
+      map <- map %>%
+        leaflet::addPolygons(
+          data = region_boundaries,
+          weight = 0,
+          fillOpacity = 0.1,
+          color = "#75DA40"
+        ) %>%
+        leaflet::fitBounds(
+          lng1 = bbox$xmin,
+          lng2 = bbox$xmax,
+          lat1 = bbox$ymin,
+          lat2 = bbox$ymax
+        )
 
 
       url_param <- if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) == "2021 to 2024") {
@@ -163,6 +170,84 @@ mod_journeys_map_server <- function(id, conn) {
 
       map %>%
         htmlwidgets::onRender(vector_grid_js)
+    })
+
+    #---------------------cumulative frequency plot-----------------------#
+
+    output$cumulative_journeys_plot <- plotly::renderPlotly({
+      counts <- "
+        WITH daily_counts AS (
+        SELECT
+          j.end::DATE AS date,
+          COUNT(*) AS daily_count
+        FROM bugs_matter.journeys_server j
+        WHERE region_id IN ({region_ids*})
+        GROUP BY j.end::DATE
+      ), date_bounds AS (
+        SELECT
+          '2021-05-01'::DATE AS min_date,
+          '2024-11-01'::DATE AS max_date
+      ),  -- No need to select FROM the table here
+      all_dates AS (
+        SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
+        FROM date_bounds
+      )
+      SELECT
+        all_dates.date,
+        COALESCE(daily_counts.daily_count, 0) AS daily_count,
+        SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
+          ORDER BY all_dates.date
+          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS cumulative_count
+      FROM all_dates
+      LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
+      ORDER BY all_dates.date;" %>%
+        glue::glue_data_sql(
+          list(region_ids = if (input$area == "uk") {
+            c(11, 10, 12, 4, 6, 7, 1, 2, 8, 9, 5, 3)
+          } else if (input$area == "england") {
+            c(4, 6, 1, 2, 8, 9, 5, 3, 7)
+          } else {
+            as.numeric(input$area)
+          }),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(date = as.Date(date))
+
+      x_range <- if (input$year == "2021 to 2024") {
+        as.Date(c("2021-05-01", "2024-11-01"))
+      } else {
+        as.Date(
+          c(
+            sprintf("%s-05-01", input$year),
+            sprintf("%s-11-01", input$year)
+          )
+        )
+      }
+
+      plotly::plot_ly(
+        type = "scatter",
+        mode = "lines"
+      ) %>%
+        plotly::add_trace(
+          showlegend = FALSE,
+          y = counts$cumulative_count,
+          x = counts$date,
+          line = list(
+            color = "#147331",
+            width = 3
+          )
+        ) %>%
+        plotly::layout(
+          yaxis = list(range = c(0, max(counts$cumulative_count) * 1.05 )),
+          staticplot = TRUE,
+          dragmode = FALSE
+        ) %>%
+        plotly::config(
+          displayModeBar = FALSE
+        )
     })
 
 
