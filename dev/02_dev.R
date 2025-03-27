@@ -303,11 +303,30 @@ region_centres$lat <- coords[, 2]
 usethis::use_data(region_centres, overwrite = TRUE)
 
 
-region_choices <- "SELECT objectid AS id, nuts118nm AS name FROM bugs_matter.regionboundaries WHERE nuts118nm IS NOT NULL GROUP BY objectid, nuts118nm ORDER BY nuts118nm;" %>%
-  DBI::dbGetQuery(conn, .)
+# region_choices <- "SELECT objectid AS id, nuts118nm AS name FROM bugs_matter.regionboundaries WHERE nuts118nm IS NOT NULL GROUP BY objectid, nuts118nm ORDER BY nuts118nm;" %>%
+#   DBI::dbGetQuery(conn, .)
 
-region_choices <- as.list(region_choices$id) %>%
-  setNames(region_choices$name)
+# region_choices <- as.list(region_choices$id) %>%
+#   setNames(region_choices$name)
+
+region_choices <- list(
+  "United Kingdom" = "uk",
+  "England" = "england",
+  "Scotland" = 11,
+  "Wales" = 10,
+  "Northern Ireland" = 12,
+  "English Regions" = list(
+    "East Midlands" = 4,
+    "East of England" = 6,
+    "London" = 7,
+    "North East" = 1,
+    "North West" = 2,
+    "South East" = 8,
+    "South West" = 9,
+    "West Midlands" = 5,
+    "Yorkshire and The Humber" = 3
+  )
+)
 
 usethis::use_data(region_choices, overwrite = TRUE)
 

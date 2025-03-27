@@ -18,14 +18,14 @@ mod_journeys_map_ui <- function(id) {
       shiny::selectInput(
         ns("year"),
         "Year",
-        choices = c("All", bugsMatterDashboard::years),
+        choices = c("2021 to 2024", bugsMatterDashboard::years),
         selected = "All"
       ),
       shiny::selectInput(
-        ns("region_id"),
-        "Year",
+        ns("area"),
+        "Area",
         choices = c(bugsMatterDashboard::region_choices),
-        selected = "All"
+        selected = "uk"
       )
     ),
     shiny::div(
@@ -78,23 +78,22 @@ mod_journeys_map_server <- function(id, conn) {
     ns <- session$ns
 
     output$map <- leaflet::renderLeaflet({
-      # lines <- "SELECT
-      #       j.id,
-      #       public.st_astext(public.st_transform(public.ST_Simplify(j.geometry, 100), 4326)) AS geom
-      #   FROM bugs_matter.journeys5 j;" %>%
-      #   DBI::dbGetQuery(conn, .) %>%
-      # dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
-      # sf::st_as_sf(crs = 4326)
-      options(mapbox.accessToken = NA)
-
-      leaflet::leaflet(options = leaflet::leafletOptions(maxZoom = 12)) %>%
+      map <- leaflet::leaflet(options = leaflet::leafletOptions(maxZoom = 12)) %>%
         leaflet::addProviderTiles("CartoDB.Positron") %>%
-        leaflet::setView(lng = 1, lat = 51, zoom = 6) %>%
-        htmlwidgets::onRender(sprintf("
+        leaflet::setView(lng = 1, lat = 51, zoom = 6)
+
+        url_param <- if (tolower(input$area) %in% c("uk", "england")) {
+          tolower(input$area)
+        } else {
+          paste0("regions/", input$area)
+        }
+
+      vector_grid_js <- sprintf(
+        "
         function(el, x) {
           // Leaflet.VectorGrid is loaded in header
           var vectorGrid = L.vectorGrid.protobuf(
-            'http://localhost:3000/regions/%s/tiles/{z}/{x}/{y}.pbf', {
+            'http://localhost:3000/tiles/%s/{z}/{x}/{y}.pbf', {
               vectorTileLayerStyles: {
                   lines: function(properties, zoom) {
                       return {
@@ -112,7 +111,13 @@ mod_journeys_map_server <- function(id, conn) {
           // Add the vector grid layer to the map
           vectorGrid.addTo(this);
         }
-      ", input$region_id))
+      ",
+        url_param
+      )
+
+      map %>%
+        htmlwidgets::onRender(vector_grid_js)
+
     })
 
 
