@@ -19,6 +19,7 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
         j.start,
         j.end,
         j.distance,
+        j.vehicle_cl,
         EXTRACT(year FROM j.end)::integer AS year,
         r.objectid::integer AS region_id,
         public.st_transform(public.ST_Simplify(j.geometry, 100), 4326) AS geom

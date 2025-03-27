@@ -91,7 +91,14 @@ mod_explore_journeys_ui <- function(id) {
               )
             ),
             bslib::nav_panel(
-              "Vehicle type"
+              "Vehicle type",
+              bslib::card_body(
+                class = "p-0",
+                plotly::plotlyOutput(
+                  ns("vehicle_bars"),
+                  height = "100%"
+                )
+              )
             )
           ) %>%
             htmltools::tagAppendAttributes(style = "flex: 1;")
@@ -297,8 +304,8 @@ mod_explore_journeys_server <- function(id, conn) {
 
     output$distance_histogram <- plotly::renderPlotly({
       "SELECT j.distance
-                    FROM bugs_matter.journeys_server j
-                    WHERE j.region_id IN ({region_ids*}) AND j.year IN ({years*});" %>%
+                  FROM bugs_matter.journeys_server j
+                  WHERE j.region_id IN ({region_ids*}) AND j.year IN ({years*});" %>%
         glue::glue_data_sql(
           list(
             region_ids = get_region_ids(input$area),
@@ -318,6 +325,44 @@ mod_explore_journeys_server <- function(id, conn) {
         dragmode = FALSE,
         yaxis = list(title = "Number of Journeys"),
         xaxis = list(title = "Distance (miles)")
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
+    })
+
+    #---------------------vehicle type bars -----------------------#
+
+    output$vehicle_bars <- plotly::renderPlotly({
+      "WITH all_vehicles AS(
+          SELECT DISTINCT (j.vehicle_cl) AS vehicle_cl
+          FROM bugs_matter.journeys_server j
+        )
+        SELECT all_vehicles.vehicle_cl, COALESCE(COUNT(*), 0) AS count
+        FROM all_vehicles
+        LEFT JOIN bugs_matter.journeys_server j ON all_vehicles.vehicle_cl = j.vehicle_cl
+        WHERE j.region_id IN ({region_ids*}) AND j.year IN ({years*})
+        GROUP BY j.vehicle_cl, all_vehicles.vehicle_cl;" %>%
+        glue::glue_data_sql(
+          list(
+            region_ids = get_region_ids(input$area),
+            years = get_years(input$year)
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+      plotly::plot_ly(
+        data = .,
+        type = "bar",
+        x = ~vehicle_cl,
+        y = ~count,
+        marker = list(color = "#147331")
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(title = "Number of Journeys"),
+        xaxis = list(title = "Vehicle Type")
       ) %>%
       plotly::config(
         displayModeBar = FALSE
