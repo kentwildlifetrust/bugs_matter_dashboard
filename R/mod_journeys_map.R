@@ -43,6 +43,7 @@ mod_journeys_map_ui <- function(id) {
           "Map"
         ),
         bslib::card_body(
+          class = "p-0",
           leaflet::leafletOutput(ns("map"))
         )
       ),
@@ -82,10 +83,14 @@ mod_journeys_map_server <- function(id, conn) {
         leaflet::addProviderTiles("CartoDB.Positron") %>%
         leaflet::setView(lng = 1, lat = 51, zoom = 6)
 
-        url_param <- if (tolower(input$area) %in% c("uk", "england")) {
+        url_param <- if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) == "2021 to 2024") {
           tolower(input$area)
-        } else {
+        } else if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) != "2021 to 2024") {
+          paste0(input$area, "/years/", input$year)
+        } else if (tolower(input$year) == "2021 to 2024") {
           paste0("regions/", input$area)
+        } else if (tolower(input$year) != "2021 to 2024") {
+          paste0("regions/", input$area, "/years/", input$year)
         }
 
       vector_grid_js <- sprintf(
@@ -117,7 +122,6 @@ mod_journeys_map_server <- function(id, conn) {
 
       map %>%
         htmlwidgets::onRender(vector_grid_js)
-
     })
 
 
