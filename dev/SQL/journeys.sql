@@ -43,13 +43,30 @@ CREATE MATERIALIZED VIEW bugs_matter.regions_app AS (
 
 GRANT SELECT ON bugs_matter.regions_server TO "BugsMatterReadOnly";
 
+DROP MATERIALIZED VIEW bugs_matter.users_app;
 CREATE MATERIALIZED VIEW bugs_matter.users_app AS (
     SELECT
+        u.user_id,
         u.sign_up_date,
         r.objectid::integer AS region_id
     FROM bugs_matter.user_data2 u
-    LEFT JOIN bugs_matter.regionboundaries r ON u.region = r.nuts118nm
+    LEFT JOIN bugs_matter.regionboundaries r
+    ON (
+        (u.region = r.region_name OR (u.region IS NULL AND r.region_name IS NULL))
+        AND u.country = r.country
+    )
+    --because NULL=NULL is NULL, we need to explicitely allow these as matches for Scotland, Wales, Northern Ireland
 ) WITH DATA;
+
+--check that joining worked
+WITH missing_id AS (
+    SELECT user_id FROM bugs_matter.users_app WHERE region_id IS NULL
+)
+SELECT u.user_id, u.country, u.region
+FROM bugs_matter.user_data2 u
+RIGHT JOIN missing_id m ON u.user_id = m.user_id
+WHERE u.country IS NOT NULL;
+--just a few that didn't match
 
 GRANT SELECT ON bugs_matter.users_app TO "BugsMatterReadOnly";
 

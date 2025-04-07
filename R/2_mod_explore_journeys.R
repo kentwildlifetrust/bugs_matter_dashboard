@@ -49,7 +49,7 @@ mod_explore_journeys_ui <- function(id) {
             height = "100%",
             full_screen = TRUE,
             bslib::card_header(
-              "Routes taken"
+              "Routes"
             ),
             bslib::card_body(
               class = "p-0",
@@ -61,7 +61,7 @@ mod_explore_journeys_ui <- function(id) {
           style = "width: 40%; height: 100%; display: flex; flex-direction: column;",
           bslib::navset_card_tab(
             # full_screen = TRUE, #causes page layout to break slightly :(
-            title = "Total sampling effort",
+            title = "Sampling effort",
             bslib::nav_panel(
               "Journeys",
               bslib::card_body(
@@ -83,11 +83,11 @@ mod_explore_journeys_ui <- function(id) {
               )
             ),
             bslib::nav_panel(
-              "Participants signed up",
+              "Sign ups",
               bslib::card_body(
                 class = "p-0",
                 plotly::plotlyOutput(
-                  ns("cumulative_participants_plot"),
+                  ns("cumulative_sign_ups"),
                   height = "100%"
                 )
               )
@@ -313,13 +313,14 @@ mod_explore_journeys_server <- function(id, conn) {
         ) %>%
         plotly::layout(
           dragmode = FALSE,
-          yaxis = list(title = "Number of Journeys"),
+          yaxis = list(title = "Total number of journeys"),
           xaxis = list(title = "Date")
         ) %>%
         plotly::config(
           displayModeBar = FALSE
         )
     })
+
 
     #---------------------distance travelled------------------------#
       output$cumulative_distance_plot <- plotly::renderPlotly({
@@ -350,6 +351,84 @@ mod_explore_journeys_server <- function(id, conn) {
           {min_date}::DATE AS min_date,
           {max_date}::DATE AS max_date
       ),  -- No need to select FROM the table here
+      all_dates AS (
+        SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
+        FROM date_bounds
+      )
+      SELECT
+        all_dates.date,
+        COALESCE(daily_counts.daily_count, 0) AS daily_count,
+        ROUND((SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
+          ORDER BY all_dates.date
+          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ))::NUMERIC) AS cumulative_count
+      FROM all_dates
+      LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
+      ORDER BY all_dates.date;" %>%
+        glue::glue_data_sql(
+          list(
+            region_ids = get_region_ids(input$area),
+          min_date = min_date,
+          max_date = max_date
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(date = as.Date(date))
+
+      plotly::plot_ly(
+        type = "scatter",
+        mode = "lines"
+      ) %>%
+        plotly::add_trace(
+          showlegend = FALSE,
+          y = counts$cumulative_count,
+          x = counts$date,
+          line = list(
+            color = "#147331",
+            width = 3
+          )
+        ) %>%
+        plotly::layout(
+          dragmode = FALSE,
+          yaxis = list(title = "Total distance travelled (miles)"),
+          xaxis = list(title = "Date")
+        ) %>%
+        plotly::config(
+          displayModeBar = FALSE
+        )
+    })
+
+    #---------------signed up users----------------------------------#
+     output$cumulative_sign_ups <- plotly::renderPlotly({
+      min_date <- if (input$year == "2021 to 2024") {
+        "2021-05-01"
+      } else if (input$year == "2024") {
+        sprintf("%s-04-01", input$year)
+      } else {
+        sprintf("%s-05-01", input$year)
+      }
+      max_date <- if (input$year == "2021 to 2024") {
+        "2024-11-01"
+      } else if (input$year == "2024") {
+        sprintf("%s-11-01", input$year)
+      } else {
+        sprintf("%s-10-01", input$year)
+      }
+      counts <- "
+        WITH daily_counts AS (
+        SELECT
+          u.sign_up_date::DATE AS date,
+          COUNT(*) AS daily_count
+        FROM bugs_matter.users_app u
+        WHERE region_id IN ({region_ids*})
+        GROUP BY u.sign_up_date::DATE
+      ), date_bounds AS (
+        SELECT
+          {min_date}::DATE AS min_date,
+          {max_date}::DATE AS max_date
+      ),
       all_dates AS (
         SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
         FROM date_bounds
@@ -391,83 +470,7 @@ mod_explore_journeys_server <- function(id, conn) {
         ) %>%
         plotly::layout(
           dragmode = FALSE,
-          yaxis = list(title = "Distance travelled (miles)"),
-          xaxis = list(title = "Date")
-        ) %>%
-        plotly::config(
-          displayModeBar = FALSE
-        )
-    })
-
-    output$cumulative_participants_plot <- plotly::renderPlotly({
-      shiny::req(input$area == "uk")
-      min_date <- if (input$year == "2021 to 2024") {
-        "2021-05-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-04-01", input$year)
-      } else {
-        sprintf("%s-05-01", input$year)
-      }
-      max_date <- if (input$year == "2021 to 2024") {
-        "2024-11-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-11-01", input$year)
-      } else {
-        sprintf("%s-10-01", input$year)
-      }
-      counts <- "
-        WITH daily_counts AS (
-        SELECT
-          u.sign_up_date::DATE AS date,
-          COUNT(*) AS daily_count
-        FROM bugs_matter.users_app u
-        GROUP BY u.sign_up_date::DATE
-      ), date_bounds AS (
-        SELECT
-          {min_date}::DATE AS min_date,
-          {max_date}::DATE AS max_date
-      ),  -- No need to select FROM the table here
-      all_dates AS (
-        SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
-        FROM date_bounds
-      )
-      SELECT
-        all_dates.date,
-        COALESCE(daily_counts.daily_count, 0) AS daily_count,
-        SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
-          ORDER BY all_dates.date
-          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS cumulative_count
-      FROM all_dates
-      LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
-      ORDER BY all_dates.date;" %>%
-        glue::glue_data_sql(
-          list(
-            min_date = min_date,
-            max_date = max_date
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(date = as.Date(date))
-
-      plotly::plot_ly(
-        type = "scatter",
-        mode = "lines"
-      ) %>%
-        plotly::add_trace(
-          showlegend = FALSE,
-          y = counts$cumulative_count,
-          x = counts$date,
-          line = list(
-            color = "#147331",
-            width = 3
-          )
-        ) %>%
-        plotly::layout(
-          dragmode = FALSE,
-          yaxis = list(title = "Number of Participants"),
+          yaxis = list(title = "Total registered users"),
           xaxis = list(title = "Date")
         ) %>%
         plotly::config(
