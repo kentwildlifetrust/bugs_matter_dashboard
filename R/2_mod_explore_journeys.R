@@ -52,7 +52,7 @@ mod_explore_journeys_ui <- function(id) {
               "Routes"
             ),
             bslib::card_body(
-              class = "p-0",
+              padding = c(0, 0, 0, 0),
               leaflet::leafletOutput(ns("map"))
             )
           )
@@ -65,7 +65,7 @@ mod_explore_journeys_ui <- function(id) {
             bslib::nav_panel(
               "Journeys",
               bslib::card_body(
-                class = "p-0",
+                padding = c(0, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("cumulative_journeys_plot"),
                   height = "100%"
@@ -75,7 +75,7 @@ mod_explore_journeys_ui <- function(id) {
             bslib::nav_panel(
               "Distance travelled",
               bslib::card_body(
-                class = "p-0",
+                padding = c(0, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("cumulative_distance_plot"),
                   height = "100%"
@@ -85,7 +85,7 @@ mod_explore_journeys_ui <- function(id) {
             bslib::nav_panel(
               "Sign ups",
               bslib::card_body(
-                class = "p-0",
+                padding = c(0, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("cumulative_sign_ups"),
                   height = "100%"

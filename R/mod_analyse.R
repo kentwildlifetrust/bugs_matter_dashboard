@@ -46,8 +46,47 @@ mod_analyse_ui <- function(id) {
       # shiny::hr(class = "data-header-hr"),
       shiny::div(
         style = "display: flex; gap: var(--_padding); height: 100%;",
+
         shiny::div(
-          style = "width: 30%; height: 100%; padding-bottom: var(--_padding);",
+          style = "width: 40%; height: 100%; display: flex; flex-direction: column;",
+          bslib::navset_card_tab(
+            # full_screen = TRUE, #causes page layout to break slightly :(
+            title = "Splat Rate",
+            bslib::nav_panel(
+              "Model predictions",
+              bslib::card_body(
+                padding = c(0, 0, 10, 0),
+                plotly::plotlyOutput(
+                  ns("predicted_splat_rate"),
+                  height = "100%"
+                )
+              )
+            ),
+            bslib::nav_panel(
+              "By date",
+              bslib::card_body(
+                padding = c(0, 0, 10, 0),
+                plotly::plotlyOutput(
+                  ns("splat_rate_line"),
+                  height = "100%"
+                )
+              )
+            ),
+            bslib::nav_panel(
+              "By year",
+              bslib::card_body(
+                padding = c(0, 0, 10, 0),
+                plotly::plotlyOutput(
+                  ns("splat_rate_box"),
+                  height = "100%"
+                )
+              )
+            )
+          ) %>%
+            htmltools::tagAppendAttributes(style = "flex: 1;")
+        ),
+        shiny::div(
+          style = "width: 60%; height: 100%; padding-bottom: var(--_padding);",
           bslib::card(
             height = "100%",
             full_screen = TRUE,
@@ -55,7 +94,7 @@ mod_analyse_ui <- function(id) {
               "Change in splat rate in response to variables"
             ),
             bslib::card_body(
-              class = "p-0",
+              padding = c(0, 0, 10, 0),
               div(
                 style = "height: calc(100% + 30px); margin-top: -30px;",
                 plotly::plotlyOutput(
@@ -65,38 +104,6 @@ mod_analyse_ui <- function(id) {
               )
             )
           )
-        ),
-        shiny::div(
-          style = "width: 70%; height: 100%; display: flex; flex-direction: column;",
-          bslib::navset_card_tab(
-            # full_screen = TRUE, #causes page layout to break slightly :(
-            title = "Splat Rate",
-            bslib::nav_panel(
-              "Date",
-              bslib::card_body(
-                class = "p-0",
-                plotly::plotlyOutput(
-                  ns("splat_rate_line"),
-                  height = "100%"
-                )
-              )
-            ),
-            bslib::nav_panel(
-              "Year",
-              bslib::card_body(
-                class = "p-0",
-                plotly::plotlyOutput(
-                  ns("splat_rate_box"),
-                  height = "100%"
-                )
-              )
-            )
-          ) %>%
-            htmltools::tagAppendAttributes(style = "flex: 1;"),
-          bslib::card(
-            bslib::card_header("Model predictions of splat rate")
-          ) %>%
-            htmltools::tagAppendAttributes(style = "flex: 1;")
         )
       )
     )
@@ -170,7 +177,16 @@ mod_analyse_server <- function(id, conn) {
             urban +
             stats::offset(log_cm_miles_offset),
           data = journeys
-        ) %>%
+        ),
+        error = function(e) {
+          warning(paste("Model failed for region:", input$area, "Error:", e$message))
+          return(NULL)
+        }
+      )
+    })
+
+    forest_data <- shiny::reactive({
+      mod() %>%
           broom::tidy(conf.int = TRUE, exponentiate = TRUE) %>%
           dplyr::filter(!term %in% c("(Intercept)", "stats::offset(log_cm_miles_offset)")) %>%
           dplyr::arrange(dplyr::desc(estimate)) %>%
@@ -189,13 +205,8 @@ mod_analyse_server <- function(id, conn) {
             term == "lat" ~ "Latitude",
             term == "avg_speed" ~ "Average Speed",
             .default = snakecase::to_title_case(term)
-          )),
-        error = function(e) {
-          warning(paste("Model failed for region:", input$area, "Error:", e$message))
-          return(NULL)
-        }
-      )
-    }) %>%
+          ))
+    })  %>%
       shiny::bindCache(
         input$area,
         input$year,
@@ -231,7 +242,7 @@ mod_analyse_server <- function(id, conn) {
     }
 
     output$forest <- plotly::renderPlotly({
-      model_data <- mod() %>%
+      model_data <- forest_data() %>%
           dplyr::mutate(
             term = factor(term, levels = term),
             sig = dplyr::case_when(
@@ -243,14 +254,18 @@ mod_analyse_server <- function(id, conn) {
             color = dplyr::case_when(
               conf.high < 1 ~ "red",
               conf.low > 1 ~ "green",
-              .default = "gray"
+              .default = "darkgray"
             )
           ) %>%
           dplyr::mutate(
             label = ifelse(
               estimate < 0.01,
               paste("< 0.01", sig),
-              paste(format(round(estimate, 2), nsmall = 2), sig)
+              ifelse(
+                estimate > 100,
+                paste("> 100", sig),
+                paste(format(round(estimate, 2), nsmall = 2), sig)
+              )
             )
           )
       p <- plotly::plot_ly() %>%
@@ -264,17 +279,18 @@ mod_analyse_server <- function(id, conn) {
           color = "red"
         ) %>%
         add_forest_trace(
-          model_data = dplyr::filter(model_data, color == "gray"),
-          color = "gray"
+          model_data = dplyr::filter(model_data, color == "darkgray"),
+          color = "darkgray"
         ) %>%
         plotly::layout(
-            xaxis = list(title = "Indcidence rate ratios", type = "log"),
+            xaxis = list(title = "Indcidence rate ratios", type = "log", showgrid = FALSE),
             yaxis = list(title = "Explanatory variable"),
-            # shapes = list(list(
-            #   type = "line",
-            #   x0 = 1, x1 = 1, y0 = -0.5, y1 = length(model_data$term) - 0.5,
-            #   line = list(dash = "dash", width = 1)
-            # )),
+            shapes = list(list(
+              type = "line",
+              x0 = 1, x1 = 1, y0 = -0.5, y1 = length(model_data$term) - 0.5,
+              line = list(color = "lightgray", width = 1),
+              layer = "below"
+            )),
             dragmode = FALSE
           ) %>%
           plotly::config(
@@ -282,7 +298,58 @@ mod_analyse_server <- function(id, conn) {
           )
     })
 
+    predictions_data <- shiny::reactive({
+      sjPlot::get_model_data(mod(), type = "pred", terms = "year")
+    }) %>%
+      shiny::bindCache(
+        input$area,
+        input$year,
+        cache = cachem::cache_disk(app_sys("./app-cache"))
+      )
 
+    output$predicted_splat_rate <- plotly::renderPlotly({
+      model_data <- as.data.frame(predictions_data())
+      int_ticks <- sort(unique(model_data$x))
+      plotly::plot_ly(
+        showlegend = FALSE,
+        data = model_data,
+        x = ~x,
+        y = ~predicted,
+        type = "scatter",
+        error_y = list(
+          type = "data",
+          symmetric = FALSE,
+          array = model_data$conf.high - model_data$conf.low,
+          arrayminus = model_data$predicted - model_data$conf.low,
+          color = "black"
+        ),
+        marker = list(size = 10, color = "black"),
+        hoverinfo = "text",
+        hovertext = ~paste0(
+          "Year: ", x, "<br>",
+          "Predicted splat count: ", round(predicted, 2), "<br>",
+          "CI: [", round(conf.low, 2), ", ", round(conf.high, 2), "]<br>"
+        )
+      ) %>%
+        plotly::layout(
+            yaxis = list(
+              title = "Splat count"
+            ),
+            xaxis = list(
+              title = "Year",
+              tickvals = int_ticks,
+              ticktext = int_ticks,
+              showgrid = TRUE,
+              gridcolor = "lightgray",
+              gridwidth = 1
+            ),
+            dragmode = FALSE
+          ) %>%
+          plotly::config(
+            displayModeBar = FALSE
+          )
+
+    })
   })
 }
 
