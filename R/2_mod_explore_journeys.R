@@ -37,7 +37,7 @@ mod_explore_journeys_ui <- function(id) {
         shiny::h2("Data Collection"),
         shiny::div(
           class = "data-lead",
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+          "Lorem consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
         ),
       ),
       # shiny::hr(class = "data-header-hr"),
@@ -225,25 +225,7 @@ mod_explore_journeys_server <- function(id, conn) {
         htmlwidgets::onRender(vector_grid_js)
     })
 
-    #---------------------cumulative frequency plot-----------------------#
-    #get the region_ids & years from dropdown selection
-    get_region_ids <- function(x) {
-      if (x == "uk") {
-        as.integer(c(11, 10, 12, 4, 6, 7, 1, 2, 8, 9, 5, 3))
-      } else if (x == "england") {
-        as.integer(c(4, 6, 1, 2, 8, 9, 5, 3, 7))
-      } else {
-        as.integer(x)
-      }
-    }
-    get_years <- function(x) {
-      if (x == "2021 to 2024") {
-        as.integer(2021:2024)
-      } else {
-        as.integer(x)
-      }
-    }
-
+    #---------------------cumulative frequency plot-----------------------
     output$cumulative_journeys_plot <- plotly::renderPlotly({
       min_date <- if (input$year == "2021 to 2024") {
         "2021-05-01"

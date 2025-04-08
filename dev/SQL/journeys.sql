@@ -18,12 +18,30 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
         j.id,
         j.start,
         j.end,
-        j.distance,
-        j.vehicle_cl,
+        splatcount,
+        distance,
+        avg_speed,
+        vehicle_cl,
+        vehicle_he,
+        EXTRACT(EPOCH FROM (midpoint_time - DATE_TRUNC('day', midpoint_time))) / 3600.0 AS hours_since_midnight,
+        dayofyear,
+        elevation,
+        "X" AS lon,
+        "Y" AS lat,
+        forest,
+        shrubland,
+        grassland,
+        wetland,
+        marine,
+        arable,
+        plantation,
+        urban,
+        log_cm_miles_offset,
+        temp,
         EXTRACT(year FROM j.end)::integer AS year,
         r.objectid::integer AS region_id,
         public.st_transform(public.ST_Simplify(j.geometry, 100), 4326) AS geom
-    FROM bugs_matter.journeys5 j
+    FROM bugs_matter.journeys8 j
     JOIN admin_boundaries.uk_boundary b ON public.st_intersects(j.geometry, b.geom)
     LEFT JOIN bugs_matter.regionboundaries r ON j.region = r.nuts118nm
 ) WITH DATA;

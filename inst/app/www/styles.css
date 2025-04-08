@@ -200,3 +200,11 @@ hr.popup-hr {
 .data-header-hr {
   margin: 1rem 0;
 }
+
+/*---------range slider-----------------*/
+.irs--shiny .irs-handle, .irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single, .irs--shiny .irs-bar {
+  background-color: #58A732;
+}
+.irs.irs--shiny.js-irs-0.irs-with-grid {
+  padding: 0 10px;
+}

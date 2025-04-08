@@ -55,6 +55,7 @@ renv::snapshot()
 ## If there is any sort of sequence to the modules, it can be really nice to add numbered prefixes to the file names
 golem::add_module(name = "journeys_map") # Name of the module
 golem::add_module(name = "welcome") # Name of the module
+golem::add_module(name = "analyse") # Name of the module
 
 ## External resources ---------------------------------------------------------
 ## Creates .css file in inst/app/www

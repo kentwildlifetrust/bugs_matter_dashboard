@@ -16,12 +16,16 @@ app_ui <- function(request) {
         shiny::span("Matter")
       ),
       bslib::nav_panel(
-        title = "Welcome",
+        title = "Welcome to the app",
         mod_welcome_ui("welcome_1")
       ),
       bslib::nav_panel(
         title = "Explore Journeys",
         mod_explore_journeys_ui("explore_journeys_1")
+      ),
+      bslib::nav_panel(
+        title = "Analyse Trends",
+        mod_analyse_ui("analyse_1")
       ),
       theme = theme()
     )

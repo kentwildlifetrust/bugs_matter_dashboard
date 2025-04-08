@@ -9,7 +9,9 @@ Description: Car number plate insect splat counts as a measure of invertebrate a
 License: MIT + file LICENSE
 Imports: 
     AzureStor,
+    broom,
     bslib,
+    cachem,
     DBI,
     dplyr,
     glue,
@@ -20,12 +22,16 @@ Imports:
     leaflet,
     magrittr,
     MASS,
+    pkgload,
     plotly,
     RPostgres,
     sf,
     shiny,
     shinyalert,
-    shinyjs
+    shinyjs,
+    sjPlot,
+    snakecase,
+    utils
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
