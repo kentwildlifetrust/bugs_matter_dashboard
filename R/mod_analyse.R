@@ -57,10 +57,23 @@ mod_analyse_ui <- function(id) {
               bslib::card_body(
                 padding = c(0, 0, 10, 0),
                 plotly::plotlyOutput(
-                  ns("predicted_splat_rate"),
+                  ns("model_predicted"),
                   height = "100%"
+                ),
+                div(
+                  style = "position: absolute; top: 20px; right: 20px;",
+                  bslib::popover(
+                    shiny::actionLink(
+                      ns("model_predicted_info"),
+                      shiny::tags$i(class = "fa fa-info-circle"),
+                      style = "font-size: 2rem;"
+                    ),
+                    "This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.",
+                    placement = "bottom"
+                  )
                 )
-              )
+              ) %>%
+                shiny::tagAppendAttributes(style = "position: relative;")
             ),
             bslib::nav_panel(
               "Cumulative average",
@@ -69,8 +82,21 @@ mod_analyse_ui <- function(id) {
                 plotly::plotlyOutput(
                   ns("splat_rate_line"),
                   height = "100%"
+                ),
+                div(
+                  style = "position: absolute; top: 20px; right: 20px;",
+                  bslib::popover(
+                    shiny::actionLink(
+                      ns("cumulative_average_info"),
+                      shiny::tags$i(class = "fa fa-info-circle"),
+                      style = "font-size: 2rem;"
+                    ),
+                    "This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.",
+                    placement = "bottom"
+                  )
                 )
-              )
+              ) %>%
+                shiny::tagAppendAttributes(style = "position: relative;")
             )#,
             # bslib::nav_panel(
             #   "By year",
@@ -101,8 +127,21 @@ mod_analyse_ui <- function(id) {
                   ns("forest"),
                   height = "100%"
                 )
+              ),
+              div(
+                style = "position: absolute; top: 20px; right: 20px;",
+                bslib::popover(
+                  shiny::actionLink(
+                    ns("forest_info"),
+                    shiny::tags$i(class = "fa fa-info-circle"),
+                    style = "font-size: 2rem;"
+                  ),
+                  "This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.",
+                  placement = "bottom"
+                )
               )
-            )
+            ) %>%
+              shiny::tagAppendAttributes(style = "position: relative;")
           )
         )
       )
@@ -306,7 +345,7 @@ mod_analyse_server <- function(id, conn) {
           )
     })
 
-    predictions_data <- shiny::reactive({
+    model_predictions <- shiny::reactive({
       sjPlot::get_model_data(mod(), type = "pred", terms = "year")
     }) %>%
       shiny::bindCache(
@@ -315,8 +354,8 @@ mod_analyse_server <- function(id, conn) {
         cache = cachem::cache_disk(app_sys("./app-cache"))
       )
 
-    output$predicted_splat_rate <- plotly::renderPlotly({
-      model_data <- as.data.frame(predictions_data())
+    output$model_predicted <- plotly::renderPlotly({
+      model_data <- as.data.frame(model_predictions())
       int_ticks <- sort(unique(model_data$x))
       plotly::plot_ly(
         showlegend = FALSE,

@@ -65,32 +65,71 @@ mod_explore_journeys_ui <- function(id) {
             bslib::nav_panel(
               "Journeys",
               bslib::card_body(
-                padding = c(0, 0, 10, 0),
+                padding = c(15, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("cumulative_journeys_plot"),
                   height = "100%"
+                ),
+                div(
+                  style = "position: absolute; top: 5px; right: 20px;",
+                  bslib::popover(
+                    shiny::actionLink(
+                      ns("cumulative_journeys_info"),
+                      shiny::tags$i(class = "fa fa-info-circle"),
+                      style = "font-size: 2rem;"
+                    ),
+                    "This line plot shows the cumulative number of journeys recorded. Over time, more and more journeys are recorded.",
+                    placement = "bottom"
+                  )
                 )
-              )
+              ) %>%
+                shiny::tagAppendAttributes(style = "position: relative;")
             ),
             bslib::nav_panel(
               "Distance travelled",
               bslib::card_body(
-                padding = c(0, 0, 10, 0),
+                padding = c(15, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("cumulative_distance_plot"),
                   height = "100%"
+                ),
+                div(
+                  style = "position: absolute; top: 5px; right: 20px;",
+                  bslib::popover(
+                    shiny::actionLink(
+                      ns("cumulative_distance_info"),
+                      shiny::tags$i(class = "fa fa-info-circle"),
+                      style = "font-size: 2rem;"
+                    ),
+                    "This line plot shows the cumulative distance travelled during sampling journeys. Over time, total sampling distance increases.",
+                    placement = "bottom"
+                  )
                 )
-              )
+              ) %>%
+                shiny::tagAppendAttributes(style = "position: relative;")
             ),
             bslib::nav_panel(
               "Sign ups",
               bslib::card_body(
-                padding = c(0, 0, 10, 0),
+                padding = c(15, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("cumulative_sign_ups"),
                   height = "100%"
+                ),
+                div(
+                  style = "position: absolute; top: 5px; right: 20px;",
+                  bslib::popover(
+                    shiny::actionLink(
+                      ns("cumulative_sign_ups_info"),
+                      shiny::tags$i(class = "fa fa-info-circle"),
+                      style = "font-size: 2rem;"
+                    ),
+                    "This line plot shows the increase in registered citizen scientists over time.",
+                    placement = "bottom"
+                  )
                 )
-              )
+              ) %>%
+                shiny::tagAppendAttributes(style = "position: relative;")
             )
             # shiny::actionButton(
             #   ns("open_animation"),
@@ -104,22 +143,48 @@ mod_explore_journeys_ui <- function(id) {
             bslib::nav_panel(
               "Distance",
               bslib::card_body(
-                class = "p-0",
+                padding = c(15, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("distance_histogram"),
                   height = "100%"
+                ),
+                div(
+                  style = "position: absolute; top: 5px; right: 20px;",
+                  bslib::popover(
+                    shiny::actionLink(
+                      ns("distance_histogram_info"),
+                      shiny::tags$i(class = "fa fa-info-circle"),
+                      style = "font-size: 2rem;"
+                    ),
+                    "This histogram plot shows how many journeys of different lengths were recorded. There tends to be more shorter journeys than longer journeys.",
+                    placement = "bottom"
+                  )
                 )
-              )
+              ) %>%
+                shiny::tagAppendAttributes(style = "position: relative;")
             ),
             bslib::nav_panel(
               "Vehicle type",
               bslib::card_body(
-                class = "p-0",
+                padding = c(15, 0, 10, 0),
                 plotly::plotlyOutput(
                   ns("vehicle_bars"),
                   height = "100%"
+                ),
+                div(
+                  style = "position: absolute; top: 5px; right: 20px;",
+                  bslib::popover(
+                    shiny::actionLink(
+                      ns("vehicle_bars_info"),
+                      shiny::tags$i(class = "fa fa-info-circle"),
+                      style = "font-size: 2rem;"
+                    ),
+                    "This bar plot shows how many journeys were recorded in different vehicle types. Most journeys are recorded in cars.",
+                    placement = "bottom"
+                  )
                 )
-              )
+              ) %>%
+                shiny::tagAppendAttributes(style = "position: relative;")
             )
           ) %>%
             htmltools::tagAppendAttributes(style = "flex: 1;")
