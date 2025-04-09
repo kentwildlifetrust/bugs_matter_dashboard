@@ -19,10 +19,12 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
         j.start,
         j.end,
         splatcount,
+        splat_rate,
         distance,
         avg_speed,
         vehicle_cl,
         vehicle_he,
+        midpoint_time,
         EXTRACT(EPOCH FROM (midpoint_time - DATE_TRUNC('day', midpoint_time))) / 3600.0 AS hours_since_midnight,
         dayofyear,
         elevation,
@@ -88,7 +90,7 @@ WHERE u.country IS NOT NULL;
 
 GRANT SELECT ON bugs_matter.users_app TO "BugsMatterReadOnly";
 
-
+SELECT AVG(splat_rate) FROM bugs_matter.journeys8;
 
 -- DROP TABLE bugs_matter.trends_app;
 -- CREATE TABLE bugs_matter.trends_app (

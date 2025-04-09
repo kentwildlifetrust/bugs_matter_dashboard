@@ -704,7 +704,7 @@ or may lose suitable habitats due to shifting climate zones."))
       sprintf(
         "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset
       FROM bugs_matter.journeys5
-      WHERE country = '%s' AND year >= '%s' AND year <= '%s'",
+      WHERE country = '%s' AND year >= '%s' AND year <= '%s' ORDER BY midpoint_time",
         input$country_trend, input$year_baseline, input$year_comparison
       )
     }
@@ -712,7 +712,7 @@ or may lose suitable habitats due to shifting climate zones."))
       sprintf(
       "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset
       FROM bugs_matter.journeys5
-      WHERE region = '%s' AND country = '%s' AND year >= '%s' AND year <= '%s'",
+      WHERE region = '%s' AND country = '%s' AND year >= '%s' AND year <= '%s' ORDER BY midpoint_time",
       input$region_trend, input$country_trend, input$year_baseline, input$year_comparison
     )
     }
@@ -757,27 +757,27 @@ or may lose suitable habitats due to shifting climate zones."))
 
     # Plot 1 - Mean splat rate over time
     output$trendPlot1 <- renderPlot({
-      ggplot(data = mod_data, aes(x = midpoint_time)) +
-        geom_line(lwd=0.5, data = mod_data, aes(y=cummean(splat_rate)), color="black") +
-        scale_color_manual(values=c(colorBlind7), name="Year") +
-        theme_minimal(base_size = 12) +
-        labs(title = "Average Splat Rate Over Time", x = "Journey date", y = "Splat rate (splats/cm/mile)") +
-        theme(
-          plot.margin = margin(rep(10,4)),
-          plot.background = element_rect(fill = "#C6E5E8", color = NA),  # Set background color
-          panel.background = element_blank(),  # No panel background
-          panel.border = element_blank(),  # Remove panel border
-          text = element_text(family = "Rubik"),
+      browser()
+      ggplot2::ggplot(data = mod_data, ggplot2::aes(x = midpoint_time)) +
+        ggplot2::geom_line(lwd=0.5, data = mod_data,  ggplot2::aes(y=dplyr::cummean(mod_data$splat_rate)), color="black") +
+        ggplot2::theme_minimal(base_size = 12) +
+        ggplot2::labs(title = "Average Splat Rate Over Time", x = "Journey date", y = "Splat rate (splats/cm/mile)") +
+        ggplot2::theme(
+          plot.margin = ggplot2::margin(rep(10,4)),
+          plot.background = ggplot2::element_rect(fill = "#C6E5E8", color = NA),  # Set background color
+          panel.background = ggplot2::element_blank(),  # No panel background
+          panel.border = ggplot2::element_blank(),  # Remove panel border
+          text = ggplot2::element_text(family = "Rubik"),
           # Add space between title and plot
-          plot.title = element_text(margin = margin(b = 20)),  # Increase space between title and plot
+          plot.title = ggplot2::element_text(margin = ggplot2::margin(b = 20)),  # Increase space between title and plot
           # Make axis tick labels bold
-          axis.text.x = element_text(face = "bold"),
-          axis.text.y = element_text(face = "bold"),
+          axis.text.x = ggplot2::element_text(face = "bold"),
+          axis.text.y = ggplot2::element_text(face = "bold"),
           # Remove grid lines and background for minor axis
-          panel.grid.major = element_line(color = "#9FC8B8", linewidth = 0.5),
-          panel.grid.minor = element_blank(),  # Remove minor gridlines
-          axis.title.x = element_text(margin = margin(t = 15)),  # Add space between x-axis title and plot
-          axis.title.y = element_text(margin = margin(r = 15))   # Add space between y-axis title and plot
+          panel.grid.major = ggplot2::element_line(color = "#9FC8B8", linewidth = 0.5),
+          panel.grid.minor = ggplot2::element_blank(),  # Remove minor gridlines
+          axis.title.x = ggplot2::element_text(margin = ggplot2::margin(t = 15)),  # Add space between x-axis title and plot
+          axis.title.y = ggplot2::element_text(margin = ggplot2::margin(r = 15))   # Add space between y-axis title and plot
         )
     })
 
@@ -858,7 +858,6 @@ or may lose suitable habitats due to shifting climate zones."))
 
     # Plot 4 - Change in splat count over time
     output$trendPlot4 <- renderPlot({
-      browser()
       plot_model(mod,
                  type="pred",
                  terms="Year",

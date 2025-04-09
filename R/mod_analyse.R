@@ -350,6 +350,62 @@ mod_analyse_server <- function(id, conn) {
           )
 
     })
+
+    splat_rate_line_data <- shiny::reactive({
+      'SELECT
+        midpoint_time,
+        splat_rate
+        --AVG(splat_rate) OVER (ORDER BY midpoint_time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS splat_rate
+      FROM
+        bugs_matter.journeys_server
+      WHERE splat_rate IS NOT NULL AND midpoint_time IS NOT NULL
+      ORDER BY
+        midpoint_time;
+      ' %>%
+        glue::glue_data_sql(
+          list(
+            region_ids = get_region_ids(input$area),
+            baseline_year = input$year[1],
+            comparison_year = input$year[2]
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .)
+    }) %>%
+      shiny::bindCache(
+        input$area,
+        input$year,
+        cache = cachem::cache_disk(app_sys("./app-cache"))
+      )
+
+    output$splat_rate_line <- plotly::renderPlotly({
+      plotly::plot_ly(
+        data = splat_rate_line_data(),
+        x = ~midpoint_time,
+        y = ~dplyr::cummean(splat_rate),
+        type = "scatter",
+        mode = "lines",
+        line = list(color = "black")
+      ) %>%
+        plotly::layout(
+            yaxis = list(
+              title = "Cumulative average splat rate (splats/cm/mile)"
+            ),
+            xaxis = list(
+              title = "Journey Date",
+              tickvals = input$year[1]:input$year[2],
+              ticktext = input$year[1]:input$year[2],
+              showgrid = TRUE,
+              gridcolor = "lightgray",
+              gridwidth = 1
+            ),
+            dragmode = FALSE
+          ) %>%
+          plotly::config(
+            displayModeBar = FALSE
+          )
+    })
   })
 }
 
