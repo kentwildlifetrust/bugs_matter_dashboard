@@ -22,12 +22,12 @@ app_ui <- function(request) {
         mod_welcome_ui("welcome_1")
       ),
       bslib::nav_panel(
-        title = "Explore Journeys",
+        title = "Journeys",
         value = 2,
         mod_explore_journeys_ui("explore_journeys_1")
       ),
       bslib::nav_panel(
-        title = "Analyse Trends",
+        title = "Trends",
         value = 3,
         mod_analyse_ui("analyse_1")
       ),
