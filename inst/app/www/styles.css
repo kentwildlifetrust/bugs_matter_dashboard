@@ -208,3 +208,17 @@ hr.popup-hr {
 .irs.irs--shiny.js-irs-0.irs-with-grid {
   padding: 0 10px;
 }
+
+
+.cards-container {
+  display: flex;
+  gap: var(--_padding);
+  height: 100%;
+}
+
+@media only screen and (max-width: 800px) {
+  .cards-container {
+    flex-wrap: wrap;
+  }
+}
+

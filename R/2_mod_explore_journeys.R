@@ -42,9 +42,9 @@ mod_explore_journeys_ui <- function(id) {
       ),
       # shiny::hr(class = "data-header-hr"),
       shiny::div(
-        style = "display: flex; gap: var(--_padding); height: 100%;",
+        class = "cards-container",
         shiny::div(
-          style = "width: 60%; height: 100%; padding-bottom: var(--_padding);",
+          style = "flex-grow: 3; height: 100%; padding-bottom: var(--_padding); min-width: 350px;",
           bslib::card(
             height = "100%",
             full_screen = TRUE,
@@ -58,7 +58,7 @@ mod_explore_journeys_ui <- function(id) {
           )
         ),
         shiny::div(
-          style = "width: 40%; height: 100%; display: flex; flex-direction: column;",
+          style = "flex-grow: 2; height: 100%; display: flex; flex-direction: column; min-width: 350px;",
           bslib::navset_card_tab(
             # full_screen = TRUE, #causes page layout to break slightly :(
             title = "Sampling effort",
