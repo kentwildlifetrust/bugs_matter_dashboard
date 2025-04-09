@@ -197,11 +197,12 @@ mod_welcome_server <- function(id, conn, next_page) {
         format(big.mark = ",")
     })
 
-    overall_trend <- shiny::reactive({
+    mod <- shiny::reactive({
       journeys <- "SELECT
         splatcount,
         year,
         distance,
+        region_id,
         avg_speed,
         vehicle_cl,
         vehicle_he,
@@ -252,7 +253,10 @@ mod_welcome_server <- function(id, conn, next_page) {
           return(NULL)
         }
       )
-      est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
+    })
+
+    overall_trend <- shiny::reactive({
+      est <- cbind(Estimate = exp(coef(mod())), exp(confint(mod())))
       comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
       comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
       data.frame(
@@ -262,11 +266,16 @@ mod_welcome_server <- function(id, conn, next_page) {
           low = unname(comparison_year_coefs1["2.5 %"]),
           high = unname(comparison_year_coefs1["97.5 %"])
       )
-    }) %>%
+  }) %>%
       shiny::bindCache(
         1,
         cache = cachem::cache_disk(app_sys("./app-cache"))
       )
+
+
+    change_by_region <- shiny::reactive({
+
+    })
 
     output$trend <- shiny::renderText({
       paste0(overall_trend()$estimate, "%")

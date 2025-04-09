@@ -22,6 +22,18 @@ mod_explore_journeys_ui <- function(id) {
               ns("data_collection_info"),
               shiny::tags$i(class = "fa fa-info-circle")
           )
+        ),
+         shiny::actionButton(
+          ns("next_page"),
+          shiny::span(
+            style = "color: white;",
+            "Analyse trends",
+            shiny::tags$i(
+              class = "fa fa-arrow-right"
+            ),
+          ),
+          class = "btn-primary m-2",
+          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
         )
       ),
       shiny::hr(class = "data-hr"),
@@ -43,18 +55,6 @@ mod_explore_journeys_ui <- function(id) {
             selected = "uk",
             width = 250
           )
-        ),
-        shiny::actionButton(
-          ns("next_page"),
-          shiny::span(
-            style = "color: white;",
-            "Analyse trends",
-            shiny::tags$i(
-              class = "fa fa-arrow-right"
-            ),
-          ),
-          class = "btn-primary m-2",
-          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
         )
       ),
       # shiny::hr(class = "data-header-hr"),

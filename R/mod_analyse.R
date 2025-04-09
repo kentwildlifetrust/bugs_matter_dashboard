@@ -22,6 +22,18 @@ mod_analyse_ui <- function(id) {
           ns("analysis_info"),
           shiny::tags$i(class = "fa fa-info-circle")
         )
+      ),
+      shiny::actionButton(
+        ns("next_page"),
+        shiny::span(
+          style = "color: white;",
+          "Get involved",
+          shiny::tags$i(
+            class = "fa fa-arrow-right"
+          ),
+        ),
+        class = "btn-primary m-2",
+          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
       )
     ),
     shiny::hr(class = "data-hr"),
@@ -45,18 +57,6 @@ mod_analyse_ui <- function(id) {
           sep = ""
         ) %>%
         shiny::tagAppendAttributes(style = "margin-left: 15px; margin-bottom: calc(1rem - 12px);")
-      ),
-      shiny::actionButton(
-        ns("next_page"),
-        shiny::span(
-          style = "color: white;",
-          "Get involved",
-          shiny::tags$i(
-            class = "fa fa-arrow-right"
-          ),
-        ),
-        class = "btn-primary m-2",
-          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
       )
     ),
     # shiny::hr(class = "data-header-hr"),
