@@ -14,6 +14,7 @@ run_app <- function(
   uiPattern = "/",
   ...
 ) {
+  options(spinner.color = "#58A732")
   with_golem_options(
     app = shinyApp(
       ui = app_ui,

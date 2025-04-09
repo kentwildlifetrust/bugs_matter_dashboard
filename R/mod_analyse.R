@@ -304,7 +304,7 @@ mod_analyse_server <- function(id, conn, next_page) {
       shiny::bindCache(
         input$area,
         input$year,
-        cache = cachem::cache_disk(app_sys("./app-cache"))
+        cache = "app"
       )
 
     add_forest_trace <- function(p, model_data, color) {
@@ -406,7 +406,7 @@ mod_analyse_server <- function(id, conn, next_page) {
       shiny::bindCache(
         input$area,
         input$year,
-        cache = cachem::cache_disk(app_sys("./app-cache"))
+        cache = "app"
       )
 
     output$model_predicted <- plotly::renderPlotly({
@@ -477,7 +477,7 @@ mod_analyse_server <- function(id, conn, next_page) {
       shiny::bindCache(
         input$area,
         input$year,
-        cache = cachem::cache_disk(app_sys("./app-cache"))
+        cache = "app"
       )
 
     output$splat_rate_line <- plotly::renderPlotly({

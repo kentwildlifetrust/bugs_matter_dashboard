@@ -197,88 +197,8 @@ mod_welcome_server <- function(id, conn, next_page) {
         format(big.mark = ",")
     })
 
-    mod <- shiny::reactive({
-      journeys <- "SELECT
-        splatcount,
-        year,
-        distance,
-        region_id,
-        avg_speed,
-        vehicle_cl,
-        vehicle_he,
-        hours_since_midnight,
-        dayofyear,
-        elevation,
-        temp,
-        lon,
-        lat,
-        forest,
-        shrubland,
-        grassland,
-        wetland,
-        marine,
-        arable,
-        plantation,
-        urban,
-        log_cm_miles_offset
-      FROM bugs_matter.journeys_server;" %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(year = relevel(as.factor(.$year), ref = "2021"))
-      mod <- tryCatch(
-        MASS::glm.nb(
-          splatcount ~ year +
-            distance +
-            avg_speed +
-            vehicle_cl +
-            vehicle_he +
-            hours_since_midnight +
-            dayofyear +
-            elevation +
-            temp +
-            lon +
-            lat +
-            forest +
-            shrubland +
-            grassland +
-            wetland +
-            marine +
-            arable +
-            plantation +
-            urban +
-            stats::offset(log_cm_miles_offset),
-          data = journeys
-        ),
-        error = function(e) {
-          warning(paste("Model failed", input$area, "Error:", e$message))
-          return(NULL)
-        }
-      )
-    })
-
-    overall_trend <- shiny::reactive({
-      est <- cbind(Estimate = exp(coef(mod())), exp(confint(mod())))
-      comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
-      comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
-      data.frame(
-          baseline_year = 2021,
-          comparison_year = 2024,
-          estimate = unname(comparison_year_coefs1["Estimate"]),
-          low = unname(comparison_year_coefs1["2.5 %"]),
-          high = unname(comparison_year_coefs1["97.5 %"])
-      )
-  }) %>%
-      shiny::bindCache(
-        1,
-        cache = cachem::cache_disk(app_sys("./app-cache"))
-      )
-
-
-    change_by_region <- shiny::reactive({
-
-    })
-
     output$trend <- shiny::renderText({
-      paste0(overall_trend()$estimate, "%")
+      paste0(bugsMatterDashboard::overall_trend$estimate, "%")
     })
 
     output$map <- leaflet::renderLeaflet({
@@ -286,7 +206,11 @@ mod_welcome_server <- function(id, conn, next_page) {
         options = leaflet::leafletOptions(zoomControl = FALSE)
       ) %>%
         leaflet::addProviderTiles("CartoDB.Positron") %>%
-        leaflet::setView(lng = -3.244293, lat = 54.350497, zoom = 6) %>%
+        leaflet::setView(lng = -3.244293, lat = 54.350497, zoom = 6)
+    })
+
+    shiny::observe({
+      leaflet::leafletProxy("map") %>%
         leaflet::addPolygons(
           data = bugsMatterDashboard::region_trends,
           color = "gray",
@@ -361,8 +285,6 @@ mod_welcome_server <- function(id, conn, next_page) {
           opacity = 1
         )
     })
-
-
 
     shiny::observeEvent(input$next_page, {
       next_page(next_page() + 1)

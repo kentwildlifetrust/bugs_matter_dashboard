@@ -209,64 +209,67 @@ regions <- "SELECT DISTINCT nuts118nm AS name FROM bugs_matter.regionboundaries 
 coefs <- list()
 
 for (region in regions) {
-  tryCatch({
-    mod_data <- "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset
+  tryCatch(
+    {
+      mod_data <- "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset
                   FROM bugs_matter.journeys5
                   WHERE year >= '2021' AND year <= '2024' AND region = {region}" %>%
-      glue::glue_sql(.con = conn) %>%
-      DBI::dbGetQuery(conn, .)
+        glue::glue_sql(.con = conn) %>%
+        DBI::dbGetQuery(conn, .)
 
-    mod_data <- mod_data %>% dplyr::rename(
-      Year = year,
-      Distance = distance,
-      Average.speed = avg_speed,
-      Vehicle.type = vehicle_cl,
-      Vehicle.height = vehicle_he,
-      Vehicle.width = vehicle_wi,
-      Day.of.year = dayofyear,
-      Longitude = X,
-      Latitude = Y
-    )
-    mod_data$Time.of.day <- as.numeric(difftime(mod_data$midpoint_time, trunc(mod_data$midpoint_time, units = "days"), units = "hours"))
-    mod_data$Year <- relevel(as.factor(mod_data$Year), ref = "2021")
-    mod <- MASS::glm.nb(
-          splatcount ~ Year +
-            Distance +
-            Average.speed +
-            Time.of.day +
-            Day.of.year +
-            # Vehicle.type +
-            Vehicle.height +
-            Vehicle.width +
-            Longitude +
-            Latitude +
-            offset(log_cm_miles_offset),
-          data = mod_data
-        )
+      mod_data <- mod_data %>% dplyr::rename(
+        Year = year,
+        Distance = distance,
+        Average.speed = avg_speed,
+        Vehicle.type = vehicle_cl,
+        Vehicle.height = vehicle_he,
+        Vehicle.width = vehicle_wi,
+        Day.of.year = dayofyear,
+        Longitude = X,
+        Latitude = Y
+      )
+      mod_data$Time.of.day <- as.numeric(difftime(mod_data$midpoint_time, trunc(mod_data$midpoint_time, units = "days"), units = "hours"))
+      mod_data$Year <- relevel(as.factor(mod_data$Year), ref = "2021")
+      mod <- MASS::glm.nb(
+        splatcount ~ Year +
+          Distance +
+          Average.speed +
+          Time.of.day +
+          Day.of.year +
+          # Vehicle.type +
+          Vehicle.height +
+          Vehicle.width +
+          Longitude +
+          Latitude +
+          offset(log_cm_miles_offset),
+        data = mod_data
+      )
 
-    # print(summary(mod))
-    # VIFtable <- check_collinearity(mod, component = "count")
-    # print(VIFtable)
-    est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
-    comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
-    comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
+      # print(summary(mod))
+      # VIFtable <- check_collinearity(mod, component = "count")
+      # print(VIFtable)
+      est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
+      comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
+      comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
 
-    coefs <- c(
-      coefs,
-      list(
-        data.frame(
-          region_name = region,
-          baseline_year = 2021,
-          comparison_year = 2024,
-          estimate = unname(comparison_year_coefs1["Estimate"]),
-          low = unname(comparison_year_coefs1["2.5 %"]),
-          high = unname(comparison_year_coefs1["97.5 %"])
+      coefs <- c(
+        coefs,
+        list(
+          data.frame(
+            region_name = region,
+            baseline_year = 2021,
+            comparison_year = 2024,
+            estimate = unname(comparison_year_coefs1["Estimate"]),
+            low = unname(comparison_year_coefs1["2.5 %"]),
+            high = unname(comparison_year_coefs1["97.5 %"])
+          )
         )
       )
-    )
-  }, error = function(e) {
-    warning(e$message)
-  })
+    },
+    error = function(e) {
+      warning(e$message)
+    }
+  )
 }
 
 trends <- coefs %>%
@@ -330,6 +333,76 @@ region_choices <- list(
 )
 
 usethis::use_data(region_choices, overwrite = TRUE)
+
+
+journeys <- "SELECT
+        splatcount,
+        year,
+        distance,
+        region_id,
+        avg_speed,
+        vehicle_cl,
+        vehicle_he,
+        hours_since_midnight,
+        dayofyear,
+        elevation,
+        temp,
+        lon,
+        lat,
+        forest,
+        shrubland,
+        grassland,
+        wetland,
+        marine,
+        arable,
+        plantation,
+        urban,
+        log_cm_miles_offset
+      FROM bugs_matter.journeys_server;" %>%
+  DBI::dbGetQuery(conn, .) %>%
+  dplyr::mutate(year = relevel(as.factor(.$year), ref = "2021"))
+overall_mod <- tryCatch(
+  MASS::glm.nb(
+    splatcount ~ year +
+      distance +
+      avg_speed +
+      vehicle_cl +
+      vehicle_he +
+      hours_since_midnight +
+      dayofyear +
+      elevation +
+      temp +
+      lon +
+      lat +
+      forest +
+      shrubland +
+      grassland +
+      wetland +
+      marine +
+      arable +
+      plantation +
+      urban +
+      stats::offset(log_cm_miles_offset),
+    data = journeys
+  ),
+  error = function(e) {
+    warning(paste("Model failed", input$area, "Error:", e$message))
+    return(NULL)
+  }
+)
+
+mod <- overall_mod
+est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
+comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
+comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
+overall_trend <- data.frame(
+  baseline_year = 2021,
+  comparison_year = 2024,
+  estimate = unname(comparison_year_coefs1["Estimate"]),
+  low = unname(comparison_year_coefs1["2.5 %"]),
+  high = unname(comparison_year_coefs1["97.5 %"])
+)
+usethis::use_data(overall_trend, overwrite = TRUE)
 
 ## Your data can be accessed anywhere in the package code using
 packageName::dataName
