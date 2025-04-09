@@ -61,7 +61,7 @@ CREATE MATERIALIZED VIEW bugs_matter.regions_app AS (
     FROM bugs_matter.regionboundaries r
 ) WITH DATA;
 
-GRANT SELECT ON bugs_matter.regions_server TO "BugsMatterReadOnly";
+GRANT SELECT ON bugs_matter.regions_app TO "BugsMatterReadOnly";
 
 DROP MATERIALIZED VIEW bugs_matter.users_app;
 CREATE MATERIALIZED VIEW bugs_matter.users_app AS (

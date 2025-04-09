@@ -323,7 +323,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
         function(el, x) {
           // Leaflet.VectorGrid is loaded in header
           var vectorGrid = L.vectorGrid.protobuf(
-            'http://localhost:3000/tiles/%s/{z}/{x}/{y}.pbf', {
+            'https://bugs-matter-vector-tiles.azurewebsites.net/tiles/%s/{z}/{x}/{y}.pbf', {
               vectorTileLayerStyles: {
                   lines: function(properties, zoom) {
                       return {

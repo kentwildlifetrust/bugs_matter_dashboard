@@ -1,53 +1,43 @@
 FROM rocker/verse:4.4.2
 
 # Install system dependencies
-# not sure if all needed (copied from wilder_carbon_registry)
-RUN apt-get update -y && apt-get install -y  make \
-    pandoc \
-    zlib1g-dev \
-    libpq-dev \
-    libicu-dev \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libx11-dev \
-    git \
-    libfontconfig1-dev \
-    libfreetype6-dev \
-    libfribidi-dev \
-    libharfbuzz-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libtiff-dev \
-    libgdal-dev \
-    gdal-bin \
-    libgeos-dev \
-    libproj-dev \
-    libsqlite3-dev \
-    libudunits2-dev \
-    libmagick++-dev \
-    gsfonts \
-    libprotobuf-dev \
-    protobuf-compiler \
-    libprotoc-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update -y && \
+    apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev libicu-dev make zlib1g-dev pandoc libpng-dev libgdal-dev gdal-bin libgeos-dev libproj-dev libsqlite3-dev libudunits2-dev libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-
-# install R dependencies
-# do this before copying the app-code, to ensure this layer is cached
+# Create a directory in the image and set wd to it
 WORKDIR /build
 
-# Install required R packages
-RUN R -q -e "options(warn=2); install.packages(c('shiny', 'leaflet', 'sf', 'dplyr', 'tidyr', 'pool', 'RPostgres', \
-                                                 'ggplot2', 'MASS', 'sjPlot', 'scales', 'shinycssloaders', \
-                                                 'shinyFeedback', 'shinydashboard', 'shinyjs', 'bslib', 'slickR'))"
+# Install remotes and renv
+RUN R -q -e "options(warn=2); install.packages('remotes')"
+RUN R -q -e 'options(warn=2); remotes::install_version("renv", version = "1.1.1")'
 
-# install R code
+#private GitHub dependencies - we need to pass in GITHUB_PAT to be used by renv::restore()
+#don't forget to adjust docker-build.yml
+#e.g. docker build --progress=plain --build-arg GITHUB_PAT=${{ secrets.SHINY_HELPER_PAT }} -t planning_portal .
+#ARG GITHUB_PAT
+
+# Copy renv.lock into image directory and restore packages
+COPY renv.lock.prod renv.lock
+RUN R -q -e 'options(warn=2); renv::restore()'
+RUN rm -rf renv.lock
+
+# add all app files not in .dockerignore to /app_pkg within the image directory
 COPY . /app_pkg
+# List files in /app_pkg for debugging purposes
+RUN ls -lh
+# Build R package from /app_pkg. This creates a tarball (tar.gz file) in /build
+RUN R CMD build /app_pkg
+# Remove the /app_pkg directory
+RUN rm -rf /app_pkg
 
-RUN ls -lah /app_pkg
+# Install the R package from the tarball
+RUN R CMD INSTALL bugsMatterDashboard*.tar.gz
+# Remove the tarball
+RUN rm -rf bugsMatterDashboard*.tar.gz
 
-# Set up runtime
+COPY inst inst
+
 EXPOSE 3838
-CMD ["R", "-e", "shiny::runApp('/app_pkg', host='0.0.0.0', port=3838)"]
-
-
+# set options and run app in container
+CMD R -e "options('shiny.port'=3838, shiny.host='0.0.0.0', golem.app.prod=TRUE); library(bugsMatterDashboard); bugsMatterDashboard::run_app()"

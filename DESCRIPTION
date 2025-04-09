@@ -7,7 +7,7 @@ Authors@R: c(
   )
 Description: Car number plate insect splat counts as a measure of invertebrate abundance change over time.
 License: MIT + file LICENSE
-Imports: 
+Imports:
     AzureStor,
     broom,
     bslib,
@@ -42,5 +42,3 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Language: en-US
-Depends: 
-    R (>= 3.5)

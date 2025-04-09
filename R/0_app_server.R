@@ -13,8 +13,8 @@ app_server <- function(input, output, session) {
       host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
       port = 5432,
       dbname = "shared",
-      user = Sys.getenv("USER"),
-      password = Sys.getenv("PASSWORD"),
+      user = Sys.getenv("BUGS_MATTER_USER"),
+      password = Sys.getenv("BUGS_MATTER_PASSWORD"),
       sslmode = "prefer"
     )
   }, error = function(e) {
