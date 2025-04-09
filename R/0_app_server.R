@@ -21,10 +21,16 @@ app_server <- function(input, output, session) {
     handle_error(e, "app_server.R", alert_title = "Database error")
   })
 
-  mod_explore_journeys_server("explore_journeys_1", conn)
-  mod_welcome_server("welcome_1", conn)
-  mod_analyse_server("analyse_1", conn)
+  next_page <- shiny::reactiveVal(0)
 
+  shiny::observeEvent(next_page(), {
+    shiny::req(next_page() > 0)
+    bslib::nav_select("page_navbar", as.character(as.numeric(input$page_navbar) + 1))
+  })
 
+  mod_welcome_server("welcome_1", conn, next_page)
+  mod_explore_journeys_server("explore_journeys_1", conn, next_page)
+  mod_analyse_server("analyse_1", conn, next_page)
+  mod_get_involved_server("get_involved_1", conn)
 }
 ##

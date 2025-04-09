@@ -30,6 +30,7 @@ theme <- function() {
     "card-border-color" = "#58A732",
     "navbar-light-active-color" = "#142D18",
     "navbar-dark-active-color" = "#142D18",
-    "nav-link-active-font-weight" = 600
+    "nav-link-active-font-weight" = 600,
+    "font-size-lg" = "1.2rem"
   )
 }

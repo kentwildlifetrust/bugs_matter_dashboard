@@ -26,7 +26,7 @@ mod_welcome_ui <- function(id) {
           shiny::h1(
             "Bugs Matter Dashboard"
           ),
-          shiny::br(),
+          shiny::tags$br(),
           shiny::p(
             class = "welcome-lead",
             "Here, you can keep up-to-date with the findings of Bugs Matter, the global citizen science
@@ -36,7 +36,7 @@ mod_welcome_ui <- function(id) {
             You can also find information on the numbers of users in different parts of the world and how many journeys have been recorded by our top recorders!"
           )
         ),
-        shiny::br(),
+        shiny::tags$br(),
         shiny::div(
           class = "welcome-body",
           shiny::h3("At a Glance"),
@@ -87,7 +87,7 @@ mod_welcome_ui <- function(id) {
                 )
               )
             ),
-            br(),
+            shiny::tags$br(),
             bslib::card(
               min_height = 600,
               bslib::card_header(
@@ -100,7 +100,7 @@ mod_welcome_ui <- function(id) {
               full_screen = TRUE
             ),
           ),
-          shiny::br(),
+          shiny::tags$br(),
           shiny::h3("About the Project"),
           shiny::p(
             "The Bugs Matter citizen science survey uses an innovative
@@ -138,17 +138,33 @@ bioabundance and species diversity, they make up the
 greatest proportion of life on Earth."
           ),
           shiny::p(
-            "Habitat loss and fragmentation has caused declines in
-biodiversity across the world. The conversion of natural
-habitats into agriculture, urban areas, and infrastructure
-development leads to the loss of suitable habitats for insects,
-making it difficult for them to feed and reproduce. The
-widespread use of chemical pesticides, including insecticides,
-herbicides, and fungicides, can have detrimental effects on
-insect populations. Climate change alters weather patterns,
-affecting insect life cycles, behaviour, and distribution. Some
-insects may struggle to adapt to rapidly changing conditions
-or may lose suitable habitats due to shifting climate zones."
+            htmltools::HTML("The Bugs Matter citizen science survey took place throughout the UK between 1<sup>st</sup> June and 31<sup>st</sup>
+            August in 2021, 2022 and 2023, and between 1<sup>st</sup> May and 30<sup>th</sup> September in 2024, using the Bugs Matter
+            mobile application. In 2021 and 2022, users received a standardised sampling grid,
+            termed a ‘splatometer’, in the post after they had signed up in the application.
+            However, in 2023 the whole number plate was used to count insect splats."
+          )),
+          shiny::p(
+            "The Bugs Matter app is available to download for free from the Apple App Store and Google Play.
+            The app was built by Natural Apptitude and uses the Coreo data collection system. Within the app,
+            users add details about the vehicle used for sampling, and are asked to confirm whether their number
+            plate measures to standard UK dimensions, and if not, asked to manually input the
+            dimensions of their number plate. Multiple vehicles can be added by a single user. Vehicle specification
+            information is used in the analysis to determine if different types of vehicles sample insects differently."
+          ),
+          shiny::div(
+            style = "display: flex; justify-content: right; margin-bottom: 60px;",
+            shiny::actionButton(
+              ns("next_page"),
+              shiny::span(
+                style = "color: white;",
+                "Explore journeys",
+                shiny::tags$i(
+                  class = "fa fa-arrow-right"
+                ),
+              ),
+              class = "btn-primary m-2"
+            )
           )
         )
       )
@@ -159,7 +175,7 @@ or may lose suitable habitats due to shifting climate zones."
 #' welcome Server Functions
 #'
 #' @noRd
-mod_welcome_server <- function(id, conn) {
+mod_welcome_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
@@ -181,12 +197,85 @@ mod_welcome_server <- function(id, conn) {
         format(big.mark = ",")
     })
 
+    overall_trend <- shiny::reactive({
+      journeys <- "SELECT
+        splatcount,
+        year,
+        distance,
+        avg_speed,
+        vehicle_cl,
+        vehicle_he,
+        hours_since_midnight,
+        dayofyear,
+        elevation,
+        temp,
+        lon,
+        lat,
+        forest,
+        shrubland,
+        grassland,
+        wetland,
+        marine,
+        arable,
+        plantation,
+        urban,
+        log_cm_miles_offset
+      FROM bugs_matter.journeys_server;" %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(year = relevel(as.factor(.$year), ref = "2021"))
+      mod <- tryCatch(
+        MASS::glm.nb(
+          splatcount ~ year +
+            distance +
+            avg_speed +
+            vehicle_cl +
+            vehicle_he +
+            hours_since_midnight +
+            dayofyear +
+            elevation +
+            temp +
+            lon +
+            lat +
+            forest +
+            shrubland +
+            grassland +
+            wetland +
+            marine +
+            arable +
+            plantation +
+            urban +
+            stats::offset(log_cm_miles_offset),
+          data = journeys
+        ),
+        error = function(e) {
+          warning(paste("Model failed", input$area, "Error:", e$message))
+          return(NULL)
+        }
+      )
+      est <- cbind(Estimate = exp(coef(mod)), exp(confint(mod)))
+      comparison_year_coefs <- est[grepl("2024", rownames(est)), ]
+      comparison_year_coefs1 <- round(((1 - comparison_year_coefs) * 100) * -1, 1)
+      data.frame(
+          baseline_year = 2021,
+          comparison_year = 2024,
+          estimate = unname(comparison_year_coefs1["Estimate"]),
+          low = unname(comparison_year_coefs1["2.5 %"]),
+          high = unname(comparison_year_coefs1["97.5 %"])
+      )
+    }) %>%
+      shiny::bindCache(
+        1,
+        cache = cachem::cache_disk(app_sys("./app-cache"))
+      )
+
     output$trend <- shiny::renderText({
-      "-55%"
+      paste0(overall_trend()$estimate, "%")
     })
 
     output$map <- leaflet::renderLeaflet({
-      leaflet::leaflet() %>%
+      leaflet::leaflet(
+        options = leaflet::leafletOptions(zoomControl = FALSE)
+      ) %>%
         leaflet::addProviderTiles("CartoDB.Positron") %>%
         leaflet::setView(lng = -3.244293, lat = 54.350497, zoom = 6) %>%
         leaflet::addPolygons(
@@ -239,12 +328,12 @@ mod_welcome_server <- function(id, conn) {
                 return()
               }
               if (low < 0 & high < 0) {
-                return('<i class="fa fa-solid fa-down map-data-icon" style="font-size: 2rem; color: #000"></i>')
+                return('<i class="fa fa-solid fa-down map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
               }
               if (low > 0 & high > 0) {
-                return('<i class="fa fa-solid fa-up map-data-icon" style="font-size: 2rem; color: #000"></i>')
+                return('<i class="fa fa-solid fa-up map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
               }
-              return('<i class="fa fa-solid fa-minus map-data-icon" style="font-size: 2rem; color: #000"></i>')
+              return('<i class="fa fa-solid fa-minus map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
             },
             low = bugsMatterDashboard::region_centres$low,
             high = bugsMatterDashboard::region_centres$high,
@@ -262,6 +351,12 @@ mod_welcome_server <- function(id, conn) {
           values = bugsMatterDashboard::region_trends$estimate,
           opacity = 1
         )
+    })
+
+
+
+    shiny::observeEvent(input$next_page, {
+      next_page(next_page() + 1)
     })
   })
 }

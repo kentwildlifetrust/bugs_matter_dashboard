@@ -13,38 +13,55 @@ library(magrittr)
 
 mod_explore_journeys_ui <- function(id) {
   ns <- shiny::NS(id)
-  bslib::page_sidebar(
-    fillable = TRUE,
-    sidebar = bslib::sidebar(
-      shiny::selectInput(
-        ns("year"),
-        "Year",
-        choices = c("2021 to 2024", bugsMatterDashboard::years),
-        selected = "All"
-      ),
-      shiny::selectInput(
-        ns("area"),
-        "Area",
-        choices = c(bugsMatterDashboard::region_choices),
-        selected = "uk"
-      )
-    ),
-    shiny::div(
-      style = "height: calc(100svh - 70px); display: flex; flex-direction: column;",
-
+  bslib::page(
       shiny::div(
         class = "data-header",
-        shiny::h2("Data Collection"),
+        shiny::h2(
+          "Data Collection",
+          shiny::actionLink(
+              ns("data_collection_info"),
+              shiny::tags$i(class = "fa fa-info-circle")
+          )
+        )
+      ),
+      shiny::hr(class = "data-hr"),
+      shiny::div(
+        class = "data-control-row",
         shiny::div(
-          class = "data-lead",
-          "Lorem consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat."
+          class = "data-controls",
+          shiny::selectInput(
+            ns("year"),
+            "Year",
+            choices = c("2021 to 2024", bugsMatterDashboard::years),
+            selected = "All",
+            width = 150
+          ),
+          shiny::selectInput(
+            ns("area"),
+            "Area",
+            choices = c(bugsMatterDashboard::region_choices),
+            selected = "uk",
+            width = 250
+          )
         ),
+        shiny::actionButton(
+          ns("next_page"),
+          shiny::span(
+            style = "color: white;",
+            "Analyse trends",
+            shiny::tags$i(
+              class = "fa fa-arrow-right"
+            ),
+          ),
+          class = "btn-primary m-2",
+          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+        )
       ),
       # shiny::hr(class = "data-header-hr"),
       shiny::div(
         class = "cards-container",
         shiny::div(
-          style = "flex-grow: 3; height: 100%; padding-bottom: var(--_padding); min-width: 350px;",
+          style = "height: 100%; padding-bottom: var(--_padding); min-width: 350px;",
           bslib::card(
             height = "100%",
             full_screen = TRUE,
@@ -58,7 +75,7 @@ mod_explore_journeys_ui <- function(id) {
           )
         ),
         shiny::div(
-          style = "flex-grow: 2; height: 100%; display: flex; flex-direction: column; min-width: 350px;",
+          style = "height: 100%; display: flex; flex-direction: column; min-width: 350px;",
           bslib::navset_card_tab(
             # full_screen = TRUE, #causes page layout to break slightly :(
             title = "Sampling effort",
@@ -76,7 +93,7 @@ mod_explore_journeys_ui <- function(id) {
                     shiny::actionLink(
                       ns("cumulative_journeys_info"),
                       shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 2rem;"
+                      style = "font-size: 1.5rem;"
                     ),
                     "This line plot shows the cumulative number of journeys recorded. Over time, more and more journeys are recorded.",
                     placement = "bottom"
@@ -99,7 +116,7 @@ mod_explore_journeys_ui <- function(id) {
                     shiny::actionLink(
                       ns("cumulative_distance_info"),
                       shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 2rem;"
+                      style = "font-size: 1.5rem;"
                     ),
                     "This line plot shows the cumulative distance travelled during sampling journeys. Over time, total sampling distance increases.",
                     placement = "bottom"
@@ -122,7 +139,7 @@ mod_explore_journeys_ui <- function(id) {
                     shiny::actionLink(
                       ns("cumulative_sign_ups_info"),
                       shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 2rem;"
+                      style = "font-size: 1.5rem;"
                     ),
                     "This line plot shows the increase in registered citizen scientists over time.",
                     placement = "bottom"
@@ -154,7 +171,7 @@ mod_explore_journeys_ui <- function(id) {
                     shiny::actionLink(
                       ns("distance_histogram_info"),
                       shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 2rem;"
+                      style = "font-size: 1.5rem;"
                     ),
                     "This histogram plot shows how many journeys of different lengths were recorded. There tends to be more shorter journeys than longer journeys.",
                     placement = "bottom"
@@ -177,7 +194,7 @@ mod_explore_journeys_ui <- function(id) {
                     shiny::actionLink(
                       ns("vehicle_bars_info"),
                       shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 2rem;"
+                      style = "font-size: 1.5rem;"
                     ),
                     "This bar plot shows how many journeys were recorded in different vehicle types. Most journeys are recorded in cars.",
                     placement = "bottom"
@@ -187,25 +204,67 @@ mod_explore_journeys_ui <- function(id) {
                 shiny::tagAppendAttributes(style = "position: relative;")
             )
           ) %>%
-            htmltools::tagAppendAttributes(style = "flex: 1;")
+            htmltools::tagAppendAttributes(style = "flex: 1; margin-bottom: 0;")
         )
       )
-    )
   )
 }
 
 #' journeys_map Server Functions
 #'
 #' @noRd
-mod_explore_journeys_server <- function(id, conn) {
+mod_explore_journeys_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    shiny::observeEvent(input$data_collection_info, {
+      shiny::showModal(
+        shiny::modalDialog(
+          shiny::div(
+            style = "display: flex; justify-content: space-between; align-items: center;",
+            shiny::h3("About Data Collection"),
+            shiny::actionLink(
+              ns("close_modal"),
+              shiny::tags$i(class = "fa fa-xmark-circle"),
+              style = "font-size: 1.5rem; margin-bottom: .5rem;"
+            )
+          ),
+          shiny::p(
+              "Prior to commencing a journey, citizen scientists clean the front number plate of their vehicle to
+              remove any residual insects. The app requests a checkbox confirmation that the number plate has been
+              cleaned. Upon starting a journey, citizen scientists tap a button in the app to begin recording the
+              journey route using the mobile device’s GPS. This provides crucial data on the length, duration,
+              location, and average speed of the journey. Insects are then sampled when they collide with the number
+              plate throughout the duration of a journey. Upon completing a journey, citizen scientists tap a
+              button in the app to finish recording the journey route. They record the number of insect splats on
+              the front number plate of their vehicle. The journey route, the number of insect splats, and a photograph
+              of the number plate are submitted via the app. Citizen scientists are asked to participate only on
+              essential journeys and not to make journeys specifically to take part in the survey."
+            ),
+            shiny::p(
+              "Prior to the analysis, some steps are taken to clean the data and remove outliers. Journeys with
+              GPS errors are removed from the dataset. These errors are caused by a drop-out of background tracking
+              due to GPS signal being lost by the device, and they appear as long straight lines between distant
+                  locations. Very short journeys, very fast journeys, very slow journeys, or journeys with over 500
+                  insect splats are removed from the dataset.  Finally, all journeys during which rainfall occurred
+                  were omitted from the dataset due to the high chance that rainfall could dislodge insects from
+                  number plates and create inaccurate splat counts."
+            ),
+            easyClose = TRUE,
+            footer = NULL
+        )
+      )
+    })
+
+    shiny::observeEvent(input$close_modal, {
+      shiny::removeModal()
+    })
 
     #---------------------journeys map-----------------------#
 
     output$map <- leaflet::renderLeaflet({
       map <- leaflet::leaflet(
-        options = leaflet::leafletOptions(maxZoom = 12)
+        options = leaflet::leafletOptions(maxZoom = 12, zoomControl = FALSE)
       ) %>%
         leaflet::addProviderTiles("CartoDB.Positron")
 
@@ -592,6 +651,10 @@ mod_explore_journeys_server <- function(id, conn) {
       plotly::config(
         displayModeBar = FALSE
       )
+    })
+
+    shiny::observeEvent(input$next_page, {
+      next_page(next_page() + 1)
     })
 
 

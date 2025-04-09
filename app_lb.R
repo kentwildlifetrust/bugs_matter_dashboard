@@ -113,7 +113,7 @@ tags$head(
                           ),
                           selectInput("region", "Select a Region:", choices = NULL),
                           selectInput("year", "Select a Year", choices = NULL),
-                          br(),
+                          shiny::tags$br(),
                           textOutput("de_text")
                         ),
 
@@ -121,7 +121,7 @@ tags$head(
                           # Wrap the leafletOutput in a div with the custom class
                           tags$div(class = "bordered-map",
                                    leafletOutput("map", height = "50vh")),  # Leaflet map
-                          br(),  # Add space
+                          shiny::tags$br(),  # Add space
                           fluidRow(
                             column(4, plotOutput("plot1", height = '30vh') |> tooltip("This line plot shows the cumulative number of journeys recorded. Over time, more and more journeys are recorded.", placement = "auto") %>%
                                      withSpinner(type=7, color = "#75DA40")),
@@ -147,8 +147,8 @@ tags$head(
                           selectInput("year_baseline", "Select a baseline year:", choices = NULL),
                           selectInput("year_comparison", "Select a comparison year:", choices = NULL),
                           loadingButton("calculate_trend", "Calculate Trend", style = "color: white; background-color: #75DA40;"),
-                          br(),
-                          br(),
+                          shiny::tags$br(),
+                          shiny::tags$br(),
                           textOutput("ta_text")
                         ),
 
@@ -158,7 +158,7 @@ tags$head(
                             column(5, plotOutput("trendPlot2", height = '40vh') |> tooltip("This boxplot with jittered data points shows the spread of the insect splat rate (splats per cm per mile) data. The boxes indicate the interquartile range (central 50% of the data), either side of the median splat rate which is shown by the horizontal line inside the box. The vertical lines extend out by 1.5 times the interquartile range, and the data points themselves are ‘horizontally jittered’ so they do not overlap to improve visualization. The thick green line at y = 0 are the data points for journeys where no bug splats were recorded.", placement = "auto")),
                             column(2, valueBoxOutput("trendStat2", width = NULL))
                             ),
-                          br(),  # Add space
+                          shiny::tags$br(),  # Add space
                           fluidRow(
                             column(5, plotOutput("trendPlot3", height = '40vh') |> tooltip("This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.", placement = "auto")),
                             column(5, plotOutput("trendPlot4", height = '40vh') |> tooltip("This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.", placement = "auto")),
@@ -178,7 +178,7 @@ tags$head(
                                          )
                           ),
                           selectInput("region_user", "Select a Region:", choices = NULL),
-                          br(),
+                          shiny::tags$br(),
                           textOutput("us_text")
                         ),
 
@@ -186,7 +186,7 @@ tags$head(
                           # Wrap the leafletOutput in a div with the custom class
                           tags$div(class = "bordered-map",
                                    leafletOutput("usermap", height = "50vh")),  # Leaflet map
-                          br(),  # Add space
+                          shiny::tags$br(),  # Add space
                           fluidRow(column(4, plotOutput("userPlot1", height = '30vh') |> tooltip("This line plot shows the increase in registered citizen scientists over time.", placement = "auto") %>%
                                      withSpinner(type=7, color = "#75DA40")),
                                    column(4, valueBoxOutput("userStat1", width = NULL)),

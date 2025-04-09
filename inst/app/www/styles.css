@@ -12,10 +12,12 @@ h2 {
   font-family: 'Adelle';
   font-size: 1.7rem;
   font-weight: 600;
+  margin-bottom: 0;
+  line-height: 1.7rem;
 }
 
 h3 {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   font-family: 'Adelle';
   font-weight: 700;
 }
@@ -183,7 +185,32 @@ hr.popup-hr {
 }
 
 .data-header {
-  margin: 20px 30px 20px;
+  margin: 30px 30px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+hr.data-hr {
+  margin: 0.5rem 0;
+}
+
+.data-control-row {
+  margin: 10px 30px -16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.data-controls {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.control-label {
+  margin-bottom: 3px !important;
 }
 
 @media only screen and (max-width: 800px) {
@@ -205,20 +232,22 @@ hr.popup-hr {
 .irs--shiny .irs-handle, .irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single, .irs--shiny .irs-bar {
   background-color: #58A732;
 }
-.irs.irs--shiny.js-irs-0.irs-with-grid {
+/* .irs.irs--shiny.js-irs-0.irs-with-grid {
   padding: 0 10px;
-}
+} */
 
 
 .cards-container {
-  display: flex;
-  gap: var(--_padding);
-  height: 100%;
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  gap: var(--bslib-mb-spacer);
+  padding: var(--bslib-mb-spacer);
+  height: calc(100svh - 270px);
 }
 
 @media only screen and (max-width: 800px) {
   .cards-container {
-    flex-wrap: wrap;
+    display: block;
   }
 }
 

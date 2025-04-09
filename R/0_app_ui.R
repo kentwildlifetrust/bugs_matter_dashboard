@@ -10,22 +10,31 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
     bslib::page_navbar(
+      id = "page_navbar",
       title = shiny::tagList(
-        tags$img(src = "www/bm_bug_icon1.png", height = "36px"),
+        tags$img(src = "www/bm_bug_icon1.png", height = "30px"),
         "Bugs",
         shiny::span("Matter")
       ),
       bslib::nav_panel(
-        title = "Welcome to the app",
+        title = "Welcome",
+        value = 1,
         mod_welcome_ui("welcome_1")
       ),
       bslib::nav_panel(
         title = "Explore Journeys",
+        value = 2,
         mod_explore_journeys_ui("explore_journeys_1")
       ),
       bslib::nav_panel(
         title = "Analyse Trends",
+        value = 3,
         mod_analyse_ui("analyse_1")
+      ),
+      bslib::nav_panel(
+        title = "Get Involved",
+        value = 4,
+        mod_get_involved_ui("get_involved_1")
       ),
       theme = theme()
     )
