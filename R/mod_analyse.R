@@ -51,7 +51,7 @@ mod_analyse_ui <- function(id) {
           style = "width: 40%; height: 100%; display: flex; flex-direction: column;",
           bslib::navset_card_tab(
             # full_screen = TRUE, #causes page layout to break slightly :(
-            title = "Splat Rate",
+            title = "Change in splat rate over time",
             bslib::nav_panel(
               "Model predictions",
               bslib::card_body(
@@ -63,7 +63,7 @@ mod_analyse_ui <- function(id) {
               )
             ),
             bslib::nav_panel(
-              "By date",
+              "Cumulative average",
               bslib::card_body(
                 padding = c(0, 0, 10, 0),
                 plotly::plotlyOutput(
@@ -71,17 +71,17 @@ mod_analyse_ui <- function(id) {
                   height = "100%"
                 )
               )
-            ),
-            bslib::nav_panel(
-              "By year",
-              bslib::card_body(
-                padding = c(0, 0, 10, 0),
-                plotly::plotlyOutput(
-                  ns("splat_rate_box"),
-                  height = "100%"
-                )
-              )
-            )
+            )#,
+            # bslib::nav_panel(
+            #   "By year",
+            #   bslib::card_body(
+            #     padding = c(0, 0, 10, 0),
+            #     plotly::plotlyOutput(
+            #       ns("splat_rate_box"),
+            #       height = "100%"
+            #     )
+            #   )
+            # )
           ) %>%
             htmltools::tagAppendAttributes(style = "flex: 1;")
         ),
@@ -283,7 +283,15 @@ mod_analyse_server <- function(id, conn) {
           color = "darkgray"
         ) %>%
         plotly::layout(
-            xaxis = list(title = "Indcidence rate ratios", type = "log", showgrid = FALSE),
+            xaxis = list(
+              title = "Incidence rate ratios",
+              type = "log",
+              tickvals = c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100),
+              ticktext = c("0.0001", "0.001", "0.01", "0.1", "1", "10", "100"),
+              showgrid = FALSE,
+              tickfont = list(size = 10),
+              ticks = "outside"
+            ),
             yaxis = list(title = "Explanatory variable"),
             shapes = list(list(
               type = "line",
@@ -390,7 +398,7 @@ mod_analyse_server <- function(id, conn) {
       ) %>%
         plotly::layout(
             yaxis = list(
-              title = "Cumulative average splat rate (splats/cm/mile)"
+              title = "Splat rate (splats/cm/mile)"
             ),
             xaxis = list(
               title = "Journey Date",
@@ -406,11 +414,7 @@ mod_analyse_server <- function(id, conn) {
             displayModeBar = FALSE
           )
     })
+
   })
 }
 
-## To be copied in the UI
-# mod_journeys_map_ui("journeys_map_1")
-
-## To be copied in the server
-# mod_journeys_map_server("journeys_map_1")
