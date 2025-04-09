@@ -185,18 +185,18 @@ hr.popup-hr {
 }
 
 .data-header {
-  margin: 30px 30px 10px;
+  margin: 30px 30px -10px;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
 hr.data-hr {
-  margin: 0.5rem 0;
+  margin: 0.2rem 0;
 }
 
 .data-control-row {
-  margin: 10px 30px -16px;
+  margin: 0 30px -28px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -207,6 +207,7 @@ hr.data-hr {
   display: flex;
   gap: 6px;
   align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 .control-label {
@@ -215,7 +216,7 @@ hr.data-hr {
 
 @media only screen and (max-width: 800px) {
   .data-header {
-    margin: 30px 12px 10px;
+    margin: 10px 12px -10px;
   }
 }
 
@@ -242,12 +243,17 @@ hr.data-hr {
   grid-template-columns: 2fr 3fr;
   gap: var(--bslib-mb-spacer);
   padding: var(--bslib-mb-spacer);
-  height: calc(100svh - 270px);
+  height: calc(100svh - 230px);
 }
 
 @media only screen and (max-width: 800px) {
   .cards-container {
-    display: block;
+    grid-template-columns: 1fr;
+    height: 1500px;
   }
 }
 
+/*----------spinner fix-------------*/
+.shiny-spinner-output-container {
+  height: 100%;
+}

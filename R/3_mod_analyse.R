@@ -73,9 +73,11 @@ mod_analyse_ui <- function(id) {
             bslib::card_body(
               padding = c(0, 0, 10, 0),
               height = "100%",
-              plotly::plotlyOutput(
-                ns("model_predicted"),
-                height = "100%"
+              shinycssloaders::withSpinner(
+                plotly::plotlyOutput(
+                  ns("model_predicted"),
+                  height = "100%"
+                )
               ),
               div(
                 style = "position: absolute; top: 20px; right: 20px;",
@@ -96,9 +98,11 @@ mod_analyse_ui <- function(id) {
             "Cumulative average",
             bslib::card_body(
               padding = c(0, 0, 10, 0),
-              plotly::plotlyOutput(
-                ns("splat_rate_line"),
-                height = "100%"
+              shinycssloaders::withSpinner(
+                plotly::plotlyOutput(
+                  ns("splat_rate_line"),
+                  height = "100%"
+                )
               ),
               div(
                 style = "position: absolute; top: 20px; right: 20px;",
@@ -138,9 +142,11 @@ mod_analyse_ui <- function(id) {
             height = "100%",
             div(
               style = "max-height: 100%; overflow-y: auto;",
-              plotly::plotlyOutput(
-                ns("forest"),
-                height = 1000
+              shinycssloaders::withSpinner(
+                plotly::plotlyOutput(
+                  ns("forest"),
+                  height = 1000
+                )
               ),
             ),
             div(

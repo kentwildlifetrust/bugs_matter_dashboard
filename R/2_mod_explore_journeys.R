@@ -70,7 +70,9 @@ mod_explore_journeys_ui <- function(id) {
             ),
             bslib::card_body(
               padding = c(0, 0, 0, 0),
-              leaflet::leafletOutput(ns("map"))
+              shinycssloaders::withSpinner(
+                leaflet::leafletOutput(ns("map"), height = "100%")
+              )
             )
           )
         ),
@@ -83,9 +85,11 @@ mod_explore_journeys_ui <- function(id) {
               "Journeys",
               bslib::card_body(
                 padding = c(15, 0, 10, 0),
-                plotly::plotlyOutput(
-                  ns("cumulative_journeys_plot"),
-                  height = "100%"
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    ns("cumulative_journeys_plot"),
+                    height = "100%"
+                  )
                 ),
                 div(
                   style = "position: absolute; top: 5px; right: 20px;",
@@ -106,9 +110,11 @@ mod_explore_journeys_ui <- function(id) {
               "Distance travelled",
               bslib::card_body(
                 padding = c(15, 0, 10, 0),
-                plotly::plotlyOutput(
-                  ns("cumulative_distance_plot"),
-                  height = "100%"
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    ns("cumulative_distance_plot"),
+                    height = "100%"
+                  )
                 ),
                 div(
                   style = "position: absolute; top: 5px; right: 20px;",
@@ -129,9 +135,11 @@ mod_explore_journeys_ui <- function(id) {
               "Sign ups",
               bslib::card_body(
                 padding = c(15, 0, 10, 0),
-                plotly::plotlyOutput(
-                  ns("cumulative_sign_ups"),
-                  height = "100%"
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    ns("cumulative_sign_ups"),
+                    height = "100%"
+                  )
                 ),
                 div(
                   style = "position: absolute; top: 5px; right: 20px;",
@@ -161,9 +169,11 @@ mod_explore_journeys_ui <- function(id) {
               "Distance",
               bslib::card_body(
                 padding = c(15, 0, 10, 0),
-                plotly::plotlyOutput(
-                  ns("distance_histogram"),
-                  height = "100%"
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    ns("distance_histogram"),
+                    height = "100%"
+                  )
                 ),
                 div(
                   style = "position: absolute; top: 5px; right: 20px;",
@@ -184,9 +194,11 @@ mod_explore_journeys_ui <- function(id) {
               "Vehicle type",
               bslib::card_body(
                 padding = c(15, 0, 10, 0),
-                plotly::plotlyOutput(
-                  ns("vehicle_bars"),
-                  height = "100%"
+                shinycssloaders::withSpinner(
+                  plotly::plotlyOutput(
+                    ns("vehicle_bars"),
+                    height = "100%"
+                  )
                 ),
                 div(
                   style = "position: absolute; top: 5px; right: 20px;",
@@ -406,7 +418,8 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
 
       plotly::plot_ly(
         type = "scatter",
-        mode = "lines"
+        mode = "lines",
+        name = ""
       ) %>%
         plotly::add_trace(
           showlegend = FALSE,
@@ -485,7 +498,8 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
 
       plotly::plot_ly(
         type = "scatter",
-        mode = "lines"
+        mode = "lines",
+        name = ""
       ) %>%
         plotly::add_trace(
           showlegend = FALSE,
@@ -563,7 +577,8 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
 
       plotly::plot_ly(
         type = "scatter",
-        mode = "lines"
+        mode = "lines",
+        name = ""
       ) %>%
         plotly::add_trace(
           showlegend = FALSE,
@@ -603,7 +618,8 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       plotly::plot_ly(
         x = .,
         type = "histogram",
-        marker = list(color = "#147331")
+        marker = list(color = "#147331"),
+        name = ""
       ) %>%
       plotly::layout(
         dragmode = FALSE,
