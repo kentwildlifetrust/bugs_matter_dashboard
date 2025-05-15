@@ -1,5 +1,6 @@
 library(httr)
 library(jsonlite)
+library(dplyr)
 
 url <- "https://api.coreo.io/graphql"
 token <- Sys.getenv("BUGS_MATTER_API_TOKEN")
@@ -13,7 +14,7 @@ graphql_request <- function(query, variables) {
     encode = "json",
     add_headers(Authorization = paste("JWT", token))
   )
-  
+
   content_text <- content(response, as = "text")
   fromJSON(content_text, flatten = TRUE)
 }
@@ -39,7 +40,7 @@ print_users <- function(){
 print_journeys <- function(){
     journeysQuery <- '
         query BugsMatterNightlyJourneysQuery($projectId: Int!){
-            records(where: { projectId: $projectId }, limit: 10){
+            records(where: { projectId: $projectId }, limit: 100){
                 id
                 geometry {
                     type
@@ -50,9 +51,11 @@ print_journeys <- function(){
             }
         }
     '
-    data <- graphql_request(journeysQuery, list(projectId = projectId))
+    data <- graphql_request(journeysQuery, list(projectId = projectId)) %>%
+        as.data.frame() %>%
+        tibble()
     print(data)
 }
 
-print_users()
+#print_users()
 print_journeys()
