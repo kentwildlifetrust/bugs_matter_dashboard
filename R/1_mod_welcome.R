@@ -182,8 +182,7 @@ mod_welcome_server <- function(id, conn, next_page) {
     pal <- leaflet::colorNumeric("Spectral", -100:100)
 
     output$distance <- shiny::renderText({
-      # "SELECT ROUND(SUM(st_length(geometry) / 1000)::NUMERIC, 0) AS length FROM bugs_matter.journeys5;" %>%
-        "SELECT ROUND(SUM(DISTANCE)::NUMERIC, 0) AS length FROM bugs_matter.journeys5;" %>%
+        "SELECT ROUND(SUM(DISTANCE)::NUMERIC, 0) AS length FROM bugs_matter.journeys_server;" %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("length") %>%
         format(big.mark = ",") %>%
@@ -191,7 +190,7 @@ mod_welcome_server <- function(id, conn, next_page) {
     })
 
     output$splats <- shiny::renderText({
-      "SELECT SUM(count) AS n_splats FROM bugs_matter.journeys5;" %>%
+      "SELECT SUM(splat_count) AS n_splats FROM bugs_matter.journeys_server;" %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("n_splats") %>%
         format(big.mark = ",")

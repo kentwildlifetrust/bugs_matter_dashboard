@@ -1,24 +1,11 @@
-DROP MATERIALIZED VIEW bugs_matter.journeys_app;
-
-CREATE MATERIALIZED VIEW bugs_matter.journeys_app AS (
-    SELECT
-        j.id,
-        j.start,
-        j.end,
-        public.st_astext(public.st_transform(public.ST_Simplify(j.geometry, 500), 4326)) AS geom
-    FROM bugs_matter.journeys5 j
-    JOIN admin_boundaries.uk_boundary b ON public.st_intersects(j.geometry, b.geom)
-    WHERE j.end > '2021-05-20'
-) WITH DATA;
-
-
+-- Active: 1731925498177@@kwt-postgresql-azdb-1.postgres.database.azure.com@5432@shared
 DROP MATERIALIZED VIEW bugs_matter.journeys_server;
 CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
     SELECT
         j.id,
         j.start,
         j.end,
-        splatcount,
+        splat_count,
         splat_rate,
         distance,
         avg_speed,
@@ -36,17 +23,17 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
         wetland,
         marine,
         arable,
-        plantation,
         urban,
         log_cm_miles_offset,
         temp,
         EXTRACT(year FROM j.end)::integer AS year,
         r.objectid::integer AS region_id,
-        public.st_transform(public.ST_Simplify(j.geometry, 100), 4326) AS geom
-    FROM bugs_matter.journeys8 j
-    JOIN admin_boundaries.uk_boundary b ON public.st_intersects(j.geometry, b.geom)
-    LEFT JOIN bugs_matter.regionboundaries r ON j.region = r.nuts118nm
-) WITH DATA;
+        j.geometry AS geom
+    FROM bugs_matter.journeys9 j
+    JOIN admin_boundaries.uk_boundary b ON public.st_intersects(j.geometry, public.st_transform(b.geom, 4326))
+    LEFT JOIN bugs_matter.regionboundaries r ON j.region = r.region
+) WITH DATA; 
+
 
 GRANT SELECT ON bugs_matter.journeys_server TO "BugsMatterReadOnly";
 
@@ -55,7 +42,7 @@ DROP MATERIALIZED VIEW bugs_matter.regions_app;
 CREATE MATERIALIZED VIEW bugs_matter.regions_app AS (
     SELECT
         r.objectid AS id,
-        r.nuts118nm AS name,
+        r.region AS name,
         -- public.st_astext(public.st_boundary(public.st_transform(public.ST_Simplify(r.geometry, 50), 4326))) AS geom
         public.st_astext(public.st_transform(public.ST_Simplify(r.geometry, 100), 4326)) AS geom
     FROM bugs_matter.regionboundaries r
