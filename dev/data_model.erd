@@ -330,19 +330,19 @@
         "id": "En0Nh4BSIYQlvo6vJz-8u",
         "tableId": "5PBlNS_-oxnbbR5EAtygr",
         "name": "time",
-        "comment": "???",
+        "comment": "Journey duration in seconds",
         "dataType": "INTEGER",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 60,
+          "widthComment": 151,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747310087468,
+          "updateAt": 1747318391852,
           "createAt": 1747309585591
         }
       },

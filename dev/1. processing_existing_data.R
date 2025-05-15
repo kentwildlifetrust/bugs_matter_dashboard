@@ -13,10 +13,10 @@ library(exactextractr)
 
 # set up pool for postgis connections
 pool <- dbPool(
-  drv = RPostgres::Postgres(), 
-  host = "kwt-postgresql-azdb-1.postgres.database.azure.com", 
-  port = 5432, dbname = "shared", 
-  user = Sys.getenv("kwt_user"), 
+  drv = RPostgres::Postgres(),
+  host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
+  port = 5432, dbname = "shared",
+  user = Sys.getenv("kwt_user"),
   password = Sys.getenv("kwt_password"),
   sslmode = "prefer"
 )
@@ -36,8 +36,8 @@ journeys <- lapply(shp_files, st_read)
 journeys <- do.call(rbind, journeys)
 
 journeys1 <- journeys %>% st_transform(27700) %>%
-  mutate(distance = as.numeric(distance) * 0.621371,
-         duration = as.numeric(time) * 0.000277778,
+  mutate(distance = as.numeric(distance) * 0.621371, #converted distance to miles
+         duration = as.numeric(time) * 0.000277778, #seconds to hours?
          avg_speed = distance / duration,
          splatcount = as.numeric(count),
          start = as.POSIXct(start, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
@@ -73,20 +73,20 @@ journey_cleaning_stats <- st_drop_geometry(journeys2) %>%
     Step = "Raw Journey Count",
     Count = n(),
     Distance = sum(distance, na.rm = TRUE))
-st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), drop=TRUE) 
+st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), drop=TRUE)
 
-st_write(obj = journeys2, dsn = pool, Id(schema="bugs_matter", table = "journeys"), drop=TRUE) 
+st_write(obj = journeys2, dsn = pool, Id(schema="bugs_matter", table = "journeys"), drop=TRUE)
 
 # Filter out journeys with only a single vertex point/journeys with GPS errors (straight line section longer than 1 km). ---- ----
 
 query <- "CREATE TABLE bugs_matter.journeys1 AS
 WITH filtered_lines AS (
   -- Filter lines that have more than 1 point
-  SELECT 
-  l.* 
-  FROM 
+  SELECT
+  l.*
+  FROM
   bugs_matter.journeys l
-  WHERE 
+  WHERE
   ST_NPoints(l.geometry) > 1
 ),
 segments AS (
@@ -120,7 +120,7 @@ WHERE
 
 # # SQL query to drop the table
 # drop_query <- "DROP TABLE IF EXISTS bugs_matter.journeys1"
-# 
+#
 # # Execute the query to delete the table
 # dbExecute(pool, drop_query)
 
@@ -144,10 +144,10 @@ journey_cleaning_stats <- st_drop_geometry(journeys4) %>%
     Step = "GPS errors",
     Count = n(),
     Distance = sum(distance, na.rm = TRUE))
-st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE) 
+st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE)
 jcs <- st_read(pool, query = "SELECT * from bugs_matter.journey_cleaning_stats")
 
-# Remove journeys on ferry routes ---- ---- 
+# Remove journeys on ferry routes ---- ----
 journeysbbox <- st_bbox(journeys4) %>% st_as_sfc() %>% st_transform(4326) %>% st_bbox() # journeys bounding box in epsg:4326
 journeysbbox
 # available_features()
@@ -163,11 +163,11 @@ land <- ne_download(type="land", scale="large", category = "physical") %>% st_tr
 
 # ggplot() +
 #   # Land outline in green
-#   geom_sf(data = land, color = "green", fill = NA) + 
+#   geom_sf(data = land, color = "green", fill = NA) +
 #   # Car ferry routes in red
-#   geom_sf(data = vehicle_ferry_routes_bng, color = "red") + 
+#   geom_sf(data = vehicle_ferry_routes_bng, color = "red") +
 #   # Journeys subset in black
-#   geom_sf(data = journeys4[8000:8200, ], color = "black") + 
+#   geom_sf(data = journeys4[8000:8200, ], color = "black") +
 #   # Coordinate limits based on journeys4 bounding box
 #   coord_sf(
 #     xlim = c(st_bbox(journeys4)["xmin"], st_bbox(journeys4)["xmax"]),
@@ -192,10 +192,10 @@ journey_cleaning_stats <- st_drop_geometry(journeys5) %>%
     Step = "Ferry routes",
     Count = n(),
     Distance = sum(distance, na.rm = TRUE))
-st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE) 
+st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE)
 jcs <- st_read(pool, query = "SELECT * from bugs_matter.journey_cleaning_stats")
 
-#Remove very short journeys, with length/distance < 1 mile.  ---- ---- 
+#Remove very short journeys, with length/distance < 1 mile.  ---- ----
 journeys5$linelength <- st_length(journeys5)
 journeys5$linelength <- as.numeric(journeys5$linelength)
 summary(journeys5$linelength)
@@ -208,10 +208,10 @@ journey_cleaning_stats <- st_drop_geometry(journeys6) %>%
     Step = "Short journeys (<1 mile or 3 mins)",
     Count = n(),
     Distance = sum(distance, na.rm = TRUE))
-st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE) 
+st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE)
 jcs <- st_read(pool, query = "SELECT * from bugs_matter.journey_cleaning_stats")
 
-# Remove journeys with average speed > 60 mph  ---- ---- 
+# Remove journeys with average speed > 60 mph  ---- ----
 summary(journeys6$avg_speed)
 journeys7 <- subset(journeys6, avg_speed < 60 & avg_speed > 3)
 
@@ -222,10 +222,10 @@ journey_cleaning_stats <- st_drop_geometry(journeys7) %>%
     Step = "Very slow or fast (<60 mph and >3 mph)",
     Count = n(),
     Distance = sum(distance, na.rm = TRUE))
-st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE) 
+st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE)
 jcs <- st_read(pool, query = "SELECT * from bugs_matter.journey_cleaning_stats")
 
-# Remove journeys with splat count > 500 as it becomes very unlikely someone would sample more than 50 bugs per splatometer window. ---- ----  
+# Remove journeys with splat count > 500 as it becomes very unlikely someone would sample more than 50 bugs per splatometer window. ---- ----
 summary(journeys7$splatcount)
 journeys8 <- subset(journeys7, splatcount < 500)
 
@@ -236,10 +236,10 @@ journey_cleaning_stats <- st_drop_geometry(journeys8) %>%
     Step = "Splat count <500",
     Count = n(),
     Distance = sum(distance, na.rm = TRUE))
-st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE) 
+st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE)
 jcs <- st_read(pool, query = "SELECT * from bugs_matter.journey_cleaning_stats")
 
-# Filter out journeys with rain  ---- ---- 
+# Filter out journeys with rain  ---- ----
 summary(as.factor(journeys8$rain))
 journeys9 <- subset(journeys8, rain == "false")
 
@@ -250,22 +250,22 @@ journey_cleaning_stats <- st_drop_geometry(journeys9) %>%
     Step = "Rain",
     Count = n(),
     Distance = sum(distance, na.rm = TRUE))
-st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE) 
+st_write(obj = journey_cleaning_stats, dsn = pool, Id(schema="bugs_matter", table = "journey_cleaning_stats"), append=TRUE)
 jcs <- st_read(pool, query = "SELECT * from bugs_matter.journey_cleaning_stats")
 
 journeys9$linelength <- NULL
 
-st_write(obj = journeys9, dsn = pool, Id(schema="bugs_matter", table = "journeys2"), drop=TRUE) 
+st_write(obj = journeys9, dsn = pool, Id(schema="bugs_matter", table = "journeys2"), drop=TRUE)
 
 journeys10 <- st_read(pool, query = "SELECT * from bugs_matter.journeys2")
 
-# Join admin boundary data  ---- ---- 
+# Join admin boundary data  ---- ----
 
 regionboundaries <- st_read(pool, query = "
-    SELECT 
-        nuts118nm, country, 
+    SELECT
+        nuts118nm, country,
         ST_MakeValid(ST_Simplify(geometry, 500)) AS geom
-    FROM 
+    FROM
         bugs_matter.regionboundaries")
 plot(regionboundaries)
 
@@ -281,16 +281,16 @@ journeys11$country <- as.factor(journeys11$country)
 levels(journeys11$country) <- c("England", "Ireland", "Northern Ireland", "Scotland", "Wales")
 summary(journeys11$country)
 
-# Calculate the journey midpoint time  ---- ---- 
+# Calculate the journey midpoint time  ---- ----
 journeys11$midpoint_time <- as.POSIXct((as.numeric(journeys11$start) + as.numeric(journeys11$end)) / 2, origin = "1970-01-01", tz = "UTC")
 journeys11$dayofyear <- as.numeric(format(as.Date(journeys11$midpoint_time), "%j"))
 journeys11$timeofday <- format(journeys11$midpoint_time, "%H:%M:%S")
 
-st_write(obj = journeys11, dsn = pool, Id(schema="bugs_matter", table = "journeys4"), append=FALSE) 
+st_write(obj = journeys11, dsn = pool, Id(schema="bugs_matter", table = "journeys4"), append=FALSE)
 
 journeys11 <- st_read(pool, query = "SELECT * from bugs_matter.journeys4")
 
-# vehicle type  ---- ---- 
+# vehicle type  ---- ----
 summary(as.factor(journeys5$vehicle_do))
 summary(as.factor(journeys5$vehicle_cl))
 
@@ -317,7 +317,7 @@ journeys13 <- journeys12 %>%
 
 journeys13$log_cm_miles_offset <- log(journeys13$cm_miles_offset)
 
-st_write(obj = journeys13, dsn = pool, Id(schema="bugs_matter", table = "journeys5"), append=FALSE) 
+st_write(obj = journeys13, dsn = pool, Id(schema="bugs_matter", table = "journeys5"), append=FALSE)
 
 journeys13 <- st_read(pool, query = "SELECT * from bugs_matter.journeys5")
 
@@ -341,7 +341,7 @@ journeys13a <- left_join(journeys13, extracted, by = "id")
 journeys13a$elevation <- journeys13a$mean
 journeys13a$mean <- NULL
 
-st_write(obj = journeys13a, dsn = pool, Id(schema="bugs_matter", table = "journeys6"), append=FALSE) 
+st_write(obj = journeys13a, dsn = pool, Id(schema="bugs_matter", table = "journeys6"), append=FALSE)
 
 #Extract habitat ---- ----
 
@@ -414,7 +414,7 @@ rename_map <- c(
 journeys15 <- journeys14a %>%
   rename_with(~ rename_map[.x], .cols = names(rename_map)[names(rename_map) %in% names(journeys14a)])
 
-st_write(obj = journeys15, dsn = pool, Id(schema="bugs_matter", table = "journeys7"), append=FALSE) 
+st_write(obj = journeys15, dsn = pool, Id(schema="bugs_matter", table = "journeys7"), append=FALSE)
 
 journeys15 <- st_read(pool, query = "SELECT * from bugs_matter.journeys7")
 
@@ -489,5 +489,5 @@ temp_data <- as.data.frame(journeys15_simplify_temp) %>% dplyr::select(id, temp)
 
 journeys16 <- left_join(journeys15, temp_data, by = "id")
 
-st_write(obj = journeys16, dsn = pool, Id(schema="bugs_matter", table = "journeys8"), append=FALSE) 
+st_write(obj = journeys16, dsn = pool, Id(schema="bugs_matter", table = "journeys8"), append=FALSE)
 
