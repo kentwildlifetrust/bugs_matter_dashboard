@@ -33,6 +33,7 @@ Imports:
     shinyjs,
     sjPlot,
     snakecase,
+    tibble,
     utils
 Encoding: UTF-8
 LazyData: true

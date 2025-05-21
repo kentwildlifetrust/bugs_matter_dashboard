@@ -49,12 +49,12 @@ get_data <- function(conn, project_id, startId, endId) {
         }
     '
     data <- graphql_request(journeysQuery, list(
-        projectId = projectId,
+        projectId = project_id,
         startId = startId,
         endId = endId
     )) %>%
         as.data.frame() %>%
-        tibble()
+        tibble::tibble()
     print(data)
 }
 
@@ -81,20 +81,34 @@ journeys <- data %>%
         year = format(start, format="%Y")
     )
 
-## data cleaning
-    ## Remove points
-    ## Remove empty/invalid geometry
-    ## Remove lines with segments > 1000m (GPS errors)
-    ## Remove journeys that pass within 50m of a car ferry route
-    ## Remove short journeys (<= 1 mile or <= 0.050 hours/180 s)
-    ## Remove fast journeys with speed >= 60 mph
-    ## Remove slow journeys with speed <= 3 mph
-    ## Remove splat counts >= 500
-    ## save stats
+## data cleaning - postgresql
+## Remove points
+## Remove empty/invalid geometry
+## Remove lines with segments > 1000m (GPS errors)
+## Remove journeys that pass within 50m of a car ferry route
+## Remove short journeys (<= 1 mile or <= 0.050 hours/180 s)
+## Remove fast journeys with speed >= 60 mph
+## Remove slow journeys with speed <= 3 mph
+## Remove splat counts >= 500
+## save stats
 
-## region classification
+## region classification using largest join
+## calculate midpoint time
+## tidy vehicle_class
+## work out cm_km_offset & log_cm_km_offset
 
+## simplify geometry to 100m
 
+## elevation
+## elevation raster using elevatr::get_elev_raster(). Data source: https://registry.opendata.aws/terrain-tiles/
+## extract mean elevation using exactextractr::exact_extract(z = 7)
 
+## habitats
+## raster from https://data-gis.unep-wcmc.org/server/rest/services/NatureMap/NatureMap_HabitatTypes/ImageServer
+## use a habitat lookup to reclassify, then make columns for each habitat type
+
+## temperature
+## source raster from https://knmi-ecad-assets-prd.s3.amazonaws.com/ensembles/data/months/ens/tg_0.1deg_day_2025_grid_ensmean.nc
+## get the mean temp for the day of each journey location
 
 
