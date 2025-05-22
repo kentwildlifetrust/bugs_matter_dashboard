@@ -44,14 +44,14 @@ mod_explore_journeys_ui <- function(id) {
           shiny::selectInput(
             ns("year"),
             "Year",
-            choices = c("2021 to 2024", bugsMatterDashboard::years),
+            choices = c("2021 to 2024", bugsMatter::years),
             selected = "All",
             width = 150
           ),
           shiny::selectInput(
             ns("area"),
             "Area",
-            choices = c(bugsMatterDashboard::region_choices),
+            choices = c(bugsMatter::region_choices),
             selected = "uk",
             width = 250
           )
@@ -683,15 +683,15 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     # shiny::observeEvent(input$year, {
     #   map <- leaflet::leafletProxy(ns("map")) %>%
     #     leaflet::clearGroup(input$map_groups)
-    #   i <- which(bugsMatterDashboard::years %in% as.numeric(input$year))
-    #   for (j in seq_len(length(bugsMatterDashboard::journeys[i][[1]]$data))) {
+    #   i <- which(bugsMatter::years %in% as.numeric(input$year))
+    #   for (j in seq_len(length(bugsMatter::journeys[i][[1]]$data))) {
     #     map <- map %>%
-    #       leaflet::hideGroup(as.character(bugsMatterDashboard::journeys[i][[1]]$dates))
+    #       leaflet::hideGroup(as.character(bugsMatter::journeys[i][[1]]$dates))
     #     map <- map %>%
     #       leaflet::addPolylines(
-    #         data = bugsMatterDashboard::journeys[i][[1]]$data[[j]]$lines,
+    #         data = bugsMatter::journeys[i][[1]]$data[[j]]$lines,
     #         color = "#147331",
-    #         group = bugsMatterDashboard::journeys[i][[1]]$data[[j]]$group,
+    #         group = bugsMatter::journeys[i][[1]]$data[[j]]$group,
     #         weight = 3,
     #         opacity = 0.2
     #       )
@@ -721,7 +721,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #       )
     #     ) %>%
     #     plotly::layout(
-    #       yaxis = list(range = c(0, max(bugsMatterDashboard::cumulative_count$cumulative_count)))
+    #       yaxis = list(range = c(0, max(bugsMatter::cumulative_count$cumulative_count)))
     #     )
     # })
 
@@ -730,8 +730,8 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     # })
 
     # dates_in_year <- shiny::reactive({
-    #   year_index <- which(bugsMatterDashboard::years %in% as.numeric(input$year))
-    #   bugsMatterDashboard::journeys[year_index][[1]]$dates
+    #   year_index <- which(bugsMatter::years %in% as.numeric(input$year))
+    #   bugsMatter::journeys[year_index][[1]]$dates
     # })
 
     # prev_date <- shiny::reactiveVal(as.Date("2025-04-30"))
@@ -767,7 +767,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #       leaflet::showGroup(dates_to_show)
 
     #     if (prev_date() <= input$date) {
-    #       points_to_add <- bugsMatterDashboard::cumulative_count %>%
+    #       points_to_add <- bugsMatter::cumulative_count %>%
     #         dplyr::filter(date <= input$date & date > prev_date())
     #       plotly::plotlyProxy("plot", session, deferUntilFlush = FALSE) %>%
     #         plotly::plotlyProxyInvoke("extendTraces", list(
@@ -775,7 +775,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #           y = list(as.list(points_to_add$cumulative_count))
     #         ), list(1))
     #     } else {
-    #       points_to_add <- bugsMatterDashboard::cumulative_count %>%
+    #       points_to_add <- bugsMatter::cumulative_count %>%
     #         dplyr::filter(
     #           date <= input$date &
     #           date >= as.Date(sprintf("%s-05-01", input$year))

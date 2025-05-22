@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(bugsMatterDashboard)
+library(bugsMatter)
 
-test_check("bugsMatterDashboard")
+test_check("bugsMatter")

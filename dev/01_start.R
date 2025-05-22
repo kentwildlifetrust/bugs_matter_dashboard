@@ -25,7 +25,7 @@ if (getRversion() != "4.4.2") {
 ## to change the name in the app_sys() function in app_config.R /!\
 ##
 golem::fill_desc(
-  pkg_name = "bugsMatterDashboard", #must be camelCase (but capitilise acronyms fully e.g. LNRSMeasuresWebmap)
+  pkg_name = "bugsMatter", #must be camelCase (but capitilise acronyms fully e.g. LNRSMeasuresWebmap)
   pkg_title = "Bugs Matter Dashboard", #please give a title for the app (to be displayed on ShinyProxy)
   pkg_description = "Car number plate insect splat counts as a measure of invertebrate abundance change over time.", #please give a description to help future maintainers understand what this is for!!
   authors = c(person( #add yourself here!

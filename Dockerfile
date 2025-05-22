@@ -32,12 +32,12 @@ RUN R CMD build /app_pkg
 RUN rm -rf /app_pkg
 
 # Install the R package from the tarball
-RUN R CMD INSTALL bugsMatterDashboard*.tar.gz
+RUN R CMD INSTALL bugsMatter*.tar.gz
 # Remove the tarball
-RUN rm -rf bugsMatterDashboard*.tar.gz
+RUN rm -rf bugsMatter*.tar.gz
 
 COPY inst inst
 
 EXPOSE 3838
 # set options and run app in container
-CMD R -e "options('shiny.port'=3838, shiny.host='0.0.0.0', golem.app.prod=TRUE); library(bugsMatterDashboard); bugsMatterDashboard::run_app()"
+CMD R -e "options('shiny.port'=3838, shiny.host='0.0.0.0', golem.app.prod=TRUE); library(bugsMatter); bugsMatter::run_app()"

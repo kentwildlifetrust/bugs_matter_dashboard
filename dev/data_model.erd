@@ -4,13 +4,13 @@
   "settings": {
     "width": 2000,
     "height": 2000,
-    "scrollTop": -1172,
-    "scrollLeft": -800,
+    "scrollTop": -716,
+    "scrollLeft": -8,
     "zoomLevel": 1,
     "show": 511,
     "database": 16,
     "databaseName": "",
-    "canvasType": "ERD",
+    "canvasType": "@dineug/erd-editor/builtin-schema-sql",
     "language": 1,
     "tableNameCase": 4,
     "columnNameCase": 2,
@@ -33,19 +33,19 @@
     "tableIds": [
       "5PBlNS_-oxnbbR5EAtygr",
       "wINJEvA8btJ2YQQ6U37sq",
-      "uNlnX1iIomLLAL3Yt1FOf",
       "0MpceA2qJNzhxc6kD-DHK",
       "E36hYBG2rUADZ0tAgbE0G",
       "XRfY1zfOavQ4Y_g-BKrZc",
-      "f5I5kzr_btbfy410-XAVG"
+      "f5I5kzr_btbfy410-XAVG",
+      "1gPZnNsBPzQWoHoL14H7O"
     ],
     "relationshipIds": [
       "pHbVw-RkGTOLeQAxc0wNE",
-      "rZKZlmnKscJm-YzmoqBjz",
       "t4nWqk1009U9Fb_xqsLwh",
       "tC-vepCWjeyljwJCw5gfR",
       "T5zh63Mafy_sjZMPjxREc",
-      "JLR8hesc6K_pk_En6RRX4"
+      "JLR8hesc6K_pk_En6RRX4",
+      "a1GuS-eNZrYW960xhbrXk"
     ],
     "indexIds": [
       "rcQ-pW413z6efqKZHICoB"
@@ -56,7 +56,7 @@
     "tableEntities": {
       "5PBlNS_-oxnbbR5EAtygr": {
         "id": "5PBlNS_-oxnbbR5EAtygr",
-        "name": "op.raw_journeys",
+        "name": "op.all_journeys",
         "comment": "Raw bug splat sampling journeys downloaded from Coreo API",
         "columnIds": [
           "N4fz3bBAV2Hnvj7Gya5Lk",
@@ -65,17 +65,49 @@
           "mBAzNKmDZ_VZTMHNE3hJb",
           "Jaq256sAy01KLd7UPR3mA",
           "zDEze3Jhw8xV3dtk0h_Js",
-          "En0Nh4BSIYQlvo6vJz-8u",
+          "Xo1hLWm5QzSb8OX0e82j9",
+          "PJ_yq3BCm_JXZpkKiMBvX",
+          "z2TiGUvUXSyQILy_r3ZNx",
           "umJOpwqPbFfNuU4LddEVd",
           "nOF5LUsSkcogGzSF9x9Ig",
-          "Xo1hLWm5QzSb8OX0e82j9",
           "1_pvBvD661zJk-T6OTEPK",
           "iqNP8WzdMuQXv8TkiWLtJ",
           "UJc5BTyVeOE7IdxyA1N4R",
-          "2NzSu_7QZwy4ORNKeQrSx",
           "Ch32e7xMV1Tvt-C0fZbaj",
-          "XOJzICcEH7uZhdT09ojiA",
-          "eNCIKMtfGZcePGJlEs1lS",
+          "fq-pZmKIEwjvET2ptVBpX",
+          "dKMcJTHPC0itkS9mnB8Q-",
+          "1gc9f-7m4p8XyAmC6HDLC",
+          "6MtiGSiHUrsDiGO4JcWfL",
+          "w4YouIRjIig5WNhdUN11r",
+          "cpdyy1sa9bxuAqaoDkXOq",
+          "Op0bwni0IQVs6co9AWCSX",
+          "mIMaMDVqh8liIM6IpaFK4",
+          "IfhDoRq6ySTJV32n1PvHz",
+          "ONxCIx-LfPhg9W52yku8P",
+          "O-FucGlMYpq4eL4QavQxM",
+          "Gz62ZPvmz_9eWTF2GS3cu",
+          "wE1ucglEGqZ_bkvyEnJ0L",
+          "jIlBhTR1LgmxKU2tRKQzC",
+          "Z-PvWE-pPM4k1YB1Ilfqf",
+          "qZHKmjms9O36bK_ISO4ZR",
+          "LN7kobsmcz4v82UXli5of",
+          "evZxXGHiocEEVVo__I48k",
+          "-Fq1QBG2PK_7C87ogvlf0",
+          "xcR6YRCKAdp4XH6aBYEuU",
+          "2Ml-8HZ1aEKj1J_tyNaMJ",
+          "oYkO10ijj0hC-DtwAUZQf",
+          "kgdJGlQML5rJu_RdeAE0w",
+          "DGVxfEkHK4nHsM8fsA_ui",
+          "8k0v8nFghvUWB2lEQeSEg",
+          "PCmmOYLxAWLQuKSN4pLJh",
+          "3n5L2jQs4ns4DdgY-p6Jz",
+          "G7udl-khynrWLU60lXqZv",
+          "54G4pdT8Esv4OJjTpmhOI",
+          "j8mrz5XPssyRDi1S5ZI4Q",
+          "tsSzhs7EexHCfJSMtUGyu",
+          "tunCrntASrWWZqLaeZvXR",
+          "2NzSu_7QZwy4ORNKeQrSx",
+          "Mi3j6iFH-EBV-7tZxDJLK",
           "--jaMHGhB5OjSVQPi9lN-"
         ],
         "seqColumnIds": [
@@ -87,17 +119,17 @@
           "Jaq256sAy01KLd7UPR3mA",
           "zDEze3Jhw8xV3dtk0h_Js",
           "En0Nh4BSIYQlvo6vJz-8u",
+          "Xo1hLWm5QzSb8OX0e82j9",
+          "PJ_yq3BCm_JXZpkKiMBvX",
+          "z2TiGUvUXSyQILy_r3ZNx",
           "umJOpwqPbFfNuU4LddEVd",
           "nOF5LUsSkcogGzSF9x9Ig",
-          "Xo1hLWm5QzSb8OX0e82j9",
           "1_pvBvD661zJk-T6OTEPK",
           "iqNP8WzdMuQXv8TkiWLtJ",
           "UJc5BTyVeOE7IdxyA1N4R",
-          "2NzSu_7QZwy4ORNKeQrSx",
-          "Ch32e7xMV1Tvt-C0fZbaj",
           "XOJzICcEH7uZhdT09ojiA",
           "eNCIKMtfGZcePGJlEs1lS",
-          "--jaMHGhB5OjSVQPi9lN-",
+          "vJFG66CW9duTiA_Fi-VeF",
           "yeDKA-9_EWypYOa105dHo",
           "X3qoLdqupTubrkbvmsq6T",
           "-WCe_YXZtmbqOPz5TXNFg",
@@ -124,18 +156,87 @@
           "u_Qzc6_3oHoxcU0sEDUpZ",
           "cOCiSEa4SYgiuS5g8tkNa",
           "EeAiXZ1AK3MI-ZPKFW1fW",
-          "MigSluPQmz_ITnFyxBL1a"
+          "MigSluPQmz_ITnFyxBL1a",
+          "Ch32e7xMV1Tvt-C0fZbaj",
+          "gbqPTOVYAcjyt9pTOGZbn",
+          "cQkOirZuDaYBfxITjVA3q",
+          "rdg7-4j8oFw5hpPEedLlM",
+          "paWBpuR9N-S7lhhU_mFPW",
+          "4fudqlD-l6OvNUfSudgwB",
+          "rMrlYPiAYz9tg_e_vGrvw",
+          "n9S58_a-qDbuyCzRNhQr4",
+          "FEMgN2rhiIO1ngRuaWKYA",
+          "wNNDOEAQN8HkbBvbMHiS4",
+          "jLIfnHTYgjubzjDsT5Tk1",
+          "uOw_oRl31UHvNfeUsnz59",
+          "JQVXe-19zl9bFsef8b1oL",
+          "SqJKvEgh_Wb5BnZ8ggn_W",
+          "HcfxN5Jk4U-YkUOWHnyqH",
+          "aWY_xfF9qISMew0EnudOQ",
+          "zz-BxmBzlto-kLk1kh2zG",
+          "BMloE9jk3Hw793WT3mlBE",
+          "m6FjHLSnVzOEV6RE6fmQd",
+          "hriO_l2f42dRnYUsmqKg1",
+          "cvUwJwGF99gwr-RhIzpt_",
+          "UCIquCaI-XIFtCuhKjbQT",
+          "TF6OXxYC8WOh-vVr3WEId",
+          "yHL3BAG-8Gz5PkZj5doX4",
+          "KIOM9_zK1PztYt7sQoi_1",
+          "Zv_7E68RHP9GfsGi8ehsD",
+          "FSY-b6jQ_wBH_r1cZapiR",
+          "VVViUGw2qqk436jLjyYu9",
+          "Z33zoAVNxkb7J5drA98r5",
+          "WqVdc_vFnkNmu3uIx6ZBS",
+          "a8zmGQu9rKPT7dTC8LxG4",
+          "rVjTiIgqbpxucrVXzK2cF",
+          "uh-6bv3qSEoyOz5qtoS69",
+          "9ERQjqZj3MXPDR2HV4WVW",
+          "fq-pZmKIEwjvET2ptVBpX",
+          "dKMcJTHPC0itkS9mnB8Q-",
+          "1gc9f-7m4p8XyAmC6HDLC",
+          "6MtiGSiHUrsDiGO4JcWfL",
+          "w4YouIRjIig5WNhdUN11r",
+          "cpdyy1sa9bxuAqaoDkXOq",
+          "Op0bwni0IQVs6co9AWCSX",
+          "mIMaMDVqh8liIM6IpaFK4",
+          "IfhDoRq6ySTJV32n1PvHz",
+          "ONxCIx-LfPhg9W52yku8P",
+          "O-FucGlMYpq4eL4QavQxM",
+          "Gz62ZPvmz_9eWTF2GS3cu",
+          "wE1ucglEGqZ_bkvyEnJ0L",
+          "jIlBhTR1LgmxKU2tRKQzC",
+          "Z-PvWE-pPM4k1YB1Ilfqf",
+          "qZHKmjms9O36bK_ISO4ZR",
+          "LN7kobsmcz4v82UXli5of",
+          "evZxXGHiocEEVVo__I48k",
+          "-Fq1QBG2PK_7C87ogvlf0",
+          "xcR6YRCKAdp4XH6aBYEuU",
+          "2Ml-8HZ1aEKj1J_tyNaMJ",
+          "oYkO10ijj0hC-DtwAUZQf",
+          "kgdJGlQML5rJu_RdeAE0w",
+          "DGVxfEkHK4nHsM8fsA_ui",
+          "8k0v8nFghvUWB2lEQeSEg",
+          "PCmmOYLxAWLQuKSN4pLJh",
+          "3n5L2jQs4ns4DdgY-p6Jz",
+          "G7udl-khynrWLU60lXqZv",
+          "54G4pdT8Esv4OJjTpmhOI",
+          "j8mrz5XPssyRDi1S5ZI4Q",
+          "tsSzhs7EexHCfJSMtUGyu",
+          "tunCrntASrWWZqLaeZvXR",
+          "2NzSu_7QZwy4ORNKeQrSx",
+          "Mi3j6iFH-EBV-7tZxDJLK",
+          "--jaMHGhB5OjSVQPi9lN-"
         ],
         "ui": {
-          "x": 1066.1334,
-          "y": 875.0766,
+          "x": 24.7187,
+          "y": -1.4111,
           "zIndex": 2,
-          "widthName": 87,
+          "widthName": 80,
           "widthComment": 330,
           "color": ""
         },
         "meta": {
-          "updateAt": 1747831166334,
+          "updateAt": 1747857955570,
           "createAt": 1747308804511
         }
       },
@@ -154,21 +255,21 @@
           "rr9ZVDlNYrJUgXvv_qnha"
         ],
         "ui": {
-          "x": 1248.6429,
-          "y": 594.3658,
+          "x": 1176.96,
+          "y": 362.9999,
           "zIndex": 88,
           "widthName": 60,
           "widthComment": 76,
           "color": ""
         },
         "meta": {
-          "updateAt": 1747830985839,
+          "updateAt": 1747851212174,
           "createAt": 1747309727933
         }
       },
       "uNlnX1iIomLLAL3Yt1FOf": {
         "id": "uNlnX1iIomLLAL3Yt1FOf",
-        "name": "op.vehicles",
+        "name": "op.journey",
         "comment": "Vehicles used for sampling journeys",
         "columnIds": [
           "Q1xxAQc6jfbQhwb1k7cPJ",
@@ -252,7 +353,7 @@
           "color": ""
         },
         "meta": {
-          "updateAt": 1747830975496,
+          "updateAt": 1747857726965,
           "createAt": 1747311156508
         }
       },
@@ -302,7 +403,7 @@
       },
       "0MpceA2qJNzhxc6kD-DHK": {
         "id": "0MpceA2qJNzhxc6kD-DHK",
-        "name": "op.processed_journeys",
+        "name": "op.cleaned_journeys",
         "comment": "Cleaned sampling journeys to be used in analysis",
         "columnIds": [
           "F_cQYVxEdHWDOJTi8qubO",
@@ -320,7 +421,8 @@
           "UZhMhVbJLzBsSPeage7Ef",
           "TzjSSl7SjalTZ6RUAc1sI",
           "mLXmjswL6N07_TyS_On6S",
-          "4h1r_zC-naTGaBekBPl9R"
+          "4h1r_zC-naTGaBekBPl9R",
+          "l53jjVlDepSQJbYfHV7Ut"
         ],
         "seqColumnIds": [
           "nYq5gSy8jFZD1gAQXqPRs",
@@ -342,18 +444,19 @@
           "mLXmjswL6N07_TyS_On6S",
           "4h1r_zC-naTGaBekBPl9R",
           "x230sK2jn2-OmZgehpqXi",
-          "HIMRGxthR2dPmJ5nIiENN"
+          "HIMRGxthR2dPmJ5nIiENN",
+          "l53jjVlDepSQJbYfHV7Ut"
         ],
         "ui": {
-          "x": 168.0894,
-          "y": 1145.9718,
+          "x": 13.2114,
+          "y": 1503.2889,
           "zIndex": 290,
-          "widthName": 122,
+          "widthName": 109,
           "widthComment": 261,
           "color": ""
         },
         "meta": {
-          "updateAt": 1747831153680,
+          "updateAt": 1747857811318,
           "createAt": 1747822587901
         }
       },
@@ -479,16 +582,57 @@
           "wtQkBWNFNj76368cOBQNN"
         ],
         "ui": {
-          "x": 689.1732,
-          "y": 1694.6568,
+          "x": 847.7098,
+          "y": 1811.73,
           "zIndex": 509,
           "widthName": 140,
           "widthComment": 385,
           "color": ""
         },
         "meta": {
-          "updateAt": 1747840122833,
+          "updateAt": 1747857812653,
           "createAt": 1747829694159
+        }
+      },
+      "1gPZnNsBPzQWoHoL14H7O": {
+        "id": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "op.journey_cleaning",
+        "comment": "Journeys are checked against multiple criteria to determine if they should be included in analysis",
+        "columnIds": [
+          "MJcv4xgVEXps43SSy6_Ik",
+          "2_wfG7mI2jtRf_2jBJP4D",
+          "KpFRSha6-imq__VCQEqWG",
+          "Uvkwthpw36-lMmRaFDI04",
+          "Ik8NUjTaS7rbVtGeDnuQw",
+          "VNOTpOuM3z7hF4u5_6NtG",
+          "LZo-1vDS5a64MsZzJhuTe",
+          "FXagOASmnUoc4pDEn2r3D",
+          "X6yhpLfiOjH4J4KvMVfpC"
+        ],
+        "seqColumnIds": [
+          "c-F_ln7z1ZWgc8NwsrKOp",
+          "MJcv4xgVEXps43SSy6_Ik",
+          "2_wfG7mI2jtRf_2jBJP4D",
+          "KpFRSha6-imq__VCQEqWG",
+          "Uvkwthpw36-lMmRaFDI04",
+          "Ik8NUjTaS7rbVtGeDnuQw",
+          "VNOTpOuM3z7hF4u5_6NtG",
+          "LZo-1vDS5a64MsZzJhuTe",
+          "FXagOASmnUoc4pDEn2r3D",
+          "X6yhpLfiOjH4J4KvMVfpC",
+          "74sC66cRHYr0MxwtPk4UT"
+        ],
+        "ui": {
+          "x": 1250.9772,
+          "y": 863.503,
+          "zIndex": 645,
+          "widthName": 108,
+          "widthComment": 512,
+          "color": ""
+        },
+        "meta": {
+          "updateAt": 1747857814900,
+          "createAt": 1747851214530
         }
       }
     },
@@ -540,7 +684,7 @@
         "comment": "When the journey ended",
         "dataType": "TIMESTAMP WITH TIME ZONE",
         "default": "",
-        "options": 8,
+        "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 83,
@@ -549,7 +693,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747310186832,
+          "updateAt": 1747850950330,
           "createAt": 1747309585250
         }
       },
@@ -577,19 +721,19 @@
         "id": "En0Nh4BSIYQlvo6vJz-8u",
         "tableId": "5PBlNS_-oxnbbR5EAtygr",
         "name": "time",
-        "comment": "Journey duration in seconds",
+        "comment": "Journey time in seconds",
         "dataType": "INTEGER",
         "default": "",
         "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 60,
-          "widthComment": 151,
+          "widthComment": 129,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747318391852,
+          "updateAt": 1747851015041,
           "createAt": 1747309585591
         }
       },
@@ -609,7 +753,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747311733907,
+          "updateAt": 1747857951159,
           "createAt": 1747309725927
         }
       },
@@ -656,27 +800,27 @@
       "umJOpwqPbFfNuU4LddEVd": {
         "id": "umJOpwqPbFfNuU4LddEVd",
         "tableId": "5PBlNS_-oxnbbR5EAtygr",
-        "name": "count",
+        "name": "splat_count",
         "comment": "The number of bug splats on the number plate at the end of the journey",
         "dataType": "INTEGER",
         "default": "",
-        "options": 8,
+        "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 60,
+          "widthName": 62,
           "widthComment": 385,
           "widthDataType": 60,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747310130011,
+          "updateAt": 1747851097664,
           "createAt": 1747310090369
         }
       },
       "nOF5LUsSkcogGzSF9x9Ig": {
         "id": "nOF5LUsSkcogGzSF9x9Ig",
         "tableId": "5PBlNS_-oxnbbR5EAtygr",
-        "name": "photo",
+        "name": "photo_url",
         "comment": "Number plate photo url",
         "dataType": "VARCHAR",
         "default": "",
@@ -689,7 +833,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747312202638,
+          "updateAt": 1747850900141,
           "createAt": 1747310136583
         }
       },
@@ -700,7 +844,7 @@
         "comment": "When the journey started",
         "dataType": "TIMESTAMP WITH TIME ZONE",
         "default": "",
-        "options": 8,
+        "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 87,
@@ -709,7 +853,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747310179275,
+          "updateAt": 1747850949722,
           "createAt": 1747310164779
         }
       },
@@ -720,7 +864,7 @@
         "comment": "Distance travelled in km",
         "dataType": "NUMERIC",
         "default": "",
-        "options": 8,
+        "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 60,
@@ -729,7 +873,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747310277688,
+          "updateAt": 1747850952898,
           "createAt": 1747310197077
         }
       },
@@ -1822,7 +1966,7 @@
         "default": "",
         "options": 8,
         "ui": {
-          "keys": 2,
+          "keys": 0,
           "widthName": 60,
           "widthComment": 93,
           "widthDataType": 60,
@@ -2009,7 +2153,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747311601314,
+          "updateAt": 1747850920557,
           "createAt": 1747311568360
         }
       },
@@ -2069,27 +2213,27 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747311700075,
+          "updateAt": 1747850955112,
           "createAt": 1747311646511
         }
       },
       "Ch32e7xMV1Tvt-C0fZbaj": {
         "id": "Ch32e7xMV1Tvt-C0fZbaj",
         "tableId": "5PBlNS_-oxnbbR5EAtygr",
-        "name": "database_timestamp",
-        "comment": "Time added to this table",
-        "dataType": "TIMESTAMP WITH TIME ZONE",
-        "default": "NOW()",
-        "options": 8,
+        "name": "vehicle_reg",
+        "comment": "Vehicle registration number",
+        "dataType": "VARCHAR(12)",
+        "default": "",
+        "options": 0,
         "ui": {
           "keys": 0,
-          "widthName": 111,
-          "widthComment": 131,
-          "widthDataType": 162,
+          "widthName": 61,
+          "widthComment": 148,
+          "widthDataType": 75,
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747311723312,
+          "updateAt": 1747857826386,
           "createAt": 1747311672130
         }
       },
@@ -2180,7 +2324,7 @@
         "comment": "Has the journey been excluded from the analysis during data cleaning",
         "dataType": "BOOLEAN",
         "default": "",
-        "options": 8,
+        "options": 0,
         "ui": {
           "keys": 0,
           "widthName": 60,
@@ -2189,7 +2333,7 @@
           "widthDefault": 60
         },
         "meta": {
-          "updateAt": 1747822563849,
+          "updateAt": 1747850961646,
           "createAt": 1747822440054
         }
       },
@@ -2992,6 +3136,1626 @@
           "updateAt": 1747840127593,
           "createAt": 1747840122832
         }
+      },
+      "l53jjVlDepSQJbYfHV7Ut": {
+        "id": "l53jjVlDepSQJbYfHV7Ut",
+        "tableId": "0MpceA2qJNzhxc6kD-DHK",
+        "name": "geom",
+        "comment": "",
+        "dataType": "GEOMETRY",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 62,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747848248662,
+          "createAt": 1747848242746
+        }
+      },
+      "vJFG66CW9duTiA_Fi-VeF": {
+        "id": "vJFG66CW9duTiA_Fi-VeF",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "geometry_type",
+        "comment": "Type of geometry",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 81,
+          "widthComment": 95,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747850964347,
+          "createAt": 1747850183361
+        }
+      },
+      "PJ_yq3BCm_JXZpkKiMBvX": {
+        "id": "PJ_yq3BCm_JXZpkKiMBvX",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "duration",
+        "comment": "Journey time in hours",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 116,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851027940,
+          "createAt": 1747850932338
+        }
+      },
+      "z2TiGUvUXSyQILy_r3ZNx": {
+        "id": "z2TiGUvUXSyQILy_r3ZNx",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "avg_speed",
+        "comment": "Journey speed in km/h",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 122,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851077061,
+          "createAt": 1747850939964
+        }
+      },
+      "gbqPTOVYAcjyt9pTOGZbn": {
+        "id": "gbqPTOVYAcjyt9pTOGZbn",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "",
+        "comment": "",
+        "dataType": "",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747850940267,
+          "createAt": 1747850940267
+        }
+      },
+      "cQkOirZuDaYBfxITjVA3q": {
+        "id": "cQkOirZuDaYBfxITjVA3q",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "jo",
+        "comment": "",
+        "dataType": "",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851203589,
+          "createAt": 1747851197054
+        }
+      },
+      "c-F_ln7z1ZWgc8NwsrKOp": {
+        "id": "c-F_ln7z1ZWgc8NwsrKOp",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "",
+        "comment": "",
+        "dataType": "",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851245959,
+          "createAt": 1747851245959
+        }
+      },
+      "MJcv4xgVEXps43SSy6_Ik": {
+        "id": "MJcv4xgVEXps43SSy6_Ik",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "id",
+        "comment": "Unique journey record Id",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 10,
+        "ui": {
+          "keys": 3,
+          "widthName": 60,
+          "widthComment": 134,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851436574,
+          "createAt": 1747851428023
+        }
+      },
+      "KpFRSha6-imq__VCQEqWG": {
+        "id": "KpFRSha6-imq__VCQEqWG",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "not_linestring",
+        "comment": "All points are excluded",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 74,
+          "widthComment": 122,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851728771,
+          "createAt": 1747851437976
+        }
+      },
+      "2_wfG7mI2jtRf_2jBJP4D": {
+        "id": "2_wfG7mI2jtRf_2jBJP4D",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "invalid_geom",
+        "comment": "Geometry must be non-empty and valid",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 72,
+          "widthComment": 214,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851721994,
+          "createAt": 1747851455746
+        }
+      },
+      "Uvkwthpw36-lMmRaFDI04": {
+        "id": "Uvkwthpw36-lMmRaFDI04",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "gps_error",
+        "comment": "Linestrings with segments > 1000m are assumed to be GPS errors",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 350,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851732105,
+          "createAt": 1747851525597
+        }
+      },
+      "Ik8NUjTaS7rbVtGeDnuQw": {
+        "id": "Ik8NUjTaS7rbVtGeDnuQw",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "ferry",
+        "comment": "Journeys passing < 50m from a car ferry route are excluded",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 316,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851585935,
+          "createAt": 1747851560210
+        }
+      },
+      "VNOTpOuM3z7hF4u5_6NtG": {
+        "id": "VNOTpOuM3z7hF4u5_6NtG",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "short",
+        "comment": "Journeys with a distance < 1 mile or duration < 0.05 hr are excluded",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 362,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851643971,
+          "createAt": 1747851586410
+        }
+      },
+      "LZo-1vDS5a64MsZzJhuTe": {
+        "id": "LZo-1vDS5a64MsZzJhuTe",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "fast",
+        "comment": "Journeys with speed >= 60 mph are excluded",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 243,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851663866,
+          "createAt": 1747851644148
+        }
+      },
+      "FXagOASmnUoc4pDEn2r3D": {
+        "id": "FXagOASmnUoc4pDEn2r3D",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "slow",
+        "comment": "Journeys with speed <= 3 mph are excluded",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 237,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851679290,
+          "createAt": 1747851664052
+        }
+      },
+      "X6yhpLfiOjH4J4KvMVfpC": {
+        "id": "X6yhpLfiOjH4J4KvMVfpC",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "high_count",
+        "comment": "Journeys with improbable splat counts (>= 500) are excluded",
+        "dataType": "BOOLEAN",
+        "default": "",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 325,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851705423,
+          "createAt": 1747851679577
+        }
+      },
+      "74sC66cRHYr0MxwtPk4UT": {
+        "id": "74sC66cRHYr0MxwtPk4UT",
+        "tableId": "1gPZnNsBPzQWoHoL14H7O",
+        "name": "",
+        "comment": "",
+        "dataType": "",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 60,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747851705636,
+          "createAt": 1747851705636
+        }
+      },
+      "rdg7-4j8oFw5hpPEedLlM": {
+        "id": "rdg7-4j8oFw5hpPEedLlM",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "bhp",
+        "comment": "Vehicle engine break horsepower",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 177,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756010
+        }
+      },
+      "paWBpuR9N-S7lhhU_mFPW": {
+        "id": "paWBpuR9N-S7lhhU_mFPW",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "year_of_manufacture",
+        "comment": "Vehicle year of manufacture",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 112,
+          "widthComment": 149,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756011
+        }
+      },
+      "4fudqlD-l6OvNUfSudgwB": {
+        "id": "4fudqlD-l6OvNUfSudgwB",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "date_first_registered",
+        "comment": "Date first registered",
+        "dataType": "DATE",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 109,
+          "widthComment": 107,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756011
+        }
+      },
+      "rMrlYPiAYz9tg_e_vGrvw": {
+        "id": "rMrlYPiAYz9tg_e_vGrvw",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "date_first_registered_uk",
+        "comment": "Date first registered in the UK",
+        "dataType": "DATE",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 127,
+          "widthComment": 159,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756011
+        }
+      },
+      "n9S58_a-qDbuyCzRNhQr4": {
+        "id": "n9S58_a-qDbuyCzRNhQr4",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "make",
+        "comment": "Vehicle make",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 71,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756011
+        }
+      },
+      "FEMgN2rhiIO1ngRuaWKYA": {
+        "id": "FEMgN2rhiIO1ngRuaWKYA",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "make_code",
+        "comment": "Vehicle make code",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 62,
+          "widthComment": 101,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756011
+        }
+      },
+      "wNNDOEAQN8HkbBvbMHiS4": {
+        "id": "wNNDOEAQN8HkbBvbMHiS4",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "range",
+        "comment": "Vehicle range",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 73,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756011
+        }
+      },
+      "jLIfnHTYgjubzjDsT5Tk1": {
+        "id": "jLIfnHTYgjubzjDsT5Tk1",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "model",
+        "comment": "Vehicle model",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 76,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756011,
+          "createAt": 1747857756011
+        }
+      },
+      "uOw_oRl31UHvNfeUsnz59": {
+        "id": "uOw_oRl31UHvNfeUsnz59",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "model_code",
+        "comment": "Vehicle model code",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 67,
+          "widthComment": 105,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756011
+        }
+      },
+      "JQVXe-19zl9bFsef8b1oL": {
+        "id": "JQVXe-19zl9bFsef8b1oL",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "trim",
+        "comment": "Vehicle trim",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 64,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "SqJKvEgh_Wb5BnZ8ggn_W": {
+        "id": "SqJKvEgh_Wb5BnZ8ggn_W",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "width",
+        "comment": "Width of vehicle",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 88,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "HcfxN5Jk4U-YkUOWHnyqH": {
+        "id": "HcfxN5Jk4U-YkUOWHnyqH",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "height",
+        "comment": "Height of vehicle",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 91,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "aWY_xfF9qISMew0EnudOQ": {
+        "id": "aWY_xfF9qISMew0EnudOQ",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "car_length",
+        "comment": "Vehicle car length",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 96,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "zz-BxmBzlto-kLk1kh2zG": {
+        "id": "zz-BxmBzlto-kLk1kh2zG",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "colour",
+        "comment": "Vehicle colour",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 76,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "BMloE9jk3Hw793WT3mlBE": {
+        "id": "BMloE9jk3Hw793WT3mlBE",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "num_axles",
+        "comment": "Vehicle number of axles",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 127,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "m6FjHLSnVzOEV6RE6fmQd": {
+        "id": "m6FjHLSnVzOEV6RE6fmQd",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "num_doors",
+        "comment": "Vehicle number of doors",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 132,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "hriO_l2f42dRnYUsmqKg1": {
+        "id": "hriO_l2f42dRnYUsmqKg1",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "num_seats",
+        "comment": "Vehicle number of seats",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 128,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "cvUwJwGF99gwr-RhIzpt_": {
+        "id": "cvUwJwGF99gwr-RhIzpt_",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "body_shape",
+        "comment": "Vehicle body shape",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 65,
+          "widthComment": 104,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "UCIquCaI-XIFtCuhKjbQT": {
+        "id": "UCIquCaI-XIFtCuhKjbQT",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "wheel_base",
+        "comment": "Vehicle wheel base",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 62,
+          "widthComment": 101,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "TF6OXxYC8WOh-vVr3WEId": {
+        "id": "TF6OXxYC8WOh-vVr3WEId",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "wheel_plan",
+        "comment": "Vehicle wheel plan",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 61,
+          "widthComment": 100,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "yHL3BAG-8Gz5PkZj5doX4": {
+        "id": "yHL3BAG-8Gz5PkZj5doX4",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "kerb_height",
+        "comment": "Vehicle kerb height",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 64,
+          "widthComment": 103,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756012,
+          "createAt": 1747857756012
+        }
+      },
+      "KIOM9_zK1PztYt7sQoi_1": {
+        "id": "KIOM9_zK1PztYt7sQoi_1",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "load_length",
+        "comment": "Vehicle load length",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 64,
+          "widthComment": 103,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756012
+        }
+      },
+      "Zv_7E68RHP9GfsGi8ehsD": {
+        "id": "Zv_7E68RHP9GfsGi8ehsD",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "rigid_artic",
+        "comment": "Vehicle rigid artic",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 60,
+          "widthComment": 93,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "FSY-b6jQ_wBH_r1cZapiR": {
+        "id": "FSY-b6jQ_wBH_r1cZapiR",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "driving_axle",
+        "comment": "Vehicle driving axle (FWD etc)",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 64,
+          "widthComment": 159,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "VVViUGw2qqk436jLjyYu9": {
+        "id": "VVViUGw2qqk436jLjyYu9",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "door_plan_literal",
+        "comment": "Vehicle door plan literal",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 89,
+          "widthComment": 127,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "Z33zoAVNxkb7J5drA98r5": {
+        "id": "Z33zoAVNxkb7J5drA98r5",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "payload_volume",
+        "comment": "Vehicle payload volume",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 88,
+          "widthComment": 127,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "WqVdc_vFnkNmu3uIx6ZBS": {
+        "id": "WqVdc_vFnkNmu3uIx6ZBS",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "payload_weight",
+        "comment": "Vehicle payload weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 85,
+          "widthComment": 124,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "a8zmGQu9rKPT7dTC8LxG4": {
+        "id": "a8zmGQu9rKPT7dTC8LxG4",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "unladen_weight",
+        "comment": "Vehicle unladed weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 85,
+          "widthComment": 125,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "rVjTiIgqbpxucrVXzK2cF": {
+        "id": "rVjTiIgqbpxucrVXzK2cF",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "gross_train_weight",
+        "comment": "Vehicle gross train weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 100,
+          "widthComment": 138,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "uh-6bv3qSEoyOz5qtoS69": {
+        "id": "uh-6bv3qSEoyOz5qtoS69",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "gross_vehicle_weight",
+        "comment": "Vehicle gross weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 113,
+          "widthComment": 110,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "9ERQjqZj3MXPDR2HV4WVW": {
+        "id": "9ERQjqZj3MXPDR2HV4WVW",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "gross_combined_weight",
+        "comment": "Vehicle gross combined weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 129,
+          "widthComment": 166,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857756013,
+          "createAt": 1747857756013
+        }
+      },
+      "fq-pZmKIEwjvET2ptVBpX": {
+        "id": "fq-pZmKIEwjvET2ptVBpX",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_class",
+        "comment": "Type of vehicle (car, HGV etc.)",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 68,
+          "widthComment": 159,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857866291,
+          "createAt": 1747857765010
+        }
+      },
+      "dKMcJTHPC0itkS9mnB8Q-": {
+        "id": "dKMcJTHPC0itkS9mnB8Q-",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_bhp",
+        "comment": "Vehicle engine break horsepower",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 64,
+          "widthComment": 177,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857869007,
+          "createAt": 1747857765010
+        }
+      },
+      "1gc9f-7m4p8XyAmC6HDLC": {
+        "id": "1gc9f-7m4p8XyAmC6HDLC",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_year_of_manufacture",
+        "comment": "Vehicle year of manufacture",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 153,
+          "widthComment": 149,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857876017,
+          "createAt": 1747857765010
+        }
+      },
+      "6MtiGSiHUrsDiGO4JcWfL": {
+        "id": "6MtiGSiHUrsDiGO4JcWfL",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_date_first_registered",
+        "comment": "Date first registered",
+        "dataType": "DATE",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 150,
+          "widthComment": 107,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857878777,
+          "createAt": 1747857765010
+        }
+      },
+      "w4YouIRjIig5WNhdUN11r": {
+        "id": "w4YouIRjIig5WNhdUN11r",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_date_first_registered_uk",
+        "comment": "Date first registered in the UK",
+        "dataType": "DATE",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 168,
+          "widthComment": 159,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857880377,
+          "createAt": 1747857765010
+        }
+      },
+      "cpdyy1sa9bxuAqaoDkXOq": {
+        "id": "cpdyy1sa9bxuAqaoDkXOq",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_make",
+        "comment": "Vehicle make",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 72,
+          "widthComment": 71,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857881742,
+          "createAt": 1747857765010
+        }
+      },
+      "Op0bwni0IQVs6co9AWCSX": {
+        "id": "Op0bwni0IQVs6co9AWCSX",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_make_code",
+        "comment": "Vehicle make code",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 101,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857882857,
+          "createAt": 1747857765010
+        }
+      },
+      "mIMaMDVqh8liIM6IpaFK4": {
+        "id": "mIMaMDVqh8liIM6IpaFK4",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_range",
+        "comment": "Vehicle range",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 74,
+          "widthComment": 73,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857884664,
+          "createAt": 1747857765010
+        }
+      },
+      "IfhDoRq6ySTJV32n1PvHz": {
+        "id": "IfhDoRq6ySTJV32n1PvHz",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_model",
+        "comment": "Vehicle model",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 77,
+          "widthComment": 76,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857886801,
+          "createAt": 1747857765011
+        }
+      },
+      "ONxCIx-LfPhg9W52yku8P": {
+        "id": "ONxCIx-LfPhg9W52yku8P",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_model_code",
+        "comment": "Vehicle model code",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 108,
+          "widthComment": 105,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857888290,
+          "createAt": 1747857765011
+        }
+      },
+      "O-FucGlMYpq4eL4QavQxM": {
+        "id": "O-FucGlMYpq4eL4QavQxM",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_trim",
+        "comment": "Vehicle trim",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 65,
+          "widthComment": 64,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857890033,
+          "createAt": 1747857765011
+        }
+      },
+      "Gz62ZPvmz_9eWTF2GS3cu": {
+        "id": "Gz62ZPvmz_9eWTF2GS3cu",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_width",
+        "comment": "Width of vehicle",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 73,
+          "widthComment": 88,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857892129,
+          "createAt": 1747857765011
+        }
+      },
+      "wE1ucglEGqZ_bkvyEnJ0L": {
+        "id": "wE1ucglEGqZ_bkvyEnJ0L",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_height",
+        "comment": "Height of vehicle",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 77,
+          "widthComment": 91,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857896947,
+          "createAt": 1747857765011
+        }
+      },
+      "jIlBhTR1LgmxKU2tRKQzC": {
+        "id": "jIlBhTR1LgmxKU2tRKQzC",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_car_length",
+        "comment": "Vehicle car length",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 98,
+          "widthComment": 96,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857898288,
+          "createAt": 1747857765011
+        }
+      },
+      "Z-PvWE-pPM4k1YB1Ilfqf": {
+        "id": "Z-PvWE-pPM4k1YB1Ilfqf",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_colour",
+        "comment": "Vehicle colour",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 77,
+          "widthComment": 76,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857903212,
+          "createAt": 1747857765011
+        }
+      },
+      "qZHKmjms9O36bK_ISO4ZR": {
+        "id": "qZHKmjms9O36bK_ISO4ZR",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_num_axles",
+        "comment": "Vehicle number of axles",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 98,
+          "widthComment": 127,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857905433,
+          "createAt": 1747857765011
+        }
+      },
+      "LN7kobsmcz4v82UXli5of": {
+        "id": "LN7kobsmcz4v82UXli5of",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_num_doors",
+        "comment": "Vehicle number of doors",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 103,
+          "widthComment": 132,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857908489,
+          "createAt": 1747857765011
+        }
+      },
+      "evZxXGHiocEEVVo__I48k": {
+        "id": "evZxXGHiocEEVVo__I48k",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_num_seats",
+        "comment": "Vehicle number of seats",
+        "dataType": "INTEGER",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 99,
+          "widthComment": 128,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857910073,
+          "createAt": 1747857765011
+        }
+      },
+      "-Fq1QBG2PK_7C87ogvlf0": {
+        "id": "-Fq1QBG2PK_7C87ogvlf0",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_body_shape",
+        "comment": "Vehicle body shape",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 107,
+          "widthComment": 104,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857911496,
+          "createAt": 1747857765011
+        }
+      },
+      "xcR6YRCKAdp4XH6aBYEuU": {
+        "id": "xcR6YRCKAdp4XH6aBYEuU",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_wheel_base",
+        "comment": "Vehicle wheel base",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 104,
+          "widthComment": 101,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857913617,
+          "createAt": 1747857765012
+        }
+      },
+      "2Ml-8HZ1aEKj1J_tyNaMJ": {
+        "id": "2Ml-8HZ1aEKj1J_tyNaMJ",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_wheel_plan",
+        "comment": "Vehicle wheel plan",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 102,
+          "widthComment": 100,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857915841,
+          "createAt": 1747857765012
+        }
+      },
+      "oYkO10ijj0hC-DtwAUZQf": {
+        "id": "oYkO10ijj0hC-DtwAUZQf",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_kerb_height",
+        "comment": "Vehicle kerb height",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 106,
+          "widthComment": 103,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857917690,
+          "createAt": 1747857765012
+        }
+      },
+      "kgdJGlQML5rJu_RdeAE0w": {
+        "id": "kgdJGlQML5rJu_RdeAE0w",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_load_length",
+        "comment": "Vehicle load length",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 105,
+          "widthComment": 103,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857919266,
+          "createAt": 1747857765012
+        }
+      },
+      "DGVxfEkHK4nHsM8fsA_ui": {
+        "id": "DGVxfEkHK4nHsM8fsA_ui",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_rigid_artic",
+        "comment": "Vehicle rigid artic",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 95,
+          "widthComment": 93,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857921019,
+          "createAt": 1747857765012
+        }
+      },
+      "8k0v8nFghvUWB2lEQeSEg": {
+        "id": "8k0v8nFghvUWB2lEQeSEg",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_driving_axle",
+        "comment": "Vehicle driving axle (FWD etc)",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 106,
+          "widthComment": 159,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857922044,
+          "createAt": 1747857765012
+        }
+      },
+      "PCmmOYLxAWLQuKSN4pLJh": {
+        "id": "PCmmOYLxAWLQuKSN4pLJh",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_door_plan_literal",
+        "comment": "Vehicle door plan literal",
+        "dataType": "VARCHAR",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 131,
+          "widthComment": 127,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857923083,
+          "createAt": 1747857765012
+        }
+      },
+      "3n5L2jQs4ns4DdgY-p6Jz": {
+        "id": "3n5L2jQs4ns4DdgY-p6Jz",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_payload_volume",
+        "comment": "Vehicle payload volume",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 130,
+          "widthComment": 127,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857925392,
+          "createAt": 1747857765012
+        }
+      },
+      "G7udl-khynrWLU60lXqZv": {
+        "id": "G7udl-khynrWLU60lXqZv",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_payload_weight",
+        "comment": "Vehicle payload weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 126,
+          "widthComment": 124,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857927049,
+          "createAt": 1747857765012
+        }
+      },
+      "54G4pdT8Esv4OJjTpmhOI": {
+        "id": "54G4pdT8Esv4OJjTpmhOI",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_unladen_weight",
+        "comment": "Vehicle unladed weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 127,
+          "widthComment": 125,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857928063,
+          "createAt": 1747857765013
+        }
+      },
+      "j8mrz5XPssyRDi1S5ZI4Q": {
+        "id": "j8mrz5XPssyRDi1S5ZI4Q",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_gross_train_weight",
+        "comment": "Vehicle gross train weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 142,
+          "widthComment": 138,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857929297,
+          "createAt": 1747857765013
+        }
+      },
+      "tsSzhs7EexHCfJSMtUGyu": {
+        "id": "tsSzhs7EexHCfJSMtUGyu",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_gross_vehicle_weight",
+        "comment": "Vehicle gross weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 154,
+          "widthComment": 110,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857930330,
+          "createAt": 1747857765013
+        }
+      },
+      "tunCrntASrWWZqLaeZvXR": {
+        "id": "tunCrntASrWWZqLaeZvXR",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "vehicle_gross_combined_weight",
+        "comment": "Vehicle gross combined weight",
+        "dataType": "NUMERIC",
+        "default": "",
+        "options": 0,
+        "ui": {
+          "keys": 0,
+          "widthName": 171,
+          "widthComment": 166,
+          "widthDataType": 60,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857931321,
+          "createAt": 1747857765013
+        }
+      },
+      "Mi3j6iFH-EBV-7tZxDJLK": {
+        "id": "Mi3j6iFH-EBV-7tZxDJLK",
+        "tableId": "5PBlNS_-oxnbbR5EAtygr",
+        "name": "database_timestamp",
+        "comment": "",
+        "dataType": "TIMESTAMP WITH TIME ZONE",
+        "default": "NOW()",
+        "options": 8,
+        "ui": {
+          "keys": 0,
+          "widthName": 111,
+          "widthComment": 60,
+          "widthDataType": 162,
+          "widthDefault": 60
+        },
+        "meta": {
+          "updateAt": 1747857786501,
+          "createAt": 1747857770666
+        }
       }
     },
     "relationshipEntities": {
@@ -3005,18 +4769,18 @@
           "columnIds": [
             "n3j5hL6KyZlgpLvGPZ6cS"
           ],
-          "x": 1514.1429,
-          "y": 722.3658,
-          "direction": 8
+          "x": 1176.96,
+          "y": 426.9999,
+          "direction": 1
         },
         "end": {
           "tableId": "5PBlNS_-oxnbbR5EAtygr",
           "columnIds": [
             "e_SGs-y-6cufeHJBGZUD7"
           ],
-          "x": 1514.1334,
-          "y": 875.0766,
-          "direction": 4
+          "x": 980.7187,
+          "y": 312.5889,
+          "direction": 2
         },
         "meta": {
           "updateAt": 1747309802114,
@@ -3033,17 +4797,17 @@
           "columnIds": [
             "Q1xxAQc6jfbQhwb1k7cPJ"
           ],
-          "x": 789.6945000000001,
-          "y": 647.169,
-          "direction": 2
+          "x": 480.1945,
+          "y": 1083.169,
+          "direction": 8
         },
         "end": {
           "tableId": "5PBlNS_-oxnbbR5EAtygr",
           "columnIds": [
             "XX2MV0MO9p9Mb_RZLSueD"
           ],
-          "x": 1066.1334,
-          "y": 997.0766,
+          "x": 871.2554,
+          "y": 888.3449,
           "direction": 1
         },
         "meta": {
@@ -3098,7 +4862,7 @@
           "columnIds": [
             "0-pdukiqQrkKWImuhNR_F"
           ],
-          "x": 1608.9544,
+          "x": 1743.9544,
           "y": 1590.7157,
           "direction": 8
         },
@@ -3118,7 +4882,7 @@
             "avnjoo55aL0ifc0-LUrAM"
           ],
           "x": 1338.9544,
-          "y": 1476.7157,
+          "y": 1514.7157,
           "direction": 1
         },
         "end": {
@@ -3126,8 +4890,8 @@
           "columnIds": [
             "laVqLxo3LnS2W4kjK54cK"
           ],
-          "x": 809.0894000000001,
-          "y": 1475.9718,
+          "x": 654.2114,
+          "y": 1735.2889,
           "direction": 2
         },
         "meta": {
@@ -3138,28 +4902,28 @@
       "T5zh63Mafy_sjZMPjxREc": {
         "id": "T5zh63Mafy_sjZMPjxREc",
         "identification": true,
-        "relationshipType": 16,
+        "relationshipType": 8,
         "startRelationshipType": 2,
         "start": {
           "tableId": "5PBlNS_-oxnbbR5EAtygr",
           "columnIds": [
             "N4fz3bBAV2Hnvj7Gya5Lk"
           ],
-          "x": 1066.1334,
-          "y": 1241.0765999999999,
-          "direction": 1
+          "x": 502.7187,
+          "y": 1254.5889,
+          "direction": 8
         },
         "end": {
           "tableId": "0MpceA2qJNzhxc6kD-DHK",
           "columnIds": [
             "F_cQYVxEdHWDOJTi8qubO"
           ],
-          "x": 809.0894000000001,
-          "y": 1255.9718,
-          "direction": 2
+          "x": 333.7114,
+          "y": 1503.2889,
+          "direction": 4
         },
         "meta": {
-          "updateAt": 1747824400333,
+          "updateAt": 1747851370807,
           "createAt": 1747824400333
         }
       },
@@ -3173,22 +4937,50 @@
           "columnIds": [
             "avnjoo55aL0ifc0-LUrAM"
           ],
-          "x": 1338.9544,
-          "y": 1552.7157,
-          "direction": 1
+          "x": 1473.9544,
+          "y": 1590.7157,
+          "direction": 8
         },
         "end": {
           "tableId": "f5I5kzr_btbfy410-XAVG",
           "columnIds": [
             "pNsbjOM_GPKw9xK5XqOZe"
           ],
-          "x": 1248.1732,
-          "y": 1758.6568,
+          "x": 1406.7098,
+          "y": 1875.73,
           "direction": 2
         },
         "meta": {
           "updateAt": 1747829745301,
           "createAt": 1747829745301
+        }
+      },
+      "a1GuS-eNZrYW960xhbrXk": {
+        "id": "a1GuS-eNZrYW960xhbrXk",
+        "identification": true,
+        "relationshipType": 8,
+        "startRelationshipType": 2,
+        "start": {
+          "tableId": "5PBlNS_-oxnbbR5EAtygr",
+          "columnIds": [
+            "N4fz3bBAV2Hnvj7Gya5Lk"
+          ],
+          "x": 980.7187,
+          "y": 940.5889,
+          "direction": 2
+        },
+        "end": {
+          "tableId": "1gPZnNsBPzQWoHoL14H7O",
+          "columnIds": [
+            "MJcv4xgVEXps43SSy6_Ik"
+          ],
+          "x": 1250.9772,
+          "y": 999.503,
+          "direction": 1
+        },
+        "meta": {
+          "updateAt": 1747851428023,
+          "createAt": 1747851428023
         }
       }
     },
