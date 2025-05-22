@@ -7,12 +7,21 @@
 #' @export
 
 # Generic GraphQL request function
-get_journeys <- function(conn, url, project_id, start_id) {
+get_journeys <- function(conn, url, project_id, date) {
+    message(sprintf("Fetching journeys for %s", date))
+    # Construct end date by adding one day
+    end_date <- as.Date(date) + 1
+    
     journeysQuery <- "
-        query BugsMatterNightlyJourneysQuery($projectId: Int!, $startId: Int!){
+        query BugsMatterNightlyJourneysQuery($projectId: Int!, $date: String!, $endDate: String!){
             records(where: {
                 projectId: $projectId,
-                id: { gte: $startId }
+                data: { 
+                    time: { 
+                        gte: $date,
+                        lt: $endDate
+                    }
+                }
             }, limit: 1000){
                 id
                 geometry {
@@ -28,20 +37,39 @@ get_journeys <- function(conn, url, project_id, start_id) {
     response <- httr::POST(
         url,
         body = list(
-            query = query,
+            query = journeysQuery,
             variables = list(
                 projectId = project_id,
-                startId = start_id
+                date = date,
+                endDate = end_date
             )
         ),
         encode = "json",
         httr::add_headers(Authorization = paste("JWT", token))
     )
 
+    # Check for HTTP errors
+    if (httr::http_error(response)) {
+        stop(sprintf("HTTP error: %s", httr::http_status(response)$message))
+    }
+
     content_text <- httr::content(response, as = "text")
+    
+    # Check if we got HTML instead of JSON
+    if (grepl("<!DOCTYPE html>", content_text)) {
+        stop("Received HTML response instead of JSON. Check API endpoint and authentication.")
+    }
 
     new_journeys <-  jsonlite::fromJSON(content_text, flatten = TRUE) %>%
-        as.data.frame() %>%
+        as.data.frame()
+
+    print(new_journeys)
+
+    if (nrow(new_journeys) == 0) {
+        return(new_journeys)
+    }
+
+    new_journeys <- new_journeys %>%
         tibble::tibble() %>%
         dplyr::rename_all(
             function(col) stringr::str_replace_all(col, "data.records.", "")
@@ -91,7 +119,7 @@ get_journeys <- function(conn, url, project_id, start_id) {
 
     sf::st_write(new_journeys, conn, DBI::Id("op", "all_journeys"), append = TRUE)
 
-    message(sprintf("Added %s journeys.", new_journeys))
+    message(sprintf("Added %s journeys.", nrow(new_journeys)))
     return(new_journeys)
 }
 

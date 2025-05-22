@@ -5,12 +5,21 @@
 #' @return The return value, if any, from executing the function.
 #'
 #' @export
-get_users <- function(conn, url, project_id, start_id) {
+get_users <- function(conn, url, project_id, date) {
+    message(sprintf("Fetching users for %s", date))
+    # Construct end date by adding time component and one day
+    end_date <- as.Date(date) + 1
+    
     # Original users query
     usersQuery <- '
-        query BugsMatterNightlyUsersQuery($projectId: Int!, $startId: Int!){
+        query BugsMatterNightlyUsersQuery($projectId: Int!, $date: String!, $endDate: String!){
             project(id: $projectId) {
-                memberships(where: { userId: { gt: $startId } }, limit: 1000) {
+                memberships(where: { 
+                    createdAt: { 
+                        gte: $date,
+                        lt: $endDate
+                    } 
+                }) {
                     user {
                         id
                         username
@@ -27,7 +36,8 @@ get_users <- function(conn, url, project_id, start_id) {
             query = usersQuery,
             variables = list(
                 projectId = project_id,
-                startId = start_id
+                date = date,
+                endDate = end_date
             )
         ),
         encode = "json",
@@ -38,6 +48,8 @@ get_users <- function(conn, url, project_id, start_id) {
 
     new_users <- jsonlite::fromJSON(content_text, flatten = TRUE) %>%
         as.data.frame()
+
+    print(new_users)
 
     if (nrow(new_users) == 0) {
         return(new_users)

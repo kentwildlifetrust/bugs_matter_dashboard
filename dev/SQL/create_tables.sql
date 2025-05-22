@@ -1,56 +1,58 @@
+-- Active: 1746105028947@@kwt-postgresql-azdb-1.postgres.database.azure.com@5432@bugs_matter
 
-CREATE TABLE op.all_journeys (
-    id INTEGER NOT NULL UNIQUE,
-    user_id INTEGER NOT NULL,
-    vehicle_id INTEGER NOT NULL,
-    start_timestamp TIMESTAMP WITH TIME ZONE,
-    end_timestamp TIMESTAMP WITH TIME ZONE,
-    rain BOOLEAN,
-    distance NUMERIC,
-    duration NUMERIC,
-    avg_speed NUMERIC,
-    splat_count INTEGER,
-    photo_url VARCHAR,
-    speed NUMERIC,
-    bearing NUMERIC,
-    accuracy NUMERIC,
-    vehicle_reg VARCHAR(12),
-    vehicle_class VARCHAR,
-    vehicle_bhp NUMERIC,
-    vehicle_year_of_manufacture INTEGER,
-    vehicle_date_first_registered DATE,
-    vehicle_date_first_registered_uk DATE,
-    vehicle_make VARCHAR,
-    vehicle_make_code VARCHAR,
-    vehicle_range VARCHAR,
-    vehicle_model VARCHAR,
-    vehicle_model_code VARCHAR,
-    vehicle_trim VARCHAR,
-    vehicle_width NUMERIC,
-    vehicle_height NUMERIC,
-    vehicle_car_length NUMERIC,
-    vehicle_colour VARCHAR,
-    vehicle_num_axles INTEGER,
-    vehicle_num_doors INTEGER,
-    vehicle_num_seats INTEGER,
-    vehicle_body_shape VARCHAR,
-    vehicle_wheel_base NUMERIC,
-    vehicle_wheel_plan VARCHAR,
-    vehicle_kerb_height NUMERIC,
-    vehicle_load_length NUMERIC,
-    vehicle_rigid_artic VARCHAR,
-    vehicle_driving_axle VARCHAR,
-    vehicle_door_plan_literal VARCHAR,
-    vehicle_payload_volume NUMERIC,
-    vehicle_payload_weight NUMERIC,
-    vehicle_unladen_weight NUMERIC,
-    vehicle_gross_train_weight NUMERIC,
-    vehicle_gross_vehicle_weight NUMERIC,
-    vehicle_gross_combined_weight NUMERIC,
-    app_timestamp TIMESTAMP WITH TIME ZONE,
-    database_timestamp TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    geom GEOMETRY NOT NULL,
-    PRIMARY KEY (id)
+CREATE TABLE op.all_journeys
+(
+  id                               INTEGER                  NOT NULL UNIQUE,
+  user_id                          INTEGER                  NOT NULL,
+  vehicle_id                       INTEGER                  NOT NULL,
+  start_timestamp                  TIMESTAMP WITH TIME ZONE,
+  end_timestamp                    TIMESTAMP WITH TIME ZONE,
+  rain                             BOOLEAN                 ,
+  distance                         NUMERIC                 ,
+  duration                         NUMERIC                 ,
+  avg_speed                        NUMERIC                 ,
+  splat_count                      INTEGER                 ,
+  photo_url                        VARCHAR                 ,
+  speed                            NUMERIC                 ,
+  bearing                          NUMERIC                 ,
+  accuracy                         NUMERIC                 ,
+  vehicle_reg                      VARCHAR(12)             ,
+  vehicle_class                    VARCHAR                 ,
+  vehicle_bhp                      NUMERIC                 ,
+  vehicle_year_of_manufacture      INTEGER                 ,
+  vehicle_date_first_registered    DATE                    ,
+  vehicle_date_first_registered_uk DATE                    ,
+  vehicle_make                     VARCHAR                 ,
+  vehicle_make_code                VARCHAR                 ,
+  vehicle_range                    VARCHAR                 ,
+  vehicle_model                    VARCHAR                 ,
+  vehicle_model_code               VARCHAR                 ,
+  vehicle_trim                     VARCHAR                 ,
+  vehicle_width                    NUMERIC                 ,
+  vehicle_height                   NUMERIC                 ,
+  vehicle_car_length               NUMERIC                 ,
+  vehicle_colour                   VARCHAR                 ,
+  vehicle_num_axles                INTEGER                 ,
+  vehicle_num_doors                INTEGER                 ,
+  vehicle_num_seats                INTEGER                 ,
+  vehicle_body_shape               VARCHAR                 ,
+  vehicle_wheel_base               NUMERIC                 ,
+  vehicle_wheel_plan               VARCHAR                 ,
+  vehicle_kerb_height              NUMERIC                 ,
+  vehicle_load_length              NUMERIC                 ,
+  vehicle_rigid_artic              VARCHAR                 ,
+  vehicle_driving_axle             VARCHAR                 ,
+  vehicle_door_plan_literal        VARCHAR                 ,
+  vehicle_payload_volume           NUMERIC                 ,
+  vehicle_payload_weight           NUMERIC                 ,
+  vehicle_unladen_weight           NUMERIC                 ,
+  vehicle_gross_train_weight       NUMERIC                 ,
+  vehicle_gross_vehicle_weight     NUMERIC                 ,
+  vehicle_gross_combined_weight    NUMERIC                 ,
+  app_timestamp                    TIMESTAMP WITH TIME ZONE,
+  database_timestamp               TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  geom                             GEOMETRY                 NOT NULL,
+  PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE op.all_journeys IS 'Raw bug splat sampling journeys downloaded from Coreo API';
@@ -153,42 +155,44 @@ COMMENT ON COLUMN op.all_journeys.app_timestamp IS 'Time journey uploaded from a
 
 COMMENT ON COLUMN op.all_journeys.geom IS 'Journey line path';
 
-CREATE TABLE op.cleaned_journeys (
-    id INTEGER NOT NULL,
-    region_code CHAR(6) NOT NULL,
-    cm_km_offset NUMERIC NOT NULL,
-    log_cm_miles_offset NUMERIC NOT NULL,
-    midpoint_time TIMESTAMP WITH TIME ZONE NOT NULL,
-    elevation NUMERIC NOT NULL,
-    day_of_year INTEGER NOT NULL,
-    temp NUMERIC NOT NULL,
-    forest NUMERIC NOT NULL,
-    shrubland NUMERIC NOT NULL,
-    grassland NUMERIC NOT NULL,
-    wetland NUMERIC NOT NULL,
-    marine NUMERIC NOT NULL,
-    arable NUMERIC NOT NULL,
-    pasture NUMERIC NOT NULL,
-    urban NUMERIC NOT NULL,
-    geom GEOMETRY NOT NULL,
-    PRIMARY KEY (id)
+CREATE TABLE op.cleaned_journeys
+(
+  id                  INTEGER                  NOT NULL,
+  region_code         CHAR(6)                  NOT NULL,
+  cm_km_offset        NUMERIC                  NOT NULL,
+  log_cm_miles_offset NUMERIC                  NOT NULL,
+  midpoint_time       TIMESTAMP WITH TIME ZONE NOT NULL,
+  elevation           NUMERIC                  NOT NULL,
+  day_of_year         INTEGER                  NOT NULL,
+  temp                NUMERIC                  NOT NULL,
+  forest              NUMERIC                  NOT NULL,
+  shrubland           NUMERIC                  NOT NULL,
+  grassland           NUMERIC                  NOT NULL,
+  wetland             NUMERIC                  NOT NULL,
+  marine              NUMERIC                  NOT NULL,
+  arable              NUMERIC                  NOT NULL,
+  pasture             NUMERIC                  NOT NULL,
+  urban               NUMERIC                  NOT NULL,
+  geom                GEOMETRY                 NOT NULL,
+  PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE op.cleaned_journeys IS 'Cleaned sampling journeys to be used in analysis';
 
 COMMENT ON COLUMN op.cleaned_journeys.id IS 'Unique journey record Id';
 
-CREATE TABLE op.journey_cleaning (
-    id INTEGER NOT NULL,
-    invalid_geom BOOLEAN NOT NULL,
-    not_linestring BOOLEAN NOT NULL,
-    gps_error BOOLEAN NOT NULL,
-    ferry BOOLEAN NOT NULL,
-    short BOOLEAN NOT NULL,
-    fast BOOLEAN NOT NULL,
-    slow BOOLEAN NOT NULL,
-    high_count BOOLEAN NOT NULL,
-    PRIMARY KEY (id)
+CREATE TABLE op.journey_cleaning
+(
+  id             INTEGER NOT NULL,
+  invalid_geom   BOOLEAN NOT NULL,
+  not_linestring BOOLEAN NOT NULL,
+  gps_error      BOOLEAN NOT NULL,
+  ferry          BOOLEAN NOT NULL,
+  short          BOOLEAN NOT NULL,
+  fast           BOOLEAN NOT NULL,
+  slow           BOOLEAN NOT NULL,
+  high_count     BOOLEAN NOT NULL,
+  PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE op.journey_cleaning IS 'Journeys are checked against multiple criteria to determine if they should be included in analysis';
@@ -211,11 +215,20 @@ COMMENT ON COLUMN op.journey_cleaning.slow IS 'Journeys with speed <= 3 mph are 
 
 COMMENT ON COLUMN op.journey_cleaning.high_count IS 'Journeys with improbable splat counts (>= 500) are excluded';
 
-CREATE TABLE op.users (
-    id INTEGER NOT NULL UNIQUE,
-    username VARCHAR NOT NULL,
-    sign_up_date DATE NOT NULL,
-    PRIMARY KEY (id)
+CREATE TABLE op.journeys_queried_dates
+(
+  date DATE NOT NULL UNIQUE,
+  PRIMARY KEY (date)
+);
+
+COMMENT ON TABLE op.journeys_queried_dates IS 'Keeps track of the days that have been checked for journeys';
+
+CREATE TABLE op.users
+(
+  id           INTEGER NOT NULL UNIQUE,
+  username     VARCHAR NOT NULL,
+  sign_up_date DATE    NOT NULL,
+  PRIMARY KEY (id)
 );
 
 COMMENT ON TABLE op.users IS 'User accounts';
@@ -226,49 +239,72 @@ COMMENT ON COLUMN op.users.username IS 'Username';
 
 COMMENT ON COLUMN op.users.sign_up_date IS 'Date registered';
 
-CREATE TABLE ref.countries (
-    code CHAR(3) NOT NULL,
-    name VARCHAR NOT NULL,
-    geom GEOMETRY NOT NULL,
-    PRIMARY KEY (code)
+CREATE TABLE op.users_queried_dates
+(
+  date DATE NOT NULL UNIQUE,
+  PRIMARY KEY (date)
+);
+
+COMMENT ON TABLE op.users_queried_dates IS 'Keeps track of the days that have been checked for user sign ups';
+
+CREATE TABLE ref.countries
+(
+  code CHAR(3)  NOT NULL,
+  name VARCHAR  NOT NULL,
+  geom GEOMETRY NOT NULL,
+  PRIMARY KEY (code)
 );
 
 COMMENT ON TABLE ref.countries IS 'ISO 3166-1 countries';
 
-CREATE TABLE ref.country_subdivisions_1 (
-    code CHAR(6) NOT NULL,
-    country_code CHAR(3) NOT NULL,
-    name VARCHAR NOT NULL,
-    geom GEOMETRY NOT NULL,
-    PRIMARY KEY (code)
+CREATE TABLE ref.country_subdivisions_1
+(
+  code         CHAR(6)  NOT NULL,
+  country_code CHAR(3)  NOT NULL,
+  name         VARCHAR  NOT NULL,
+  geom         GEOMETRY NOT NULL,
+  PRIMARY KEY (code)
 );
 
 COMMENT ON TABLE ref.country_subdivisions_1 IS 'ISO 3166-2 country subdivisions (UK nations, regions, provinces etc.).';
 
-CREATE TABLE ref.country_subdivisions_2 (
-    subdivision_code CHAR(6) NOT NULL,
-    area_name VARCHAR NOT NULL,
-    geom GEOMETRY NOT NULL,
-    PRIMARY KEY (subdivision_code, area_name)
+CREATE TABLE ref.country_subdivisions_2
+(
+  subdivision_code CHAR(6)  NOT NULL,
+  area_name        VARCHAR  NOT NULL,
+  geom             GEOMETRY NOT NULL,
+  PRIMARY KEY (subdivision_code, area_name)
 );
 
 COMMENT ON TABLE ref.country_subdivisions_2 IS 'Larger country_subdivisions are further split. English regions for example';
 
 ALTER TABLE op.all_journeys
-ADD CONSTRAINT FK_op_users_TO_op_all_journeys FOREIGN KEY (user_id) REFERENCES op.users (id);
+  ADD CONSTRAINT FK_op_users_TO_op_all_journeys
+    FOREIGN KEY (user_id)
+    REFERENCES op.users (id);
 
 ALTER TABLE ref.country_subdivisions_1
-ADD CONSTRAINT FK_ref_countries_TO_ref_country_subdivisions_1 FOREIGN KEY (country_code) REFERENCES ref.countries (code);
+  ADD CONSTRAINT FK_ref_countries_TO_ref_country_subdivisions_1
+    FOREIGN KEY (country_code)
+    REFERENCES ref.countries (code);
 
 ALTER TABLE op.cleaned_journeys
-ADD CONSTRAINT FK_ref_country_subdivisions_1_TO_op_cleaned_journeys FOREIGN KEY (region_code) REFERENCES ref.country_subdivisions_1 (code);
+  ADD CONSTRAINT FK_ref_country_subdivisions_1_TO_op_cleaned_journeys
+    FOREIGN KEY (region_code)
+    REFERENCES ref.country_subdivisions_1 (code);
 
 ALTER TABLE op.cleaned_journeys
-ADD CONSTRAINT FK_op_all_journeys_TO_op_cleaned_journeys FOREIGN KEY (id) REFERENCES op.all_journeys (id);
+  ADD CONSTRAINT FK_op_all_journeys_TO_op_cleaned_journeys
+    FOREIGN KEY (id)
+    REFERENCES op.all_journeys (id);
 
 ALTER TABLE ref.country_subdivisions_2
-ADD CONSTRAINT FK_ref_country_subdivisions_1_TO_ref_country_subdivisions_2 FOREIGN KEY (subdivision_code) REFERENCES ref.country_subdivisions_1 (code);
+  ADD CONSTRAINT FK_ref_country_subdivisions_1_TO_ref_country_subdivisions_2
+    FOREIGN KEY (subdivision_code)
+    REFERENCES ref.country_subdivisions_1 (code);
 
 ALTER TABLE op.journey_cleaning
-ADD CONSTRAINT FK_op_all_journeys_TO_op_journey_cleaning FOREIGN KEY (id) REFERENCES op.all_journeys (id);
+  ADD CONSTRAINT FK_op_all_journeys_TO_op_journey_cleaning
+    FOREIGN KEY (id)
+    REFERENCES op.all_journeys (id);
 

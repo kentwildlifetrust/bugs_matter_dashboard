@@ -19,26 +19,36 @@ update_database <- function() {
     token <- Sys.getenv("BUGS_MATTER_API_TOKEN")
     project_id <- 343
 
-   repeat {
-        max_user_id <- DBI::dbGetQuery(
+    repeat {
+        max_sign_up_date <- DBI::dbGetQuery(
             conn = conn,
-            statement = "SELECT COALESCE(MAX(id), 0) AS max FROM op.users;"
+            statement = "SELECT COALESCE(MAX(date), '2019-12-31') AS max FROM op.users_queried_dates;"
         ) %>%
-            dplyr::pull("max")
-
-        new_users <- bugsMatter::get_users(conn, url, project_id, max_user_id + 1)
-        if (nrow(new_users) == 0) {
+            dplyr::pull("max") %>%
+            as.Date()
+        if (max_sign_up_date == Sys.Date()) {
             break
         }
-   }
+        new_users <- bugsMatter::get_users(conn, url, project_id, max_sign_up_date + 1)
+        DBI::dbExecute(conn, "INSERT INTO op.users_queried_dates (date) VALUES ($1)", max_sign_up_date + 1)
+        Sys.sleep(1)
+    }
 
 
-    # #find the current maximum journey_id
-    # max_journey_id <- DBI::dbGetQuery(
-    #     conn = conn,
-    #     statement = "SELECT COALESCE(MAX(id), 0) AS max FROM op.all_journeys;"
-    # ) %>%
-    #     dplyr::pull("max")
+    
+    repeat {
+        max_journey_date <- DBI::dbGetQuery(
+            conn = conn,
+            statement = "SELECT COALESCE(MAX(date), '2019-12-31') AS max FROM op.journeys_queried_dates;"
+        ) %>%
+            dplyr::pull("max") %>%
+            as.Date()
+        if (max_journey_date == Sys.Date()) {
+            break
+        }
+        new_users <- bugsMatter::get_journeys(conn, url, project_id, max_journey_date + 1)
+        DBI::dbExecute(conn, "INSERT INTO op.journeys_queried_dates (date) VALUES ($1)", max_journey_date + 1)
+        Sys.sleep(1)
+    }
 
-    # new_journeys <- bugsMatter::get_journeys(conn, url, project_id, max_journey_id + 1)
 }
