@@ -37,17 +37,15 @@ update_database <- function() {
 
     
     repeat {
-        max_journey_date <- DBI::dbGetQuery(
+        max_journey_id <- DBI::dbGetQuery(
             conn = conn,
-            statement = "SELECT COALESCE(MAX(date), '2019-12-31') AS max FROM op.journeys_queried_dates;"
+            statement = "SELECT COALESCE(MAX(id), 0) AS max FROM op.all_journeys;"
         ) %>%
-            dplyr::pull("max") %>%
-            as.Date()
-        if (max_journey_date == Sys.Date()) {
+            dplyr::pull("max")
+        new_journeys <- bugsMatter::get_journeys(conn, url, project_id, max_journey_id + 1)
+        if (nrow(new_journeys) == 0) {
             break
         }
-        new_users <- bugsMatter::get_journeys(conn, url, project_id, max_journey_date + 1)
-        DBI::dbExecute(conn, "INSERT INTO op.journeys_queried_dates (date) VALUES ($1)", max_journey_date + 1)
         Sys.sleep(1)
     }
 
