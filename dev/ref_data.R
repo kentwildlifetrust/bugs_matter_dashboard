@@ -19,7 +19,7 @@ codes <- c("GBR")
 append_country <- function(code) {
     url <- sprintf("https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_%s_0.json", code)
     json <- readLines(url)
-
+    
     sf::st_read(json, quiet = TRUE) %>%
         dplyr::mutate(code = code) %>%
         dplyr::select(
@@ -33,6 +33,7 @@ append_country <- function(code) {
         sf::st_write(dsn = conn, DBI::Id("ref", "countries"), append = TRUE)
 }
 
+DBI::dbExecute(conn, "DELETE FROM ref.country_subdivisions_1")
 DBI::dbExecute(conn, "DELETE FROM ref.countries;")
 lapply(
     c("GBR", "FRA", "ESP", "PRT", "IRL"),
@@ -45,7 +46,7 @@ lapply(
 append_regions <- function(code) {
     path <- sprintf("dev/.data/gadm41_%s_1.json", code)
     json <- readr::read_file(path) #needed to cope with file encoding (region names with unusual characters)
-
+    
     regions <- sf::st_read(json, quiet = TRUE) %>%
         dplyr::mutate(country_code = code) %>%
         dplyr::filter(GID_1 != "NA")
