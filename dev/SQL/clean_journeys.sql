@@ -1,12 +1,15 @@
-WITH new_journeys AS (
+﻿DELETE FROM op.journey_check;
+
+WITH new_journeys AS MATERIALIZED (
     SELECT aj.*
     FROM op.journeys aj
     WHERE NOT EXISTS (
         SELECT 1 FROM op.journey_check jc WHERE aj.id = jc.id
     )
+    LIMIT 1000
 ),
 -- Filter out invalid geometries and ensure minimum points
-filtered_lines AS (
+filtered_lines AS MATERIALIZED (
     SELECT
         l.*
     FROM
@@ -17,7 +20,7 @@ filtered_lines AS (
         AND NOT public.ST_IsEmpty(l.geom)
         AND public.ST_GeometryType(l.geom) = 'ST_LineString'
 ),
-segments AS (
+segments AS MATERIALIZED (
     -- Split the lines into segments at their vertices and calculate the length of each segment
     SELECT
         f.id AS line_id,
@@ -31,13 +34,13 @@ segments AS (
         AND public.ST_IsValid(p1.geom)
         AND public.ST_IsValid(p2.geom)
 ),
-long_segments AS (
+long_segments AS MATERIALIZED (
     -- Filter the segments that are longer than 1000 meters
     SELECT DISTINCT line_id
     FROM segments
     WHERE segment_length > 1000
 ),
-vehicle_ferries AS (
+vehicle_ferries AS MATERIALIZED (
     SELECT osm_id, public.ST_Transform(geom, 27700) as geom 
     FROM ref.ferry_routes 
     WHERE motor_vehicle = 'yes'
@@ -62,9 +65,9 @@ INSERT INTO op.journey_check (
         COALESCE(aj.avg_speed <= 3 * 1.60934, FALSE) AS slow,
         COALESCE(aj.splat_count >= 500, FALSE) AS high_count
     FROM
-        new_journeys aj
+        op.journeys aj
     LEFT JOIN filtered_lines f ON f.id = aj.id
+    LIMIT 1000
 );
-
 
 

@@ -5,7 +5,7 @@
     "width": 2000,
     "height": 2000,
     "scrollTop": -1325,
-    "scrollLeft": -505,
+    "scrollLeft": -453,
     "zoomLevel": 0.94,
     "show": 511,
     "database": 16,
@@ -66,7 +66,7 @@
     "tableEntities": {
       "5PBlNS_-oxnbbR5EAtygr": {
         "id": "5PBlNS_-oxnbbR5EAtygr",
-        "name": "op.all_journeys",
+        "name": "op.journeys",
         "comment": "Raw bug splat sampling journeys downloaded from Coreo API",
         "columnIds": [
           "N4fz3bBAV2Hnvj7Gya5Lk",
@@ -243,12 +243,12 @@
           "x": -15.6659,
           "y": 135.1274,
           "zIndex": 2,
-          "widthName": 80,
+          "widthName": 64,
           "widthComment": 330,
           "color": ""
         },
         "meta": {
-          "updateAt": 1748337960577,
+          "updateAt": 1748350465235,
           "createAt": 1747308804511
         }
       },
@@ -281,7 +281,7 @@
       },
       "0MpceA2qJNzhxc6kD-DHK": {
         "id": "0MpceA2qJNzhxc6kD-DHK",
-        "name": "op.cleaned_journeys",
+        "name": "op.accepted_journeys",
         "comment": "Cleaned sampling journeys to be used in analysis",
         "columnIds": [
           "F_cQYVxEdHWDOJTi8qubO",
@@ -328,12 +328,12 @@
           "x": 31.4866,
           "y": 1499.6463,
           "zIndex": 290,
-          "widthName": 109,
+          "widthName": 116,
           "widthComment": 261,
           "color": ""
         },
         "meta": {
-          "updateAt": 1748338002326,
+          "updateAt": 1748350490738,
           "createAt": 1747822587901
         }
       },
@@ -432,7 +432,7 @@
       },
       "1gPZnNsBPzQWoHoL14H7O": {
         "id": "1gPZnNsBPzQWoHoL14H7O",
-        "name": "op.journey_cleaning",
+        "name": "op.journey_check",
         "comment": "Journeys are checked against multiple criteria to determine if they should be included in analysis",
         "columnIds": [
           "MJcv4xgVEXps43SSy6_Ik",
@@ -462,12 +462,12 @@
           "x": 1250.9772,
           "y": 863.503,
           "zIndex": 645,
-          "widthName": 108,
+          "widthName": 94,
           "widthComment": 512,
           "color": ""
         },
         "meta": {
-          "updateAt": 1747857814900,
+          "updateAt": 1748350480212,
           "createAt": 1747851214530
         }
       },
@@ -4316,34 +4316,6 @@
           "createAt": 1747824285557
         }
       },
-      "tC-vepCWjeyljwJCw5gfR": {
-        "id": "tC-vepCWjeyljwJCw5gfR",
-        "identification": false,
-        "relationshipType": 16,
-        "startRelationshipType": 2,
-        "start": {
-          "tableId": "E36hYBG2rUADZ0tAgbE0G",
-          "columnIds": [
-            "avnjoo55aL0ifc0-LUrAM"
-          ],
-          "x": 1338.9544,
-          "y": 1514.7157,
-          "direction": 1
-        },
-        "end": {
-          "tableId": "0MpceA2qJNzhxc6kD-DHK",
-          "columnIds": [
-            "laVqLxo3LnS2W4kjK54cK"
-          ],
-          "x": 654.2114,
-          "y": 1735.2889,
-          "direction": 2
-        },
-        "meta": {
-          "updateAt": 1747824377917,
-          "createAt": 1747824377917
-        }
-      },
       "T5zh63Mafy_sjZMPjxREc": {
         "id": "T5zh63Mafy_sjZMPjxREc",
         "identification": true,
@@ -4370,34 +4342,6 @@
         "meta": {
           "updateAt": 1747851370807,
           "createAt": 1747824400333
-        }
-      },
-      "JLR8hesc6K_pk_En6RRX4": {
-        "id": "JLR8hesc6K_pk_En6RRX4",
-        "identification": true,
-        "relationshipType": 16,
-        "startRelationshipType": 2,
-        "start": {
-          "tableId": "E36hYBG2rUADZ0tAgbE0G",
-          "columnIds": [
-            "avnjoo55aL0ifc0-LUrAM"
-          ],
-          "x": 1640.0911,
-          "y": 1502.5473000000002,
-          "direction": 1
-        },
-        "end": {
-          "tableId": "f5I5kzr_btbfy410-XAVG",
-          "columnIds": [
-            "pNsbjOM_GPKw9xK5XqOZe"
-          ],
-          "x": 1266.5367,
-          "y": 1848.843,
-          "direction": 2
-        },
-        "meta": {
-          "updateAt": 1747829745301,
-          "createAt": 1747829745301
         }
       },
       "a1GuS-eNZrYW960xhbrXk": {
@@ -4495,7 +4439,7 @@
             "avnjoo55aL0ifc0-LUrAM"
           ],
           "x": 1640.0911,
-          "y": 1451.8806333333334,
+          "y": 1464.5473,
           "direction": 1
         },
         "end": {
@@ -4665,7 +4609,7 @@
             "avnjoo55aL0ifc0-LUrAM"
           ],
           "x": 1640.0911,
-          "y": 1553.213966666667,
+          "y": 1540.5473,
           "direction": 1
         },
         "end": {
@@ -4674,7 +4618,7 @@
             "UBtrw5sq4jIrrwOXL456Y"
           ],
           "x": 1266.5367,
-          "y": 1924.843,
+          "y": 1886.843,
           "direction": 2
         },
         "meta": {

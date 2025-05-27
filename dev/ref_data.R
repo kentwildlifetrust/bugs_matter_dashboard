@@ -92,6 +92,79 @@ regions <- sf::st_read(path, quiet = TRUE) %>%
 DBI::dbExecute(conn, "DELETE FROM ref.sub_regions")
 sf::st_write(regions, dsn = conn, DBI::Id("ref", "sub_regions"), append = TRUE)
 
+
+####################ferry routes############################################
+#use overpass api for bulk downloads
+url <- "https://overpass-api.de/api/interpreter"
+
+#grab ferry routes for the area 
+#chunk the area so as to not overwhelm the API
+# Create a grid of bounding boxes (2x2 degrees each)
+create_bbox_grid <- function(xmin, xmax, ymin, ymax, size = 5) {
+  x_seq <- seq(xmin, xmax, by = size)
+  y_seq <- seq(ymin, ymax, by = size)
+  
+  bboxes <- list()
+  for (i in 1:(length(x_seq)-1)) {
+    for (j in 1:(length(y_seq)-1)) {
+      bboxes[[length(bboxes) + 1]] <- c(
+        y_seq[j], x_seq[i],
+        y_seq[j+1], x_seq[i+1]
+      )
+    }
+  }
+  return(bboxes)
+}
+
+# Create grid of bounding boxes
+bboxes <- create_bbox_grid(-30, 30, 25, 90)
+
+# Process each bbox and combine results
+ferry_routes_list <- list()
+for (i in seq_along(bboxes)) {
+  message(sprintf("Processing bbox %d of %d", i, length(bboxes)))
+  tryCatch({
+    routes <- osmdata::opq(bbox = bboxes[[i]]) %>%
+      osmdata::add_osm_feature(key = 'route', value = 'ferry') %>%
+      osmdata::osmdata_sf()
+    
+    if (!is.null(routes$osm_lines)) {
+      ferry_routes_list[[i]] <- routes$osm_lines
+    }
+  }, error = function(e) {
+    message(sprintf("Error processing bbox %d: %s", i, e$message))
+  })
+  
+  # Add a small delay to avoid overwhelming the API
+  Sys.sleep(1)
+}
+
+# Combine all results
+# 12573
+ferry_routes <- do.call(dplyr::bind_rows, ferry_routes_list[!sapply(ferry_routes_list, is.null)])
+
+# Remove any duplicates that might occur at bbox boundaries
+ferry_routes <- ferry_routes[!duplicated(ferry_routes$osm_id), ]
+# 10756
+
+ferry_routes <- ferry_routes %>%
+  dplyr::select("osm_id", "name", "motor_vehicle", geom = "geometry")
+DBI::dbExecute(conn, "DELETE FROM ref.ferry_routes;")
+sf::st_write(ferry_routes, conn, DBI::Id("ref", "ferry_routes"))
+
+
+##############################elevation data#############################################
+elevation <- elevatr::get_elev_raster(
+  locations = data.frame(
+    x = c(-30, 30),
+    y = c(25, 90)
+  ),
+  z = 7,
+  prj = 4326
+)
+
+
+
 #countries to include: UK, Ireland, France, Spain, Portugal
 #download from https://gadm.org/download_country.html
 #license: free for non-commercial use: https://gadm.org/license.html#google_vignette

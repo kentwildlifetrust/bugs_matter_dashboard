@@ -1,5 +1,5 @@
-﻿DROP VIEW op.journey_cleaning_summary;
-CREATE OR REPLACE VIEW op.journey_cleaning_summary AS (
+﻿DROP VIEW op.journey_check_summary;
+CREATE OR REPLACE VIEW op.journey_check_summary AS (
     SELECT 
         jc.invalid_geom::INT AS invalid_geom,
         jc.not_linestring::INT AS not_linestring,
@@ -10,7 +10,7 @@ CREATE OR REPLACE VIEW op.journey_cleaning_summary AS (
         jc.slow::INT AS slow,
         jc.high_count::INT AS high_count,
         COUNT(*) AS n_journeys
-    FROM op.journey_cleaning jc
+    FROM op.journey_check jc
     GROUP BY jc.invalid_geom,
         jc.not_linestring,
         jc.gps_error,

@@ -39,7 +39,7 @@ update_database <- function() {
     repeat {
         max_journey_id <- DBI::dbGetQuery(
             conn = conn,
-            statement = "SELECT COALESCE(MAX(id), 0) AS max FROM op.all_journeys;"
+            statement = "SELECT COALESCE(MAX(id), 0) AS max FROM op.journeys;"
         ) %>%
             dplyr::pull("max")
         new_journeys <- bugsMatter::get_journeys(conn, url, project_id, max_journey_id + 1)
@@ -48,5 +48,32 @@ update_database <- function() {
         }
         Sys.sleep(1)
     }
+
+    #check new journeys
+    readLines(system.file("SQL/clean_journeys.sql", package="bugsMatter")) %>%
+        paste(collapse = "\n") %>%
+        DBI::dbExecute(conn, statement = .)
+
+    
+
+    ## region classification using largest join
+    ## calculate midpoint time
+    ## tidy vehicle_class
+    ## work out cm_km_offset & log_cm_km_offset
+
+    ## simplify geometry to 100m
+
+    ## elevation
+    ## elevation raster using elevatr::get_elev_raster(). Data source: https://registry.opendata.aws/terrain-tiles/
+    ## extract mean elevation using exactextractr::exact_extract(z = 7)
+
+    ## habitats
+    ## raster from https://data-gis.unep-wcmc.org/server/rest/services/NatureMap/NatureMap_HabitatTypes/ImageServer
+    ## use a habitat lookup to reclassify, then make columns for each habitat type
+
+    ## temperature
+    ## source raster from https://knmi-ecad-assets-prd.s3.amazonaws.com/ensembles/data/months/ens/tg_0.1deg_day_2025_grid_ensmean.nc
+    ## get the mean temp for the day of each journey location
+
 
 }
