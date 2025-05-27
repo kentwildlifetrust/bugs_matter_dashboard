@@ -52,6 +52,7 @@ CREATE TABLE op.all_journeys
   app_timestamp                    TIMESTAMP WITH TIME ZONE,
   database_timestamp               TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   geom                             GEOMETRY                 NOT NULL,
+  id                               INTEGER                  NOT NULL,
   PRIMARY KEY (id)
 );
 
@@ -155,10 +156,11 @@ COMMENT ON COLUMN op.all_journeys.app_timestamp IS 'Time journey uploaded from a
 
 COMMENT ON COLUMN op.all_journeys.geom IS 'Journey line path';
 
+COMMENT ON COLUMN op.all_journeys.id IS 'Unique journey record Id';
+
 CREATE TABLE op.cleaned_journeys
 (
   id                  INTEGER                  NOT NULL,
-  region_code         CHAR(6)                  NOT NULL,
   cm_km_offset        NUMERIC                  NOT NULL,
   log_cm_miles_offset NUMERIC                  NOT NULL,
   midpoint_time       TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -215,13 +217,23 @@ COMMENT ON COLUMN op.journey_cleaning.slow IS 'Journeys with speed <= 3 mph are 
 
 COMMENT ON COLUMN op.journey_cleaning.high_count IS 'Journeys with improbable splat counts (>= 500) are excluded';
 
-CREATE TABLE op.journeys_queried_dates
+CREATE TABLE op.journey_regions
 (
-  date DATE NOT NULL UNIQUE,
-  PRIMARY KEY (date)
+  journey_id INTEGER NOT NULL,
+  region_id  INTEGER NOT NULL,
+  PRIMARY KEY (journey_id, region_id)
 );
 
-COMMENT ON TABLE op.journeys_queried_dates IS 'Keeps track of the days that have been checked for journeys';
+COMMENT ON COLUMN op.journey_regions.journey_id IS 'Unique journey record Id';
+
+CREATE TABLE op.journey_sub_regions
+(
+  journey_id    INTEGER NOT NULL,
+  sub_region_id INTEGER NOT NULL,
+  PRIMARY KEY (journey_id, sub_region_id)
+);
+
+COMMENT ON COLUMN op.journey_sub_regions.journey_id IS 'Unique journey record Id';
 
 CREATE TABLE op.users
 (
@@ -257,54 +269,94 @@ CREATE TABLE ref.countries
 
 COMMENT ON TABLE ref.countries IS 'ISO 3166-1 countries';
 
-CREATE TABLE ref.country_subdivisions_1
+CREATE TABLE ref.regions
 (
-  code         CHAR(6)  NOT NULL,
+  id           INTEGER  NOT NULL,
   country_code CHAR(3)  NOT NULL,
   name         VARCHAR  NOT NULL,
   geom         GEOMETRY NOT NULL,
-  PRIMARY KEY (code)
+  PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ref.country_subdivisions_1 IS 'ISO 3166-2 country subdivisions (UK nations, regions, provinces etc.).';
+COMMENT ON TABLE ref.regions IS 'ISO 3166-2 country subdivisions (UK nations, regions, provinces etc.).';
 
-CREATE TABLE ref.country_subdivisions_2
+CREATE TABLE ref.sub_regions
 (
-  subdivision_code CHAR(6)  NOT NULL,
-  area_name        VARCHAR  NOT NULL,
-  geom             GEOMETRY NOT NULL,
-  PRIMARY KEY (subdivision_code, area_name)
+  id        INTEGER  NOT NULL,
+  area_name VARCHAR  NOT NULL,
+  geom      GEOMETRY NOT NULL,
+  PRIMARY KEY (id)
 );
 
-COMMENT ON TABLE ref.country_subdivisions_2 IS 'Larger country_subdivisions are further split. English regions for example';
+COMMENT ON TABLE ref.sub_regions IS 'Larger regions are split to another level. English regions for example';
 
 ALTER TABLE op.all_journeys
   ADD CONSTRAINT FK_op_users_TO_op_all_journeys
     FOREIGN KEY (user_id)
     REFERENCES op.users (id);
 
-ALTER TABLE ref.country_subdivisions_1
-  ADD CONSTRAINT FK_ref_countries_TO_ref_country_subdivisions_1
+ALTER TABLE ref.regions
+  ADD CONSTRAINT FK_ref_countries_TO_ref_regions
     FOREIGN KEY (country_code)
     REFERENCES ref.countries (code);
-
-ALTER TABLE op.cleaned_journeys
-  ADD CONSTRAINT FK_ref_country_subdivisions_1_TO_op_cleaned_journeys
-    FOREIGN KEY (region_code)
-    REFERENCES ref.country_subdivisions_1 (code);
 
 ALTER TABLE op.cleaned_journeys
   ADD CONSTRAINT FK_op_all_journeys_TO_op_cleaned_journeys
     FOREIGN KEY (id)
     REFERENCES op.all_journeys (id);
 
-ALTER TABLE ref.country_subdivisions_2
-  ADD CONSTRAINT FK_ref_country_subdivisions_1_TO_ref_country_subdivisions_2
-    FOREIGN KEY (subdivision_code)
-    REFERENCES ref.country_subdivisions_1 (code);
 
 ALTER TABLE op.journey_cleaning
   ADD CONSTRAINT FK_op_all_journeys_TO_op_journey_cleaning
     FOREIGN KEY (id)
     REFERENCES op.all_journeys (id);
 
+ALTER TABLE op.all_journeys
+  ADD CONSTRAINT FK_op_all_journeys_TO_op_all_journeys
+    FOREIGN KEY (id)
+    REFERENCES op.all_journeys (id);
+
+ALTER TABLE op.journey_regions
+  ADD CONSTRAINT FK_op_all_journeys_TO_op_journey_regions
+    FOREIGN KEY (journey_id)
+    REFERENCES op.all_journeys (id);
+
+ALTER TABLE op.journey_regions
+  ADD CONSTRAINT FK_ref_regions_TO_op_journey_regions
+    FOREIGN KEY (region_id)
+    REFERENCES ref.regions (id);
+
+ALTER TABLE op.journey_sub_regions
+  ADD CONSTRAINT FK_op_all_journeys_TO_op_journey_sub_regions
+    FOREIGN KEY (journey_id)
+    REFERENCES op.all_journeys (id);
+
+ALTER TABLE op.journey_sub_regions
+  ADD CONSTRAINT FK_ref_sub_regions_TO_op_journey_sub_regions
+    FOREIGN KEY (sub_region_id)
+    REFERENCES ref.sub_regions (id);
+
+CREATE TABLE op.journey_countries
+(
+  journey_id   INTEGER NOT NULL,
+  country_code CHAR(3) NOT NULL,
+  PRIMARY KEY (journey_id, country_code)
+);
+
+COMMENT ON COLUMN op.journey_countries.journey_id IS 'Unique journey record Id';
+
+
+ALTER TABLE op.journey_countries
+  ADD CONSTRAINT FK_op_all_journeys_TO_op_journey_countries
+    FOREIGN KEY (journey_id)
+    REFERENCES op.all_journeys (id);
+
+ALTER TABLE op.journey_countries
+  ADD CONSTRAINT FK_ref_countries_TO_op_journey_countries
+    FOREIGN KEY (country_code)
+    REFERENCES ref.countries (code);
+
+ALTER TABLE ref.sub_regions
+ADD CONSTRAINT FK_ref_regions_TO_ref_sub_regions1
+FOREIGN KEY (region_id)
+REFERENCES ref.regions (id);
