@@ -329,7 +329,7 @@ st_geometry(journeys13_simplify) <- "geometry_simplify"
 journeys13_simplify$geometry <- NULL
 
 # Download elevation raster
-elevation <- get_elev_raster(journeys13_simplify, z = 7)
+elevation <- elevatr::get_elev_raster(journeys13_simplify, z = 7)
 elevation
 plot(elevation)
 plot(elevation, xlim = c(-0.5,0.5), ylim = c(51.3,51.7))

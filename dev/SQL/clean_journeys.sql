@@ -18,8 +18,7 @@ BEGIN
                 aj.avg_speed,
                 aj.splat_count,
 				aj.duration,
-                public.st_transform(aj.geom, 27700) AS geom_27700,
-                public.st_simplify(public.st_transform(aj.geom, 27700), 100) AS geom
+                public.st_transform(aj.geom, 27700) AS geom
             FROM op.journeys aj
             WHERE NOT EXISTS (
                 SELECT 1 FROM op.journey_check jc WHERE aj.id = jc.id

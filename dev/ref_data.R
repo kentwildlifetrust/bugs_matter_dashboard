@@ -10,73 +10,6 @@ conn <- DBI::dbConnect(
   sslmode = "prefer"
 )
 
-#fill journeys with 2021-2024 data
-sf::st_layers("dev/.data/journeys_for_data_cleaning_map_raw.gpkg")
-journeys <- sf::st_read("dev/.data/journeys_for_data_cleaning_map_raw.gpkg", "journeys_for_data_cleaning_map_raw") %>%
-    dplyr::rename_all(snakecase::to_snake_case)
-#journeys$start <- as.POSIXct(journeys$start)
-#min(journeys$start)
-#max(journeys$start)
-
-journeys <- journeys %>%
-    dplyr::mutate(
-        duration = as.numeric(time) / 60 / 60, # seconds to hours
-        avg_speed = distance / duration,
-        start_timestamp = as.POSIXct(start, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
-        end_timestamp = as.POSIXct(end, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
-        year = format(start_timestamp, format = "%Y"),
-        photo_url = NA,
-        app_timestamp = NA,
-        database_timestamp = Sys.time()
-    ) %>%
-    dplyr::select(
-        id,
-        user_id,
-        start_timestamp,
-        end_timestamp,
-        year,
-        rain,
-        distance,
-        duration,
-        avg_speed,
-        splat_count,
-        photo_url,
-        vehicle_reg = vehicle_re,
-        vehicle_class = vehicle_cl,
-        vehicle_bhp = vehicle_bh,
-        vehicle_year_of_manufacture = vehicle_ye,
-        vehicle_date_first_registered = vehicle_da,
-        vehicle_date_first_registered_uk = vehicle_da_1,
-        vehicle_make = vehicle_ma,
-        vehicle_make_code = vehicle_ma_1,
-        vehicle_range = vehicle_ra,
-        vehicle_model = vehicle_mo,
-        vehicle_model_code = vehicle_mo_1,
-        vehicle_trim = vehicle_tr,
-        vehicle_width = vehicle_wi,
-        vehicle_height = vehicle_he,
-        vehicle_car_length = vehicle_ca,
-        vehicle_colour = vehicle_co,
-        vehicle_num_axles = vehicle_nu_2,
-        vehicle_num_doors = vehicle_nu,
-        vehicle_num_seats = vehicle_nu_1,
-        vehicle_body_shape = vehicle_bo,
-        vehicle_wheel_base = vehicle_wh,
-        vehicle_wheel_plan = vehicle_wh_1,
-        vehicle_kerb_height = vehicle_ke,
-        vehicle_load_length = vehicle_lo,
-        vehicle_rigid_artic = vehicle_ri,
-        vehicle_driving_axle = vehicle_dr,
-        vehicle_door_plan_literal = vehicle_do,
-        vehicle_unladen_weight = vehicle_un,
-        app_timestamp,
-        database_timestamp,
-        geom = geom
-    )
-any(duplicated(journeys$id))
-DBI::dbExecute(conn, "DELETE FROM op.journey_check;")
-DBI::dbExecute(conn, "DELETE FROM op.journeys;")
-sf::st_write(journeys, conn, DBI::Id("op", "journeys"), append = TRUE)
 
 #countries from whole world download (separate levels geopackage)
 #https://gadm.org/download_world.html
@@ -240,7 +173,7 @@ raster::writeRaster(elevation, "dev/.data/elevation.tif")
 ###-------------------------------habitat-----------------------------------###
 url <- "https://data-gis.unep-wcmc.org/server/rest/services/NatureMap/NatureMap_HabitatTypes/ImageServer"
 imgsrv <- arcgislayers::arc_open(url)
-imgsrv
+imgsrv 
 shared_conn <- DBI::dbConnect(
     drv = RPostgres::Postgres(),
     host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
@@ -272,8 +205,7 @@ habitats <- arcgislayers::arc_raster(
     ymax = full_bbox$ymax,
     width = round(full_dims$x),
     height = round(full_dims$y)
-) %>%
-    as.factor()
+)
 # Import reclass table
 habitat_lookup <- read.csv("dev/.data/UNEP_HabitatMap_Lookup.csv")
 # Create a reclassification matrix
@@ -284,14 +216,206 @@ reclass_matrix <- habitat_lookup %>%
 habitats_reclass <- terra::classify(habitats, reclass_matrix)
 raster::plot(habitats_reclass, xlim = c(-1,1), ylim = c(51,52))
 
-raster::writeRaster(habitats, "dev/.data/habitats.tif")
+raster::writeRaster(habitats_reclass, "dev/.data/habitats.tif")
 
 #############################
 # raster2pgsql -s 4326 -C -I -F -t 3614x5721 dev/.data/habitats.tif ref.habitats | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
 
 ##--------------------------temp------------------------------##
+#"https://knmi-ecad-assets-prd.s3.amazonaws.com/ensembles/data/months/ens/tg_0.1deg_day_2025_grid_ensmean.nc"
+#"https://knmi-ecad-assets-prd.s3.amazonaws.com/ensembles/data/months/ens/tg_0.1deg_day_2024_grid_ensmean.nc"
+#"https://knmi-ecad-assets-prd.s3.amazonaws.com/ensembles/data/months/ens/tg_0.1deg_day_2023_grid_ensmean.nc"
+#"https://knmi-ecad-assets-prd.s3.amazonaws.com/ensembles/data/months/ens/tg_0.1deg_day_2022_grid_ensmean.nc"
+#"https://knmi-ecad-assets-prd.s3.amazonaws.com/ensembles/data/months/ens/tg_0.1deg_day_2021_grid_ensmean.nc"
+
+#fill in the missing days of 2025 with means from previous years
+temp_25 <- terra::rast("dev/.data/tg_0.1deg_day_2025_grid_ensmean.nc")
+means <- terra::global(temp_25, "mean", na.rm = TRUE)
+
+#index of days without temp data
+no_data <- which(is.na(means$mean))
+
+temp_21_24 <- c(2021:2024) %>%
+    sprintf("dev/.data/tg_0.1deg_day_%s_grid_ensmean.nc", .) %>%
+    lapply(terra::rast)
+
+# Function to calculate mean of a specific layer across multiple years
+calculate_layer_mean <- function(raster_list, layer_index) {
+    # Extract the specified layer from each raster
+    layers <- lapply(raster_list, function(x) x[[layer_index]])
+
+    # Stack the layers
+    layer_stack <- terra::rast(layers)
+
+    # Calculate mean across the stack
+    mean_layer <- terra::mean(layer_stack, na.rm = TRUE)
+
+    return(mean_layer)
+}
+
+# Fill in missing data in temp_25 using means from previous years
+for (layer_idx in no_data) {
+    message("Calculating layer", layer_idx)
+    # Calculate mean for this layer from previous years. The extents are essentially identical
+    mean_layer <- calculate_layer_mean(temp_21_24, layer_idx)
+
+    # Replace NA values in temp_25 with the mean values
+    temp_25[[layer_idx]] <- mean_layer
+}
+
+# Verify that all layers now have data
+means_after <- terra::global(temp_25, "mean", na.rm = TRUE)
+any(is.na(means_after$mean))  # Should be FALSE
+
+terra::writeRaster(temp_21_24[[1]], "dev/.data/temp_2021.tif")
+terra::writeRaster(temp_21_24[[2]], "dev/.data/temp_2022.tif")
+terra::writeRaster(temp_21_24[[3]], "dev/.data/temp_2023.tif")
+terra::writeRaster(temp_21_24[[4]], "dev/.data/temp_2024.tif")
+terra::writeRaster(temp_25, "temp_2025.tif")
+
+# Verify the data type of the raster files
+# Using gdalinfo
+# gdalinfo dev/.data/temp_2021.tif | findstr "Type"
+# The output should show "Type=Float32" for 32BF
+
+# Using terra in R
+# Check data type of written files
+temp_2021 <- terra::rast("dev/.data/temp_2021.tif")
+print(terra::datatype(temp_2021))  # Should show "FLT4S" for 32-bit float
+
+# raster2pgsql -d -s 4326 -C -I -N NULL -t 100x100 -x -r dev/.data/temp_2021.tif ref.temp_2021 | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
+# raster2pgsql -d -s 4326 -C -I -N NULL -t 100x100 -x -r dev/.data/temp_2022.tif ref.temp_2022 | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
+# raster2pgsql -d -s 4326 -C -I -N NULL -x -r dev/.data/temp_2023.tif ref.temp_2023 | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
+# raster2pgsql -d -s 4326 -C -I -N NULL -x -r dev/.data/temp_2024.tif ref.temp_2024 | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
+# raster2pgsql -d -s 4326 -C -I -N NULL -x -r dev/.data/temp_2025.tif ref.temp_2025 | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
 
 
+# journeys15_simplify_test <- journeys15_simplify[1:100, ]
+# plot(journeys15_simplify_test)
+
+# A SpatVector `lines` with 'year' and 'dayofyear' attributes
+# And a list of raster stacks named by year (2021:2025) where each stack has 365 layers
+
+# Function to extract mean raster values in batch
+extract_means <- function(lines, raster_list) {
+    results <- list()
+
+    # Unique combinations of year and dayofyear
+    unique_combos <- unique(as.data.frame(lines)[, c("year", "dayofyear")])
+
+    for (i in seq_len(nrow(unique_combos))) {
+        year <- unique_combos$year[i]
+        doy <- unique_combos$dayofyear[i]
+
+        # Get subset of lines for this year and doy
+        subset_lines <- lines[lines$year == year & lines$dayofyear == doy, ]
+
+        # Extract the correct raster layer
+        if (as.character(year) %in% names(raster_list)) {
+            raster <- raster_list[[as.character(year)]][[doy]]
+
+            # Perform extraction
+            # extracted_values <- terra::extract(raster, subset_lines, fun = mean, na.rm = TRUE)
+            extracted_values <- exact_extract(raster, subset_lines, append_cols = c("id", "midpoint_time"), "mean")
+            print(extracted_values)
+
+            # Merge results with subset_lines
+            subset_lines$temp <- extracted_values[, 3] # third column contains extracted values
+            results[[i]] <- subset_lines
+        }
+    }
+
+    # Combine all results into a single dataset
+    do.call(rbind, results)
+}
+
+# Example usage
+start.time <- Sys.time()
+journeys15_simplify_temp <- extract_means(journeys15_simplify, eobs_list)
+end.time <- Sys.time()
+time.taken <- end.time - start.time
+time.taken
+
+temp_data <- as.data.frame(journeys15_simplify_temp) %>% dplyr::select(id, temp)
+
+journeys16 <- left_join(journeys15, temp_data, by = "id")
+
+#-----------------------historical journeys----------------------------#
+# fill journeys with 2021-2024 data
+sf::st_layers("dev/.data/journeys_for_data_cleaning_map_raw.gpkg")
+journeys <- sf::st_read("dev/.data/journeys_for_data_cleaning_map_raw.gpkg", "journeys_for_data_cleaning_map_raw") %>%
+    dplyr::rename_all(snakecase::to_snake_case)
+# journeys$start <- as.POSIXct(journeys$start)
+# min(journeys$start)
+# max(journeys$start)
+
+journeys <- journeys %>%
+    dplyr::mutate(
+        duration = as.numeric(time) / 60 / 60, # seconds to hours
+        avg_speed = distance / duration,
+        start_timestamp = as.POSIXct(start, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
+        end_timestamp = as.POSIXct(end, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
+        year = format(start_timestamp, format = "%Y"),
+        photo_url = NA,
+        app_timestamp = NA,
+        database_timestamp = Sys.time()
+    ) %>%
+    dplyr::select(
+        id,
+        user_id,
+        start_timestamp,
+        end_timestamp,
+        year,
+        rain,
+        distance,
+        duration,
+        avg_speed,
+        splat_count,
+        photo_url,
+        vehicle_reg = vehicle_re,
+        vehicle_class = vehicle_cl,
+        vehicle_bhp = vehicle_bh,
+        vehicle_year_of_manufacture = vehicle_ye,
+        vehicle_date_first_registered = vehicle_da,
+        vehicle_date_first_registered_uk = vehicle_da_1,
+        vehicle_make = vehicle_ma,
+        vehicle_make_code = vehicle_ma_1,
+        vehicle_range = vehicle_ra,
+        vehicle_model = vehicle_mo,
+        vehicle_model_code = vehicle_mo_1,
+        vehicle_trim = vehicle_tr,
+        vehicle_width = vehicle_wi,
+        vehicle_height = vehicle_he,
+        vehicle_car_length = vehicle_ca,
+        vehicle_colour = vehicle_co,
+        vehicle_num_axles = vehicle_nu_2,
+        vehicle_num_doors = vehicle_nu,
+        vehicle_num_seats = vehicle_nu_1,
+        vehicle_body_shape = vehicle_bo,
+        vehicle_wheel_base = vehicle_wh,
+        vehicle_wheel_plan = vehicle_wh_1,
+        vehicle_kerb_height = vehicle_ke,
+        vehicle_load_length = vehicle_lo,
+        vehicle_rigid_artic = vehicle_ri,
+        vehicle_driving_axle = vehicle_dr,
+        vehicle_door_plan_literal = vehicle_do,
+        vehicle_unladen_weight = vehicle_un,
+        app_timestamp,
+        database_timestamp,
+        geom = geom
+    )
+any(duplicated(journeys$id))
+DBI::dbExecute(conn, "DELETE FROM op.journey_check;")
+DBI::dbExecute(conn, "DELETE FROM op.journeys;")
+sf::st_write(journeys, conn, DBI::Id("op", "journeys"), append = TRUE)
+
+#
+sample <- sf::st_read(conn, query = "SELECT * FROM op.journeys_simplified WHERE id IN (23881476, 23881744, 23881747, 23883050, 23887748, 23887777, 23887778, 23887909, 23887952, 23888131);")
+elevation <- raster::raster("dev/.data/elevation.tif")
+extracted <- exactextractr::exact_extract(elevation, sample, append_cols = c("id"), "mean") %>%
+    dplyr::arrange(id)
+
+sample2 <- sf::st_read(shared_conn, query = "select id, st_transform(st_simplify(st_transform(geometry, 27700), 100), 4326) AS geom from bugs_matter.journeys9  WHERE id IN (23881476, 23881744, 23881747, 23883050, 23887748, 23887777, 23887778, 23887909, 23887952, 23888131);")
 
 
 
