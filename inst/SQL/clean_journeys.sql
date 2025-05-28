@@ -1,69 +1,76 @@
+select count(*), public.st_geometrytype(geom) from op.journeys  where start_timestamp > '2022-01-01T00:00:00Z'::TIMESTAMP GROUP BY public.st_geometrytype (geom);
+select * from op.journeys  where splat_count IS NOT NULL order by start_timestamp DESC limit 100;
+select max(id) from op.journeys;
 WITH new_journeys AS (
     SELECT aj.*
     FROM op.journeys aj
     WHERE NOT EXISTS (
         SELECT 1 FROM op.journey_check jc WHERE aj.id = jc.id
     )
+    LIMIT 10000
 ),
--- Filter out invalid geometries and ensure minimum points
-filtered_lines AS (
+valid_geometries AS (
     SELECT
-        l.*
-    FROM
-        new_journeys l
-    WHERE
-        public.ST_NPoints(public.st_transform(l.geom, 27700)) > 1
-        AND public.ST_IsValid(l.geom)
-        AND NOT public.ST_IsEmpty(l.geom)
-        AND public.ST_GeometryType(l.geom) = 'ST_LineString'
+        id,
+        geom,
+        public.ST_Transform(geom, 3857) as geom_3857,
+        public.ST_NPoints(geom) as point_count,
+        public.ST_IsValid(geom) as is_valid,
+        public.ST_IsEmpty(geom) as is_empty,
+        public.ST_GeometryType(geom) as geom_type
+    FROM new_journeys
+),
+valid_lines AS (
+    SELECT *
+    FROM valid_geometries
+    WHERE point_count > 1
+        AND is_valid
+        AND NOT is_empty
+        AND geom_type = 'ST_LineString'
 ),
 segments AS (
-    -- Split the lines into segments at their vertices and calculate the length of each segment
     SELECT
         f.id AS line_id,
         public.ST_Length(public.ST_MakeLine(p1.geom, p2.geom)) AS segment_length
     FROM
-        filtered_lines f
-        CROSS JOIN LATERAL public.ST_DumpPoints(f.geom) p1
-        CROSS JOIN LATERAL public.ST_DumpPoints(f.geom) p2
+        valid_lines f
+        CROSS JOIN LATERAL public.ST_DumpPoints(f.geom_3857) p1
+        CROSS JOIN LATERAL public.ST_DumpPoints(f.geom_3857) p2
     WHERE
         p1.path[1] = p2.path[1] - 1
         AND public.ST_IsValid(p1.geom)
         AND public.ST_IsValid(p2.geom)
 ),
 long_segments AS (
-    -- Filter the segments that are longer than 1000 meters
     SELECT DISTINCT line_id
     FROM segments
     WHERE segment_length > 1000
 ),
 vehicle_ferries AS (
-    SELECT osm_id, public.ST_Transform(geom, 27700) as geom 
-    FROM ref.ferry_routes 
+    SELECT osm_id, public.ST_Transform(geom, 3857) as geom
+    FROM ref.ferry_routes
     WHERE motor_vehicle = 'yes'
+),
+ferry_check AS (
+    SELECT DISTINCT v.id
+    FROM valid_geometries v
+    CROSS JOIN vehicle_ferries f
+    WHERE public.ST_DWithin(v.geom_3857, f.geom, 50)
 )
 INSERT INTO op.journey_check (
     SELECT
         aj.id,
-        COALESCE(public.st_isempty(aj.geom) OR NOT COALESCE(public.st_isvalid(aj.geom), TRUE), FALSE) AS invalid_geom,
-        COALESCE(public.st_geometrytype(aj.geom) <> 'ST_LineString', FALSE) AS not_linestring,
+        COALESCE(v.is_empty OR NOT v.is_valid, FALSE) AS invalid_geom,
+        COALESCE(v.geom_type <> 'ST_LineString', FALSE) AS not_linestring,
         COALESCE(aj.id IN (SELECT line_id FROM long_segments), FALSE) AS gps_error,
-        COALESCE(EXISTS (
-            SELECT 1 
-            FROM vehicle_ferries vf 
-            WHERE public.ST_DWithin(
-                public.ST_Transform(aj.geom, 27700), 
-                vf.geom, 
-                50
-            )
-        ), FALSE) AS ferry,
+        COALESCE(aj.id IN (SELECT id FROM ferry_check), FALSE) AS ferry,
         COALESCE(aj.distance <= 1.60934 OR aj.duration <= 3 / 60, FALSE) AS short,
         COALESCE(aj.avg_speed >= 60 * 1.60934, FALSE) AS fast,
         COALESCE(aj.avg_speed <= 3 * 1.60934, FALSE) AS slow,
         COALESCE(aj.splat_count >= 500, FALSE) AS high_count
     FROM
         new_journeys aj
-    LEFT JOIN filtered_lines f ON f.id = aj.id
+    LEFT JOIN valid_geometries v ON v.id = aj.id
 );
 
 

@@ -1,6 +1,6 @@
 ﻿DROP VIEW op.journey_check_summary;
 CREATE OR REPLACE VIEW op.journey_check_summary AS (
-    SELECT 
+    SELECT
         jc.invalid_geom::INT AS invalid_geom,
         jc.not_linestring::INT AS not_linestring,
         jc.gps_error::INT AS gps_error,
@@ -19,4 +19,10 @@ CREATE OR REPLACE VIEW op.journey_check_summary AS (
         jc.fast,
         jc.slow,
         jc.high_count
+);
+
+CREATE OR REPLACE VIEW op.journey_check_geom AS (
+    SELECT jc.*, j.geom
+    FROM op.journey_check jc
+    LEFT JOIN op.journeys j ON jc.id = j.id
 );

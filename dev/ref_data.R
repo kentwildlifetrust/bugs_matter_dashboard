@@ -10,6 +10,74 @@ conn <- DBI::dbConnect(
   sslmode = "prefer"
 )
 
+#fill journeys with 2021-2024 data
+sf::st_layers("dev/.data/journeys_for_data_cleaning_map_raw.gpkg")
+journeys <- sf::st_read("dev/.data/journeys_for_data_cleaning_map_raw.gpkg", "journeys_for_data_cleaning_map_raw") %>%
+    dplyr::rename_all(snakecase::to_snake_case)
+#journeys$start <- as.POSIXct(journeys$start)
+#min(journeys$start)
+#max(journeys$start)
+
+journeys <- journeys %>%
+    dplyr::mutate(
+        duration = as.numeric(time) / 60 / 60, # seconds to hours
+        avg_speed = distance / duration,
+        start_timestamp = as.POSIXct(start, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
+        end_timestamp = as.POSIXct(end, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
+        year = format(start_timestamp, format = "%Y"),
+        photo_url = NA,
+        app_timestamp = NA,
+        database_timestamp = Sys.time()
+    ) %>%
+    dplyr::select(
+        id,
+        user_id,
+        start_timestamp,
+        end_timestamp,
+        year,
+        rain,
+        distance,
+        duration,
+        avg_speed,
+        splat_count,
+        photo_url,
+        vehicle_reg = vehicle_re,
+        vehicle_class = vehicle_cl,
+        vehicle_bhp = vehicle_bh,
+        vehicle_year_of_manufacture = vehicle_ye,
+        vehicle_date_first_registered = vehicle_da,
+        vehicle_date_first_registered_uk = vehicle_da_1,
+        vehicle_make = vehicle_ma,
+        vehicle_make_code = vehicle_ma_1,
+        vehicle_range = vehicle_ra,
+        vehicle_model = vehicle_mo,
+        vehicle_model_code = vehicle_mo_1,
+        vehicle_trim = vehicle_tr,
+        vehicle_width = vehicle_wi,
+        vehicle_height = vehicle_he,
+        vehicle_car_length = vehicle_ca,
+        vehicle_colour = vehicle_co,
+        vehicle_num_axles = vehicle_nu_2,
+        vehicle_num_doors = vehicle_nu,
+        vehicle_num_seats = vehicle_nu_1,
+        vehicle_body_shape = vehicle_bo,
+        vehicle_wheel_base = vehicle_wh,
+        vehicle_wheel_plan = vehicle_wh_1,
+        vehicle_kerb_height = vehicle_ke,
+        vehicle_load_length = vehicle_lo,
+        vehicle_rigid_artic = vehicle_ri,
+        vehicle_driving_axle = vehicle_dr,
+        vehicle_door_plan_literal = vehicle_do,
+        vehicle_unladen_weight = vehicle_un,
+        app_timestamp,
+        database_timestamp,
+        geom = geom
+    )
+any(duplicated(journeys$id))
+DBI::dbExecute(conn, "DELETE FROM op.journey_check;")
+DBI::dbExecute(conn, "DELETE FROM op.journeys;")
+sf::st_write(journeys, conn, DBI::Id("op", "journeys"), append = TRUE)
+
 #countries from whole world download (separate levels geopackage)
 #https://gadm.org/download_world.html
 
@@ -93,23 +161,23 @@ DBI::dbExecute(conn, "DELETE FROM ref.sub_regions")
 sf::st_write(regions, dsn = conn, DBI::Id("ref", "sub_regions"), append = TRUE)
 
 
-####################ferry routes############################################
+###-------------------------------ferry routes----------------------------------###
 #use overpass api for bulk downloads
 url <- "https://overpass-api.de/api/interpreter"
 
-#grab ferry routes for the area 
+#grab ferry routes for the area
 #chunk the area so as to not overwhelm the API
 # Create a grid of bounding boxes (2x2 degrees each)
 create_bbox_grid <- function(xmin, xmax, ymin, ymax, size = 5) {
   x_seq <- seq(xmin, xmax, by = size)
   y_seq <- seq(ymin, ymax, by = size)
-  
+
   bboxes <- list()
   for (i in 1:(length(x_seq)-1)) {
     for (j in 1:(length(y_seq)-1)) {
       bboxes[[length(bboxes) + 1]] <- c(
-        y_seq[j], x_seq[i],
-        y_seq[j+1], x_seq[i+1]
+        x_seq[i], y_seq[j],
+        x_seq[i+1], y_seq[j+1]
       )
     }
   }
@@ -127,14 +195,14 @@ for (i in seq_along(bboxes)) {
     routes <- osmdata::opq(bbox = bboxes[[i]]) %>%
       osmdata::add_osm_feature(key = 'route', value = 'ferry') %>%
       osmdata::osmdata_sf()
-    
+
     if (!is.null(routes$osm_lines)) {
       ferry_routes_list[[i]] <- routes$osm_lines
     }
   }, error = function(e) {
     message(sprintf("Error processing bbox %d: %s", i, e$message))
   })
-  
+
   # Add a small delay to avoid overwhelming the API
   Sys.sleep(1)
 }
@@ -151,9 +219,12 @@ ferry_routes <- ferry_routes %>%
   dplyr::select("osm_id", "name", "motor_vehicle", geom = "geometry")
 DBI::dbExecute(conn, "DELETE FROM ref.ferry_routes;")
 sf::st_write(ferry_routes, conn, DBI::Id("ref", "ferry_routes"))
-
-
-##############################elevation data#############################################
+DBI::dbExecute(conn, "CREATE MATERIALIZED VIEW ref.vehicle_ferry_routes AS (
+    SELECT osm_id, st_simplify(st_transform(geom, 27700), 100) AS geom
+    FROM ref.ferry_routes
+    WHERE motor_vehicle = 'yes'
+) WITH DATA;")
+###-------------------------------elevation----------------------------------###
 elevation <- elevatr::get_elev_raster(
   locations = data.frame(
     x = c(-30, 30),
@@ -162,6 +233,65 @@ elevation <- elevatr::get_elev_raster(
   z = 7,
   prj = 4326
 )
+raster::writeRaster(elevation, "dev/.data/elevation.tif")
+# raster2pgsql -s 4326 -C -I -F -t 2000x2000 dev/.data/elevation.tif ref.elevation | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
+
+
+###-------------------------------habitat-----------------------------------###
+url <- "https://data-gis.unep-wcmc.org/server/rest/services/NatureMap/NatureMap_HabitatTypes/ImageServer"
+imgsrv <- arcgislayers::arc_open(url)
+imgsrv
+shared_conn <- DBI::dbConnect(
+    drv = RPostgres::Postgres(),
+    host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
+    port = 5432,
+    dbname = "shared",
+    user = Sys.getenv("USER"),
+    password = Sys.getenv("PASSWORD"),
+    sslmode = "prefer"
+)
+DBI::dbGetQuery(shared_conn, "SELECT ST_extent(geometry) FROM bugs_matter.journeys6;")
+#work out resolution from Lawrence's analysis
+bbox <- list(xmin = -8.6709931, ymin = 41.14485, xmax = 1.817078176, ymax = 59.13162818)
+dims <- list(x = 1000, y = 1000)
+resolution <- list(
+    x = (bbox$xmax - bbox$xmin) / dims$x,
+    y = (bbox$ymax - bbox$ymin) / dims$y
+)
+full_bbox <- list(xmin = -30, ymin = 25, xmax = 30, ymax = 90)
+full_dims <- list(
+    x = (full_bbox$xmax - full_bbox$xmin) / resolution$x,
+    y = (full_bbox$ymax - full_bbox$ymin) / resolution$y
+)
+habitats <- arcgislayers::arc_raster(
+    imgsrv,
+    bbox_crs = 4326,
+    xmin = full_bbox$xmin,
+    xmax = full_bbox$xmax,
+    ymin = full_bbox$ymin,
+    ymax = full_bbox$ymax,
+    width = round(full_dims$x),
+    height = round(full_dims$y)
+) %>%
+    as.factor()
+# Import reclass table
+habitat_lookup <- read.csv("dev/.data/UNEP_HabitatMap_Lookup.csv")
+# Create a reclassification matrix
+reclass_matrix <- habitat_lookup %>%
+    dplyr::select(value, new) %>%
+    as.matrix()
+# Apply reclassification
+habitats_reclass <- terra::classify(habitats, reclass_matrix)
+raster::plot(habitats_reclass, xlim = c(-1,1), ylim = c(51,52))
+
+raster::writeRaster(habitats, "dev/.data/habitats.tif")
+
+#############################
+# raster2pgsql -s 4326 -C -I -F -t 3614x5721 dev/.data/habitats.tif ref.habitats | psql -h kwt-postgresql-azdb-1.postgres.database.azure.com -p 5432 -U euanmckenzie -d bugs_matter
+
+##--------------------------temp------------------------------##
+
+
 
 
 
@@ -174,7 +304,7 @@ elevation <- elevatr::get_elev_raster(
 # append_country <- function(code) {
 #     url <- sprintf("https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_%s_0.json", code)
 #     json <- readLines(url)
-    
+
 #     sf::st_read(json, quiet = TRUE) %>%
 #         dplyr::mutate(code = code) %>%
 #         dplyr::select(
@@ -201,7 +331,7 @@ elevation <- elevatr::get_elev_raster(
 # append_regions <- function(code) {
 #     path <- sprintf("dev/.data/gadm41_%s_1.json", code)
 #     json <- readr::read_file(path) #needed to cope with file encoding (region names with unusual characters)
-    
+
 #     regions <- sf::st_read(json, quiet = TRUE) %>%
 #         dplyr::mutate(country_code = code) %>%
 #         dplyr::filter(GID_1 != "NA")

@@ -9,7 +9,7 @@
 # Generic GraphQL request function
 get_journeys <- function(conn, url, project_id, start_id) {
     message(sprintf("Fetching journeys after ID %s", start_id))
-    
+
     journeysQuery <- "
         query BugsMatterNightlyJourneysQuery($projectId: Int!, $startId: Int!){
             records(where: { projectId: $projectId, id: { gte: $startId } }, limit: 10000){
@@ -38,7 +38,7 @@ get_journeys <- function(conn, url, project_id, start_id) {
     )
 
     content_text <- httr::content(response, as = "text")
-    
+
     # Check if we got HTML instead of JSON
     if (grepl("<!DOCTYPE html>", content_text)) {
         stop("Received HTML response instead of JSON. Check API endpoint and authentication.")
@@ -50,7 +50,7 @@ get_journeys <- function(conn, url, project_id, start_id) {
     if (nrow(new_journeys) == 0) {
         return(new_journeys)
     }
-    
+
     new_journeys <- new_journeys %>%
         tibble::tibble() %>%
         dplyr::rename_all(
@@ -87,25 +87,32 @@ get_journeys <- function(conn, url, project_id, start_id) {
             start_timestamp = as.POSIXct(start, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
             end_timestamp = as.POSIXct(end, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
             year = format(start_timestamp, format = "%Y")
-        )
-    # Convert coordinates to sf geometries
-    new_journeys <- new_journeys %>%
-        dplyr::mutate(
-            geom = purrr::map(geometry_coordinates, function(coords) {
-                if (!is.array(coords)) {
-                    return(sf::st_point(coords))
-                }
-                if (nrow(coords) == 1) {
-                    # Single point
-                    sf::st_point(coords[1, ])
-                } else {
-                    # Linestring
-                    sf::st_linestring(coords)
-                }
-            }),
-            geom = sf::st_sfc(geom, crs = 4326)
         ) %>%
-        sf::st_sf() %>%
+        dplyr::filter(!is.na(splat_count))
+
+    if (nrow(new_journeys) == 0) {
+        new_journeys$geom <- NA
+    } else {
+        # Convert coordinates to sf geometries
+        new_journeys <- new_journeys %>%
+            dplyr::mutate(
+                geom = purrr::map(geometry_coordinates, function(coords) {
+                    if (!is.array(coords)) {
+                        return(sf::st_point(coords))
+                    }
+                    if (nrow(coords) == 1) {
+                        # Single point
+                        sf::st_point(coords[1, ])
+                    } else {
+                        # Linestring
+                        sf::st_linestring(coords)
+                    }
+                }),
+                geom = sf::st_sfc(geom, crs = 4326)
+            ) %>%
+            sf::st_sf()
+    }
+    new_journeys <- new_journeys %>%
         dplyr::rename(app_timestamp = timestamp) %>%
         dplyr::select(
             -dplyr::any_of(c(
@@ -128,5 +135,3 @@ get_journeys <- function(conn, url, project_id, start_id) {
     message(sprintf("Added %s journeys.", nrow(new_journeys)))
     return(new_journeys)
 }
-
-
