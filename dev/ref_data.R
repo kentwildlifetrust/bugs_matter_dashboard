@@ -173,7 +173,7 @@ raster::writeRaster(elevation, "dev/.data/elevation.tif")
 ###-------------------------------habitat-----------------------------------###
 url <- "https://data-gis.unep-wcmc.org/server/rest/services/NatureMap/NatureMap_HabitatTypes/ImageServer"
 imgsrv <- arcgislayers::arc_open(url)
-imgsrv 
+imgsrv
 shared_conn <- DBI::dbConnect(
     drv = RPostgres::Postgres(),
     host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
@@ -271,7 +271,7 @@ terra::writeRaster(temp_21_24[[1]], "dev/.data/temp_2021.tif")
 terra::writeRaster(temp_21_24[[2]], "dev/.data/temp_2022.tif")
 terra::writeRaster(temp_21_24[[3]], "dev/.data/temp_2023.tif")
 terra::writeRaster(temp_21_24[[4]], "dev/.data/temp_2024.tif")
-terra::writeRaster(temp_25, "temp_2025.tif")
+terra::writeRaster(temp_25, "dev/.data/temp_2025.tif")
 
 # Verify the data type of the raster files
 # Using gdalinfo

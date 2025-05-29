@@ -2,6 +2,7 @@
 SET statement_timeout = '5min';  -- or any other duration
 DROP VIEW IF EXISTS op.elevation_intersection;
 
+
 CREATE MATERIALIZED VIEW op.journeys_simplified AS (
     WITH journeys AS (
         SELECT j.id, j.geom
@@ -24,14 +25,22 @@ CREATE MATERIALIZED VIEW op.journeys_simplified AS (
     FROM journeys
 ) WITH DATA;
 
+
+
+
 WITH journeys AS (
-    SELECT j.id, j.st_transform AS geom from op.journeys_simplified j
+    SELECT
+        j.id,
+        aj.year,
+        aj.day_of_year,
+        j.st_transform AS geom from op.journeys_simplified j
+        LEFT JOIN op.journeys aj ON j.id = aj.id
     LIMIT 5
 ),
 checked_journeys AS (
     SELECT j.id, j.geom AS geom
-    FROM op.journey_check jc
-    LEFT JOIN journeys j ON j.id = jc.id
+    FROM journeys j
+    INNER JOIN op.journey_check jc ON jc.id = j.id
     WHERE
         NOT (
             invalid_geom
@@ -43,6 +52,13 @@ checked_journeys AS (
             OR slow
             OR high_count
         )
+), buffered_journeys AS (
+    SELECT j.id, public.st_transform (
+            public.st_buffer (
+                public.st_transform (j.geom, 27700), 250
+            ), 4326
+        ) AS geom
+    FROM checked_journeys j
 ),
 elevation_values AS (
     SELECT
@@ -59,7 +75,7 @@ elevation_values AS (
 ),
 habitat_values AS (
     SELECT
-        checked_journeys.id,
+        buffered_journeys.id,
         COUNT(CASE WHEN (pixel).val = 1 THEN 1 END)::float /
         COUNT(*) AS forest,
         COUNT(CASE WHEN (pixel).val = 2 THEN 1 END)::float /
@@ -79,21 +95,19 @@ habitat_values AS (
         COUNT(CASE WHEN (pixel).val = 9 THEN 1 END)::float /
         COUNT(*) AS arable,
         COUNT(CASE WHEN (pixel).val = 10 THEN 1 END)::float /
-        COUNT(*) AS pastureland,
-        COUNT(CASE WHEN (pixel).val = 11 THEN 1 END)::float /
-        COUNT(*) AS plantation,
+        COUNT(*) AS pasture,
         COUNT(CASE WHEN (pixel).val = 12 THEN 1 END)::float /
         COUNT(*) AS rural_garden,
         COUNT(CASE WHEN (pixel).val = 13 THEN 1 END)::float /
         COUNT(*) AS urban
-    FROM checked_journeys
+    FROM buffered_journeys
     INNER JOIN ref.habitats
-        ON public.st_intersects(habitats.rast, checked_journeys.geom)
+        ON public.st_intersects(habitats.rast, buffered_journeys.geom)
     CROSS JOIN LATERAL
         public.st_pixelaspolygons(public.st_setsrid(habitats.rast, 4326)) AS pixel
     WHERE
-        public.st_intersects((pixel).geom, checked_journeys.geom)
-    GROUP BY checked_journeys.id
+        public.st_intersects((pixel).geom, buffered_journeys.geom)
+    GROUP BY buffered_journeys.id
 )
 SELECT
     e.id,
@@ -107,11 +121,10 @@ SELECT
     h.desert,
     h.marine,
     h.arable,
-    h.pastureland,
-    h.plantation,
+    h.pasture,
     h.rural_garden,
     h.urban
-FROM journeys j
+FROM checked_journeys j
 LEFT JOIN elevation_values e ON j.id = e.id
 LEFT JOIN habitat_values h ON j.id = h.id;
 
