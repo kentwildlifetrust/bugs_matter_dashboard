@@ -70,9 +70,7 @@ mod_explore_journeys_ui <- function(id) {
             ),
             bslib::card_body(
               padding = c(0, 0, 0, 0),
-              shinycssloaders::withSpinner(
-                leaflet::leafletOutput(ns("map"), height = "100%")
-              )
+            leaflet::leafletOutput(ns("map"), height = "100%")
             )
           )
         ),

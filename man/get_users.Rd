@@ -4,7 +4,7 @@
 \alias{get_users}
 \title{get_users}
 \usage{
-get_users(conn, url, project_id, start_id)
+get_users(conn, url, project_id, date)
 }
 \value{
 The return value, if any, from executing the function.

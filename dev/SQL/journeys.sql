@@ -1,4 +1,4 @@
--- Active: 1731925498177@@kwt-postgresql-azdb-1.postgres.database.azure.com@5432@shared
+-- Active: 1746635410704@@kwt-postgresql-azdb-1.postgres.database.azure.com@5432@shared
 DROP MATERIALIZED VIEW bugs_matter.journeys_server;
 CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
     SELECT
@@ -32,7 +32,7 @@ CREATE MATERIALIZED VIEW bugs_matter.journeys_server AS (
     FROM bugs_matter.journeys9 j
     JOIN admin_boundaries.uk_boundary b ON public.st_intersects(j.geometry, public.st_transform(b.geom, 4326))
     LEFT JOIN bugs_matter.regionboundaries r ON j.region = r.region
-) WITH DATA; 
+) WITH DATA;
 
 
 GRANT SELECT ON bugs_matter.journeys_server TO "BugsMatterReadOnly";

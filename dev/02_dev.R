@@ -211,7 +211,7 @@ coefs <- list()
 for (region in regions) {
   tryCatch(
     {
-      mod_data <- "SELECT region, country, splatcount, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset
+      mod_data <- "SELECT region, country, splat_count, splat_rate, year, distance, avg_speed, vehicle_cl, vehicle_he, vehicle_wi, midpoint_time, dayofyear, \"X\", \"Y\", log_cm_miles_offset
                   FROM bugs_matter.journeys5
                   WHERE year >= '2021' AND year <= '2024' AND region = {region}" %>%
         glue::glue_sql(.con = conn) %>%

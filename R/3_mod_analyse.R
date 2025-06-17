@@ -219,7 +219,7 @@ mod_analyse_server <- function(id, conn, next_page) {
 
     mod <- shiny::reactive({
       journeys <- "SELECT
-        splatcount,
+        splat_count,
         year,
         distance,
         avg_speed,
@@ -237,7 +237,6 @@ mod_analyse_server <- function(id, conn, next_page) {
         wetland,
         marine,
         arable,
-        plantation,
         urban,
         log_cm_miles_offset
       FROM bugs_matter.journeys_server
@@ -256,7 +255,7 @@ mod_analyse_server <- function(id, conn, next_page) {
         dplyr::mutate(year = relevel(as.factor(.$year), ref = as.character(input$year[1])))
       tryCatch(
         MASS::glm.nb(
-          splatcount ~ year +
+          splat_count ~ year +
             distance +
             avg_speed +
             vehicle_cl +
@@ -273,7 +272,6 @@ mod_analyse_server <- function(id, conn, next_page) {
             wetland +
             marine +
             arable +
-            plantation +
             urban +
             stats::offset(log_cm_miles_offset),
           data = journeys
