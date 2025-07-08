@@ -1,58 +1,86 @@
-#' get_data
+#' get_jouneys
 #'
-#' @description A fct function
+#' @description Retrieve journey records between two dates.
 #'
-#' @return The return value, if any, from executing the function.
+#' @return Number of records updated
 #'
 #' @export
 
 # Generic GraphQL request function
-get_journeys <- function(conn, url, project_id, start_id) {
-    message(sprintf("Fetching journeys after ID %s", start_id))
-
-    journeysQuery <- "
-        query BugsMatterNightlyJourneysQuery($projectId: Int!, $startId: Int!){
-            records(where: { projectId: $projectId, id: { gte: $startId } }, limit: 10000){
-                id
-                geometry {
-                    type
-                    coordinates
-                }
-                data
-                userId
-            }
-        }
-    "
-
-    response <- httr::POST(
-        url,
-        body = list(
-            query = journeysQuery,
-            variables = list(
-                projectId = project_id,
-                startId = start_id
-            )
-        ),
-        encode = "json",
-        httr::add_headers(Authorization = paste("JWT", token))
+get_journeys <- function(start_date = Sys.Date() - 1, end_date = Sys.Date()) {
+    #### Setup
+    conn <- pool::dbPool(
+        drv = RPostgres::Postgres(),
+        host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
+        port = 5432, dbname = "bugs_matter",
+        user = Sys.getenv("USER"),
+        password = Sys.getenv("PASSWORD"),
+        sslmode = "prefer"
     )
 
-    content_text <- httr::content(response, as = "text")
+    ### Retrieve recent journey records
 
-    # Check if we got HTML instead of JSON
+    #Journey records are provided via the Coreo GraphQL API. We filter by the createdAt field to capture records from a 24 hour window.
+
+    #### Query API
+
+    # API parameters
+    url <- "https://api.coreo.io/graphql"
+    token <- Sys.getenv("BUGS_MATTER_API_TOKEN")
+    project_id <- 343
+
+    # Query to get journeys by date
+    journeys_query <- '
+            query BugsMatterNightlyJourneysQuery($projectId: Int!, $startDate: String!, $endDate: String!){
+                records(where: { projectId: $projectId, createdAt: { gte: $startDate, lte: $endDate } }, limit: 10000){
+                    id
+                    geometry {
+                        type
+                        coordinates
+                    }
+                    data
+                    userId
+                }
+            }
+        '
+    response <- httr2::request(url) %>%
+        httr2::req_headers(
+            Authorization = paste("JWT", token)
+        ) %>%
+        httr2::req_body_json(
+            list(
+                query = journeys_query,
+                variables = list(
+                    projectId = project_id,
+                    startDate = start_date,
+                    endDate = end_date
+                )
+            )
+        ) %>%
+        httr2::req_method('POST') %>%
+        httr2::req_perform()
+
+    # Extract content
+    content_text <- httr2::resp_body_string(response)
+
+    # Check for error
     if (grepl("<!DOCTYPE html>", content_text)) {
         stop("Received HTML response instead of JSON. Check API endpoint and authentication.")
     }
 
-    new_journeys <-  jsonlite::fromJSON(content_text, flatten = TRUE) %>%
-        as.data.frame()
+    # Convert to data frame
+    response_data <- content_text %>%
+        jsonlite::fromJSON(flatten = TRUE)
 
-    if (nrow(new_journeys) == 0) {
-        return(new_journeys)
+    # Check for error response
+    if ("errors" %in% names(response_data)) {
+        stop(sprintf("Following error recieved: %s", response_data$errors$message))
     }
 
-    new_journeys <- new_journeys %>%
-        tibble::tibble() %>%
+    # Tidy names
+    journeys <- response_data[["data"]][["records"]] %>%
+        as.data.frame() %>%
+        tibble::as_tibble() %>%
         dplyr::rename_all(
             function(col) stringr::str_replace_all(col, "data.records.", "")
         ) %>%
@@ -63,38 +91,14 @@ get_journeys <- function(conn, url, project_id, start_id) {
             snakecase::to_snake_case
         )
 
-    if (!"time" %in% colnames(new_journeys)) {
-        new_journeys$time <- NA
-    }
-    if (!"distance" %in% colnames(new_journeys)) {
-        new_journeys$distance <- NA
-    }
-    if (!"count" %in% colnames(new_journeys)) {
-        new_journeys$count <- NA
-    }
-    if (!"start" %in% colnames(new_journeys)) {
-        new_journeys$start <- NA
-    }
-    if (!"end" %in% colnames(new_journeys)) {
-        new_journeys$end <- NA
-    }
-
-    new_journeys <- new_journeys %>%
-        dplyr::mutate(
-            duration = as.numeric(time) / 60 / 60, # seconds to hours
-            avg_speed = distance / duration,
-            splat_count = as.numeric(count),
-            start_timestamp = as.POSIXct(start, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
-            end_timestamp = as.POSIXct(end, format = "%Y-%m-%dT%H:%M:%OSZ", tz = "UTC"),
-            year = format(start_timestamp, format = "%Y")
-        ) %>%
-        dplyr::filter(!is.na(splat_count))
-
-    if (nrow(new_journeys) == 0) {
-        new_journeys$geom <- NA
+    # Convert to sf
+    if (nrow(journeys) == 0) {
+        journeys$geom <- NA
+        message("No records returned")
+        return(0)
     } else {
         # Convert coordinates to sf geometries
-        new_journeys <- new_journeys %>%
+        journeys <- journeys %>%
             dplyr::mutate(
                 geom = purrr::map(geometry_coordinates, function(coords) {
                     if (!is.array(coords)) {
@@ -112,26 +116,56 @@ get_journeys <- function(conn, url, project_id, start_id) {
             ) %>%
             sf::st_sf()
     }
-    new_journeys <- new_journeys %>%
-        dplyr::rename(app_timestamp = timestamp) %>%
+
+    #column drops and changes
+    journeys <- journeys %>%
         dplyr::select(
             -dplyr::any_of(c(
-                "geometry_type",
-                "geometry_coordinates",
-                "start",
-                "end",
-                "time",
-                "vehicle_year_month_registered",
-                "count"
+                "geometry_coordinates"
             ))
+        ) %>%
+        #start & end not good for sql column names,
+        #splat_count preferred over count
+        #duration preffed over time
+        dplyr::rename_with(
+            function(name) dplyr::case_when(
+                name == "end" ~ "end_timestamp",
+                name == "start" ~ "start_timestamp",
+                name == "count" ~ "splat_count",
+                name == "time" ~ "duration",
+                .default = name
+            )
         )
 
-    if ("photo" %in% colnames(new_journeys)) {
-        new_journeys <- new_journeys %>%
-            dplyr::rename(photo_url = photo)
-    }
-    sf::st_write(new_journeys, conn, DBI::Id("op", "all_journeys"), append = TRUE)
+    #### Data schema checks
 
-    message(sprintf("Added %s journeys.", nrow(new_journeys)))
-    return(new_journeys)
+    #As its based on GraphQL, the Coreo API does not have a fixed data schema. The table `op.journeys` accepts raw data from the API, covering all the expected fields. The following tests are applied to response fields:
+
+    #*Field in response and in table* - save to database
+    #*Field in response but not in table* - Unexpected fields, throw error. Database needs updating.
+    #*Field in table but missing from response* - Missign fields, leave column values null. Step 2 will test if journeys have minimum required fields for data analysis.
+
+
+    response_fields <- colnames(journeys)
+    expected_fields <- DBI::dbGetQuery(
+        conn,
+        statement = "SELECT column_name FROM information_schema.columns WHERE table_name = 'raw' ORDER BY ordinal_position;"
+    ) %>%
+        dplyr::pull()
+
+    unexpected_fields <- setdiff(response_fields, expected_fields)
+    stopifnot(length(unexpected_fields) == 0)
+    missing_fields <- setdiff(expected_fields, response_fields)
+    if (length(missing_fields) > 0) {
+        message(sprintf("The following fields are missing from the response: %s", paste0(missing_fields, collapse = ", ")))
+    }
+
+    DBI::dbExecute(conn, "DELETE FROM journeys.temp;")
+    sf::st_write(journeys, conn, DBI::Id("journeys", "temp"), append = TRUE)
+    # Run dedup insert (only new rows will be inserted)
+    DBI::dbExecute(conn, "
+        INSERT INTO journeys.raw
+        SELECT * FROM journeys.temp
+        ON CONFLICT (id) DO NOTHING;
+    ")
 }

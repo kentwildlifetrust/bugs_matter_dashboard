@@ -25,6 +25,7 @@ Imports:
     MASS,
     pkgload,
     plotly,
+    pool,
     RPostgres,
     sf,
     shiny,

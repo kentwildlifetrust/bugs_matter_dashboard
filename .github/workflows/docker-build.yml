@@ -1,30 +1,15 @@
-name: Docker-Build 
-on: 
-  push: 
-    branches: 
-      - shinyproxy-deploy 
+name: Docker-Build
+on:
+  push:
+    branches:
+      - main
 
-jobs: 
-  build: 
-    runs-on: [self-hosted, linux, X64] 
-    steps: 
-      - uses: actions/checkout@v4 
+jobs:
+  build:
+    runs-on: [self-hosted, linux, X64]
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Build new Docker image 
-        run: | 
-          docker build --no-cache --progress=plain -t bugs_matter_dashboard .
-
-      - name: Remove containers using dangling images and delete them
+      - name: Build Docker Image
         run: |
-          DANGLING_IMAGES=$(docker images -q --filter "dangling=true")
-          if [ ! -z "$DANGLING_IMAGES" ]; then
-            for IMAGE_ID in $DANGLING_IMAGES; do
-              CONTAINERS=$(docker ps -q --filter "ancestor=$IMAGE_ID")
-              if [ ! -z "$CONTAINERS" ]; then
-                docker stop $CONTAINERS
-                docker rm $CONTAINERS
-              fi
-              docker rmi -f $IMAGE_ID
-            done
-          fi
-
+          docker build --progress=plain -t bugs_matter .

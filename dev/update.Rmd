@@ -1,0 +1,43 @@
+## Update the Bugs Matter Dashboard
+
+### Requirements
+
+1.  Data added to PostgreSQL with sensible structure for querying by dashboard
+2.  Full data included without errors, so dashboard outputs are report-worthy
+3.  Database kept up-to-date to last day, to provide near-real-time project tracking during survey season
+4.  Calculation of elevation, temperature and habitat values for splat rate model
+
+### Outline
+
+Journeys are added following an ELT (Extract, Load, Transform) pipeline:
+
+1.  Retrieve journey records from API
+2.  Append new records to database
+4.  Filter out likely erroneous journey records (SQL)
+5.  Calculate mean elevation, temperature and habitat
+6.  Check if dashboard is up to date with all journey data
+
+Adding raw journeys to the database before any transformation provides greater transparency. For example, it allows us to see how many journeys were filtered out in step 2, allowing us to spot any potential data loss.
+
+Furthermore, some of the data processing is more performant on the database. This applies to the journey filtering, especially spotting GPS errors by checking segment length. Step 5 deals with rasters however, which is faster in R.
+
+#### Assumptions
+
+1.  Journey records are not updated once created. This means we only need to extract each journey once.
+
+#### Setup
+```{r}
+library(magrittr)
+conn <- pool::dbPool(
+    drv = RPostgres::Postgres(),
+    host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
+    port = 5432, dbname = "bugs_matter",
+    user = Sys.getenv("USER"),
+    password = Sys.getenv("PASSWORD"),
+    sslmode = "prefer"
+)
+```
+
+### 1 - Retrieve recent journey records
+
+Journey records are provided via the Coreo GraphQL API. We filter by the createdAt field to capture records from a 24 hour window.

@@ -2,13 +2,13 @@
 % Please edit documentation in R/fct_get_journeys.R
 \name{get_journeys}
 \alias{get_journeys}
-\title{get_data}
+\title{get_jouneys}
 \usage{
-get_journeys(conn, url, project_id, start_id)
+get_journeys(start_date = Sys.Date() - 1, end_date = Sys.Date())
 }
 \value{
-The return value, if any, from executing the function.
+Number of records updated
 }
 \description{
-A fct function
+Retrieve journey records between two dates.
 }
