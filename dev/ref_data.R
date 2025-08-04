@@ -98,24 +98,7 @@ sf::st_write(regions, dsn = conn, DBI::Id("ref", "sub_regions"), append = TRUE)
 #use overpass api for bulk downloads
 url <- "https://overpass-api.de/api/interpreter"
 
-#grab ferry routes for the area
-#chunk the area so as to not overwhelm the API
-# Create a grid of bounding boxes (2x2 degrees each)
-create_bbox_grid <- function(xmin, xmax, ymin, ymax, size = 5) {
-  x_seq <- seq(xmin, xmax, by = size)
-  y_seq <- seq(ymin, ymax, by = size)
 
-  bboxes <- list()
-  for (i in 1:(length(x_seq)-1)) {
-    for (j in 1:(length(y_seq)-1)) {
-      bboxes[[length(bboxes) + 1]] <- c(
-        x_seq[i], y_seq[j],
-        x_seq[i+1], y_seq[j+1]
-      )
-    }
-  }
-  return(bboxes)
-}
 
 # Create grid of bounding boxes
 bboxes <- create_bbox_grid(-30, 30, 25, 90)
@@ -125,13 +108,7 @@ ferry_routes_list <- list()
 for (i in seq_along(bboxes)) {
   message(sprintf("Processing bbox %d of %d", i, length(bboxes)))
   tryCatch({
-    routes <- osmdata::opq(bbox = bboxes[[i]]) %>%
-      osmdata::add_osm_feature(key = 'route', value = 'ferry') %>%
-      osmdata::osmdata_sf()
 
-    if (!is.null(routes$osm_lines)) {
-      ferry_routes_list[[i]] <- routes$osm_lines
-    }
   }, error = function(e) {
     message(sprintf("Error processing bbox %d: %s", i, e$message))
   })
@@ -186,7 +163,7 @@ shared_conn <- DBI::dbConnect(
 DBI::dbGetQuery(shared_conn, "SELECT ST_extent(geometry) FROM bugs_matter.journeys6;")
 #work out resolution from Lawrence's analysis
 bbox <- list(xmin = -8.6709931, ymin = 41.14485, xmax = 1.817078176, ymax = 59.13162818)
-dims <- list(x = 1000, y = 1000)
+dims <- list(x = 10000, y = 10000)
 resolution <- list(
     x = (bbox$xmax - bbox$xmin) / dims$x,
     y = (bbox$ymax - bbox$ymin) / dims$y

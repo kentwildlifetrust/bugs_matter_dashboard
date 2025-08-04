@@ -43,4 +43,4 @@ ENV START_DATE=2025-07-08
 ENV END_DATE=2024-07-09
 
 # set options and run app in container
-CMD ["R", "-e", "cat('START_DATE =', Sys.getenv('START_DATE'), '\\n'); cat('END_DATE =', Sys.getenv('END_DATE'), '\\n'); library(bugsMatter); bugsMatter::get_journeys(start_date = Sys.getenv('START_DATE'), end_date = Sys.getenv('END_DATE'))"]
+CMD ["R", "--quiet", "--vanilla", "-e", "library(bugsMatter); bugsMatter::get_journeys(start_date = Sys.getenv('START_DATE'), end_date = Sys.getenv('END_DATE'))"]

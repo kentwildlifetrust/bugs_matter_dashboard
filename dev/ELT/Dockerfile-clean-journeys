@@ -1,0 +1,7 @@
+FROM postgres:16
+
+# Copy the SQL script into the container
+COPY ./dev/SQL/clean_journeys.sql /script.sql
+
+# Set entrypoint to psql running the script
+CMD ["sh", "-c", "psql -f /script.sql"]

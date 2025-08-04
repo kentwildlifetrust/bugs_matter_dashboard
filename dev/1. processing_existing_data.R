@@ -30,6 +30,7 @@ print(shp_files)
 journeys <- lapply(shp_files, st_read)
 journeys <- do.call(rbind, journeys)
 
+
 #Add and reformat some variables, and calculate splat rates (splatometer discontinued in 2023). ---- ----
 journeys1 <- journeys %>%
   mutate(duration = as.numeric(time) * 0.000277778,

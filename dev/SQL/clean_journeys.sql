@@ -1,6 +1,6 @@
 ﻿DO $$
 DECLARE
-    batch_size INTEGER := 100;
+    batch_size INTEGER := 1000;
     processed_count INTEGER;
     total_processed INTEGER := 0;
     start_time TIMESTAMP;

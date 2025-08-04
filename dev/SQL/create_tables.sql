@@ -1,3 +1,12 @@
+-- Active: 1747166414686@@kwt-postgresql-azdb-1.postgres.database.azure.com@5432@bugs_matter
+DROP TABLE ref.ferry_routes;
+CREATE TABLE ref.ferry_routes (
+    osm_id integer NOT NULL,
+    name varchar,
+    motor_vehicle varchar,
+    geom public.geometry NOT NULL,
+    PRIMARY KEY (osm_id)
+);
 
 CREATE TABLE journeys.raw
 (
@@ -165,7 +174,7 @@ COMMENT ON TABLE op.accepted_journeys IS 'Cleaned sampling journeys to be used i
 
 COMMENT ON COLUMN op.accepted_journeys.id IS 'Unique journey record Id';
 
-CREATE TABLE op.journey_check
+CREATE TABLE journeys.check
 (
   id             INTEGER NOT NULL,
   invalid_geom   BOOLEAN NOT NULL,

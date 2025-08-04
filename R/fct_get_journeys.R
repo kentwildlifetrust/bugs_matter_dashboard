@@ -32,7 +32,7 @@ get_journeys <- function(start_date = Sys.Date() - 1, end_date = Sys.Date()) {
     # Query to get journeys by date
     journeys_query <- '
             query BugsMatterNightlyJourneysQuery($projectId: Int!, $startDate: String!, $endDate: String!){
-                records(where: { projectId: $projectId, createdAt: { gte: $startDate, lte: $endDate } }, limit: 10000){
+                records(where: { projectId: $projectId, createdAt: { gte: $startDate, lte: $endDate } }, limit: 40000){
                     id
                     geometry {
                         type
@@ -91,6 +91,11 @@ get_journeys <- function(start_date = Sys.Date() - 1, end_date = Sys.Date()) {
             snakecase::to_snake_case
         )
 
+    if ("geometry_type" %in% colnames(journeys)) {
+        journeys <- journeys %>%
+            dplyr::filter(geometry_type != "Point")
+    }
+
     # Convert to sf
     if (nrow(journeys) == 0) {
         journeys$geom <- NA
@@ -121,7 +126,11 @@ get_journeys <- function(start_date = Sys.Date() - 1, end_date = Sys.Date()) {
     journeys <- journeys %>%
         dplyr::select(
             -dplyr::any_of(c(
-                "geometry_coordinates"
+                "geometry_coordinates",
+                "speed",
+                "bearing",
+                "accuracy",
+                "timestamp"
             ))
         ) %>%
         #start & end not good for sql column names,
@@ -154,7 +163,9 @@ get_journeys <- function(start_date = Sys.Date() - 1, end_date = Sys.Date()) {
         dplyr::pull()
 
     unexpected_fields <- setdiff(response_fields, expected_fields)
-    stopifnot(length(unexpected_fields) == 0)
+    if (length(unexpected_fields) != 0) {
+        stop(sprintf("Unexpected fields returned: %s", paste(unexpected_fields, collapse = ", ")))
+    }
     missing_fields <- setdiff(expected_fields, response_fields)
     if (length(missing_fields) > 0) {
         message(sprintf("The following fields are missing from the response: %s", paste0(missing_fields, collapse = ", ")))
