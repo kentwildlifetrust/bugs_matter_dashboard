@@ -21,7 +21,7 @@ pool <- dbPool(drv = RPostgres::Postgres(),
                password = Sys.getenv("kwt_password"),
                sslmode = "prefer")
 
-# dbExecute(pool, 'GRANT SELECT ON TABLE bugs_matter.journeys5 TO "BugsMatterReadOnly";')
+# dbExecute(pool, 'GRANT SELECT ON TABLE bugs_matter.journeys5 TO "bugsMatterDashboardReadOnly";')
 
 # Import shapefiles downloaded from Coreo, join, remove dups, and write to file and PostGIS. ---- ----
 folder_path <- "C:/Users/lawrenceb/Kent Wildlife Trust/EVD - Bugs Matter - General/10. Reporting/1. Analysis/Analysis 2025"

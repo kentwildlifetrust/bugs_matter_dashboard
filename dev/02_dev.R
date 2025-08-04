@@ -295,7 +295,7 @@ region_centres <- "SELECT nuts118nm AS region_name,
                   FROM bugs_matter.regionboundaries" %>%
   sf::st_read(conn, query = .) %>%
   dplyr::left_join(
-    sf::st_drop_geometry(bugsMatter::region_trends),
+    sf::st_drop_geometry(bugsMatterDashboard::region_trends),
     by = "region_name"
   )
 

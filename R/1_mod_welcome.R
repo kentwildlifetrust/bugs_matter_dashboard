@@ -197,7 +197,7 @@ mod_welcome_server <- function(id, conn, next_page) {
     })
 
     output$trend <- shiny::renderText({
-      paste0(bugsMatter::overall_trend$estimate, "%")
+      paste0(bugsMatterDashboard::overall_trend$estimate, "%")
     })
 
     output$map <- leaflet::renderLeaflet({
@@ -211,7 +211,7 @@ mod_welcome_server <- function(id, conn, next_page) {
     shiny::observe({
       leaflet::leafletProxy("map") %>%
         leaflet::addPolygons(
-          data = bugsMatter::region_trends,
+          data = bugsMatterDashboard::region_trends,
           color = "gray",
           weight = 1,
           opacity = 1,
@@ -252,8 +252,8 @@ mod_welcome_server <- function(id, conn, next_page) {
             unname()
         ) %>%
         leaflet::addLabelOnlyMarkers(
-          lat = bugsMatter::region_centres$lat,
-          lng = bugsMatter::region_centres$lng,
+          lat = bugsMatterDashboard::region_centres$lat,
+          lng = bugsMatterDashboard::region_centres$lng,
           label = mapply(
             function(low, high) {
               if (is.na(low) | is.na(high)) {
@@ -267,8 +267,8 @@ mod_welcome_server <- function(id, conn, next_page) {
               }
               return('<i class="fa fa-solid fa-minus map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
             },
-            low = bugsMatter::region_centres$low,
-            high = bugsMatter::region_centres$high,
+            low = bugsMatterDashboard::region_centres$low,
+            high = bugsMatterDashboard::region_centres$high,
             SIMPLIFY = FALSE
           ) %>%
             lapply(htmltools::HTML),
@@ -280,7 +280,7 @@ mod_welcome_server <- function(id, conn, next_page) {
         ) %>%
         leaflet::addLegend(
           pal = pal,
-          values = bugsMatter::region_trends$estimate,
+          values = bugsMatterDashboard::region_trends$estimate,
           opacity = 1
         )
     })

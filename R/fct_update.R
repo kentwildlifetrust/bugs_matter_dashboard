@@ -29,20 +29,20 @@ update_database <- function() {
         if (max_sign_up_date == Sys.Date()) {
             break
         }
-        new_users <- bugsMatter::get_users(conn, url, project_id, max_sign_up_date + 1)
+        new_users <- bugsMatterDashboard::get_users(conn, url, project_id, max_sign_up_date + 1)
         DBI::dbExecute(conn, "INSERT INTO op.users_queried_dates (date) VALUES ($1)", max_sign_up_date + 1)
         Sys.sleep(1)
     }
 
 
-    
+
     repeat {
         max_journey_id <- DBI::dbGetQuery(
             conn = conn,
             statement = "SELECT COALESCE(MAX(id), 0) AS max FROM op.journeys;"
         ) %>%
             dplyr::pull("max")
-        new_journeys <- bugsMatter::get_journeys(conn, url, project_id, max_journey_id + 1)
+        new_journeys <- bugsMatterDashboard::get_journeys(conn, url, project_id, max_journey_id + 1)
         if (nrow(new_journeys) == 0) {
             break
         }
@@ -50,11 +50,11 @@ update_database <- function() {
     }
 
     #check new journeys
-    readLines(system.file("SQL/clean_journeys.sql", package="bugsMatter")) %>%
+    readLines(system.file("SQL/clean_journeys.sql", package="bugsMatterDashboard")) %>%
         paste(collapse = "\n") %>%
         DBI::dbExecute(conn, statement = .)
 
-    
+
 
     ## region classification using largest join
     ## calculate midpoint time

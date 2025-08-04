@@ -32,9 +32,9 @@ RUN R CMD build /app_pkg
 RUN rm -rf /app_pkg
 
 # Install the R package from the tarball
-RUN R CMD INSTALL bugsMatter*.tar.gz
+RUN R CMD INSTALL bugsMatterDashboard*.tar.gz
 # Remove the tarball
-RUN rm -rf bugsMatter*.tar.gz
+RUN rm -rf bugsMatterDashboard*.tar.gz
 
 COPY inst inst
 
@@ -43,4 +43,4 @@ ENV START_DATE=2025-07-08
 ENV END_DATE=2024-07-09
 
 # set options and run app in container
-CMD ["R", "--quiet", "--vanilla", "-e", "library(bugsMatter); bugsMatter::get_journeys(start_date = Sys.getenv('START_DATE'), end_date = Sys.getenv('END_DATE'))"]
+CMD ["R", "--quiet", "--vanilla", "-e", "library(bugsMatterDashboard); bugsMatterDashboard::get_journeys(start_date = Sys.getenv('START_DATE'), end_date = Sys.getenv('END_DATE'))"]

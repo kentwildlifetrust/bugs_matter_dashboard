@@ -44,7 +44,7 @@ mod_analyse_ui <- function(id) {
         shiny::selectInput(
           ns("area"),
           "Area",
-          choices = c(bugsMatter::region_choices),
+          choices = c(bugsMatterDashboard::region_choices),
           selected = "uk"
         ),
         shiny::sliderInput(

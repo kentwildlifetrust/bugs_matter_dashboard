@@ -21,7 +21,7 @@ graphql_request <- function(query, variables) {
 
 print_users <- function(){
     usersQuery <- '
-        query BugsMatterNightlyUsersQuery($projectId: Int!){
+        query bugsMatterDashboardNightlyUsersQuery($projectId: Int!){
             project(id: $projectId) {
                 memberships(where: { createdAt: { gt: "2024-04-15" } }){
                     user {
@@ -39,7 +39,7 @@ print_users <- function(){
 
 print_journeys <- function(){
     journeysQuery <- '
-        query BugsMatterNightlyJourneysQuery($projectId: Int!){
+        query bugsMatterDashboardNightlyJourneysQuery($projectId: Int!){
             records(where: { projectId: $projectId }, limit: 100){
                 id
                 geometry {

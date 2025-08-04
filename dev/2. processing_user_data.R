@@ -7,10 +7,10 @@ library(httr)
 
 # PARTICIPATION ANALYSIS
 # set up pool for postgis connections
-pool <- dbPool(drv = RPostgres::Postgres(), 
-               host = "kwt-postgresql-azdb-1.postgres.database.azure.com", 
-               port = 5432, dbname = "shared", 
-               user = Sys.getenv("kwt_user"), 
+pool <- dbPool(drv = RPostgres::Postgres(),
+               host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
+               port = 5432, dbname = "shared",
+               user = Sys.getenv("kwt_user"),
                password = Sys.getenv("kwt_password"),
                sslmode = "prefer")
 
@@ -22,17 +22,17 @@ pcodes1$pcd <- gsub(" ", "", pcodes1$pcd, fixed = TRUE)
 
 #st_write(obj = pcodes1, dsn = pool, Id(schema="bugs_matter", table = "postcodes"), drop=TRUE)
 
-# read in user data (latest version) and spreadsheet with some users that are missing postcodes from the main version. 
-userdata <- read.csv("C:/Users/lawrenceb/Kent Wildlife Trust/EVD - Bugs Matter - General/10. Reporting/1. Analysis/Analysis 2025/bugsmatter-users-7bbba7a3-92c8-449f-9f70-a465bfc8ae76.csv")
+# read in user data (latest version) and spreadsheet with some users that are missing postcodes from the main version.
+userdata <- read.csv("C:/Users/lawrenceb/Kent Wildlife Trust/EVD - Bugs Matter - General/10. Reporting/1. Analysis/Analysis 2025/bugsMatterDashboard-users-7bbba7a3-92c8-449f-9f70-a465bfc8ae76.csv")
 userdata1 <- userdata %>% mutate(postcode = na_if(postcode, ""))
 userdata_w_postcodes <- read.csv("C:/Users/lawrenceb/Kent Wildlife Trust/EVD - Bugs Matter - General/10. Reporting/1. Analysis/Analysis 2025/signups.w.postcodes.csv", header=T)
-userdata_w_postcodes1 <- userdata_w_postcodes %>% 
-  rename(User.ID = user_id, w_postcode = postcode) %>% 
-  select(User.ID, w_postcode) %>% 
+userdata_w_postcodes1 <- userdata_w_postcodes %>%
+  rename(User.ID = user_id, w_postcode = postcode) %>%
+  select(User.ID, w_postcode) %>%
   mutate(w_postcode = na_if(w_postcode, ""))
-userdata2 <- left_join(userdata1, userdata_w_postcodes1, by = "User.ID") %>%  
-  mutate(postcode_final = ifelse(is.na(postcode), w_postcode, postcode)) %>% 
-  dplyr::select(-w_postcode, -postcode) %>% 
+userdata2 <- left_join(userdata1, userdata_w_postcodes1, by = "User.ID") %>%
+  mutate(postcode_final = ifelse(is.na(postcode), w_postcode, postcode)) %>%
+  dplyr::select(-w_postcode, -postcode) %>%
   rename(postcode = postcode_final)
 
 # users_manual_postcodes <- subset(userdata2, is.na(postcode))
@@ -40,9 +40,9 @@ userdata2 <- left_join(userdata1, userdata_w_postcodes1, by = "User.ID") %>%
 users_manual_postcodes <- read.csv("users_manual_postcodes.csv")
 users_manual_postcodes1 <- users_manual_postcodes %>% select(User.ID, postcode)
 users_manual_postcodes1 <- users_manual_postcodes1 %>% rename(man_postcode = postcode)
-userdata3 <- left_join(userdata2, users_manual_postcodes1, by = "User.ID") %>%  
-  mutate(postcode_final = ifelse(is.na(postcode), man_postcode, postcode)) %>% 
-  dplyr::select(-man_postcode, -postcode) %>% 
+userdata3 <- left_join(userdata2, users_manual_postcodes1, by = "User.ID") %>%
+  mutate(postcode_final = ifelse(is.na(postcode), man_postcode, postcode)) %>%
+  dplyr::select(-man_postcode, -postcode) %>%
   rename(postcode = postcode_final)
 
 userdata3$Sign.Up.Date <- as.Date(userdata3$Sign.Up.Date)
@@ -53,7 +53,7 @@ userdata3 <- userdata3 %>% mutate(address = na_if(address, ""))
 
 # create list of postcodes
 list <- as.list(unique(userdata3$postcode))
-datamap <- subset(pcodes1, pcodes1$pcd %in% list, select=c("lat","long","pcd", "oseast1m", "osnrth1m"))  
+datamap <- subset(pcodes1, pcodes1$pcd %in% list, select=c("lat","long","pcd", "oseast1m", "osnrth1m"))
 names(datamap)[names(datamap) == "pcd"] <- "postcode"
 userdata4 <- merge(userdata3, datamap, by="postcode", all.x=T)
 userdata4[which(userdata4$postcode == "GY46QJ"), "lat"] <- 49.4448
@@ -107,7 +107,7 @@ userdata5a$county <- NULL
 
 userdata6 <- userdata5a %>%
   st_join(counties["CTYUA24NM"] %>% rename(county = CTYUA24NM)) %>%
-  st_join(regions_en["RGN23NM"] %>% rename(region = RGN23NM)) %>% 
+  st_join(regions_en["RGN23NM"] %>% rename(region = RGN23NM)) %>%
   st_join(countries["CTRY23NM"] %>% rename(country = CTRY23NM))
 
 userdata6$country <- as.factor(userdata6$country)
@@ -118,7 +118,7 @@ userdata6$region <- as.factor(userdata6$region)
 
 journeys_raw <- st_read(pool, query = "SELECT * from bugs_matter.journeys2")
 
-#Add a column for the count of journeys for each user. 
+#Add a column for the count of journeys for each user.
 user_journey_count <- journeys_raw %>%
   st_drop_geometry() %>%
   dplyr::select(userId) %>%
@@ -140,7 +140,7 @@ userdata8 <- userdata7 %>% rename(sign_up_date = Sign.Up.Date,
 
 st_write(obj = userdata8, dsn = pool, Id(schema="bugs_matter", table = "user_data2"), append=FALSE)
 
-dbExecute(pool, 'GRANT SELECT, INSERT, UPDATE, DELETE ON bugs_matter.user_data2 TO "BugsMatterReadOnly";')
+dbExecute(pool, 'GRANT SELECT, INSERT, UPDATE, DELETE ON bugs_matter.user_data2 TO "bugsMatterDashboardReadOnly";')
 
 ###################################################
 
@@ -195,36 +195,36 @@ mean_journeys_per_user_22 <- round(mean(participants_22_1$journeys), 2)
 mean_journeys_per_user_23 <- round(mean(participants_23_1$journeys), 2)
 mean_journeys_per_user_24 <- round(mean(participants_24_1$journeys), 2)
 
-#Make a table of participation results. 
-participation_table <- data.frame("step" = "Number of new sign-ups", 
+#Make a table of participation results.
+participation_table <- data.frame("step" = "Number of new sign-ups",
                                   "Signed up in 2021" = nrow(userdata21_temp),
                                   "Signed up in 2022" = nrow(userdata22_temp),
                                   "Signed up in 2023" = nrow(userdata23_temp),
                                   "Signed up in 2024" = nrow(userdata24_temp))
 participation_table
-participation_table1 <- rbind(participation_table, 
-                              data.frame("step" = "Number of participants in 2021 survey", 
+participation_table1 <- rbind(participation_table,
+                              data.frame("step" = "Number of participants in 2021 survey",
                                          "Signed up in 2021" = nrow(participants_21_1),
                                          "Signed up in 2022" = "NA",
                                          "Signed up in 2023" = "NA",
                                          "Signed up in 2024" = "NA"))
 participation_table1
-participation_table2 <- rbind(participation_table1, 
-                              data.frame("step" = "Number of participants in 2022 survey", 
+participation_table2 <- rbind(participation_table1,
+                              data.frame("step" = "Number of participants in 2022 survey",
                                          "Signed up in 2021" = nrow(subset(participants_22_1, signupyear == "2021")),
                                          "Signed up in 2022" = nrow(subset(participants_22_1, signupyear == "2022")),
                                          "Signed up in 2023" = "NA",
                                          "Signed up in 2024" = "NA"))
 participation_table2
-participation_table3 <- rbind(participation_table2, 
-                              data.frame("step" = "Number of participants in 2023 survey", 
+participation_table3 <- rbind(participation_table2,
+                              data.frame("step" = "Number of participants in 2023 survey",
                                          "Signed up in 2021" = nrow(subset(participants_23_1, signupyear == "2021")),
                                          "Signed up in 2022" = nrow(subset(participants_23_1, signupyear == "2022")),
                                          "Signed up in 2023" = nrow(subset(participants_23_1, signupyear == "2023")),
                                          "Signed up in 2024" = "NA"))
 participation_table3
-participation_table4 <- rbind(participation_table3, 
-                              data.frame("step" = "Number of participants in 2024 survey", 
+participation_table4 <- rbind(participation_table3,
+                              data.frame("step" = "Number of participants in 2024 survey",
                                          "Signed up in 2021" = nrow(subset(participants_24_1, signupyear == "2021")),
                                          "Signed up in 2022" = nrow(subset(participants_24_1, signupyear == "2022")),
                                          "Signed up in 2023" = nrow(subset(participants_24_1, signupyear == "2023")),
@@ -236,8 +236,8 @@ participation_table4$Signed.up.in.2023 <- as.integer(participation_table4$Signed
 participation_table4$Signed.up.in.2024 <- as.integer(participation_table4$Signed.up.in.2024)
 participation_table4
 
-participation_table5 <- rbind(participation_table4, 
-                              data.frame("step" = "Conversion rate (proportion of users that signed up and did one or more journeys in the same year)", 
+participation_table5 <- rbind(participation_table4,
+                              data.frame("step" = "Conversion rate (proportion of users that signed up and did one or more journeys in the same year)",
                                          "Signed up in 2021" = paste0(round(participation_table4[2,2] / participation_table4[1,2] * 100, 1), "%"),
                                          "Signed up in 2022" = paste0(round(participation_table4[3,3] / participation_table4[1,3] * 100, 1), "%"),
                                          "Signed up in 2023" = paste0(round(participation_table4[4,4] / participation_table4[1,4] * 100, 1), "%"),
@@ -256,10 +256,10 @@ write.csv(participation_table5, "C:/Users/lawrenceb/Kent Wildlife Trust/EVD - Bu
 
 
 
-# Summary stats about time between sign-up and first journey. 
+# Summary stats about time between sign-up and first journey.
 journeys212223_9a <- journeys212223_9
 journeys212223_9a$User.ID <- journeys212223_9a$userId
-journeys212223_9b <- merge(journeys212223_9a, 
+journeys212223_9b <- merge(journeys212223_9a,
                            userdata2[c("User.ID", "Sign.Up.Date")])
 signupstart <- aggregate(journeys212223_9b$starttime ~ journeys212223_9b$User.ID , FUN = min, simplify=T, drop=F)
 signupstart$User.ID <- signupstart$`journeys212223_9b$User.ID`
@@ -267,14 +267,14 @@ signupstart$starttime <- signupstart$`journeys212223_9b$starttime`
 signupstart1 <- merge(signupstart, userdata2[c("User.ID", "Sign.Up.Date")])
 signupstart1$datediff <- as.Date(signupstart1$starttime) - as.Date(signupstart1$Sign.Up.Date)
 signupstart1
-signupstart2 <- subset(signupstart1, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-12-31") 
+signupstart2 <- subset(signupstart1, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-12-31")
 hist(as.numeric(signupstart2$datediff))
 
-##############why are there negative numbers of days here? Because some people have recorded journeys before signing up. 
-#Plot histogram of Time between sign-up and first journey  
-ggplot(signupstart2, aes(x=datediff)) + geom_histogram(fill = "#72DB41", color=1, binwidth = 10) + 
+##############why are there negative numbers of days here? Because some people have recorded journeys before signing up.
+#Plot histogram of Time between sign-up and first journey
+ggplot(signupstart2, aes(x=datediff)) + geom_histogram(fill = "#72DB41", color=1, binwidth = 10) +
   theme_minimal() +
-  xlim(0,900) + 
+  xlim(0,900) +
   labs(x = "Time between sign-up and first journey (days)", y = "Count of users",
        #title = "Participation",
        #subtitle = "Histogram showing counts of users in bins of time between sign-up and recording a first journey"
@@ -296,34 +296,34 @@ ggsave("Figures/Histogram showing counts of users in bins of time between sign-u
 userdata7$county <- as.factor(userdata7$county)
 hertsusers_all <- subset(userdata7, county == "Hertfordshire")
 hertsusers_mc <- subset(userdata7, county == "Hertfordshire" & Marketing.Consent == "TRUE")
-write.csv(hertsusers_mc[c("postcode", 
-                          "District", 
-                          "county", 
-                          "Name.x", 
-                          "Email", 
-                          "Sign.Up.Date", 
-                          "Marketing.Consent", 
-                          "address", 
+write.csv(hertsusers_mc[c("postcode",
+                          "District",
+                          "county",
+                          "Name.x",
+                          "Email",
+                          "Sign.Up.Date",
+                          "Marketing.Consent",
+                          "address",
                           "journeys")], "hertsusers.csv")
 
 kentusers_all <- subset(userdata7, county == "Kent")
 kentusers_mc <- subset(userdata7, county == "Kent" & Marketing.Consent == "TRUE")
-write.csv(kentusers_mc[c("postcode", 
-                         "District", 
-                         "county", 
-                         "Name.x", 
-                         "Email", 
-                         "Sign.Up.Date", 
-                         "Marketing.Consent", 
-                         "address", 
+write.csv(kentusers_mc[c("postcode",
+                         "District",
+                         "county",
+                         "Name.x",
+                         "Email",
+                         "Sign.Up.Date",
+                         "Marketing.Consent",
+                         "address",
                          "journeys")], "kentusers.csv")
 
-#subset data by years. 
-userdata21 <- subset(userdata7, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2021-12-31") 
+#subset data by years.
+userdata21 <- subset(userdata7, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2021-12-31")
 userdata21$doy <- as.numeric(format(as.Date(userdata21$Sign.Up.Date), "%j"))
-userdata22 <- subset(userdata7, Sign.Up.Date >= "2022-01-01"& Sign.Up.Date <= "2022-12-31") 
+userdata22 <- subset(userdata7, Sign.Up.Date >= "2022-01-01"& Sign.Up.Date <= "2022-12-31")
 userdata22$doy <- as.numeric(format(as.Date(userdata22$Sign.Up.Date), "%j"))
-userdata23 <- subset(userdata7, Sign.Up.Date >= "2023-01-01"& Sign.Up.Date <= "2023-12-31") 
+userdata23 <- subset(userdata7, Sign.Up.Date >= "2023-01-01"& Sign.Up.Date <= "2023-12-31")
 userdata23$doy <- as.numeric(format(as.Date(userdata23$Sign.Up.Date), "%j"))
 
 #userdata21_county <- st_intersection(userdata21, subset(admin_areas, County == params$county))
@@ -340,7 +340,7 @@ participant_count23 <- length(unique(subset(journeys212223_9, year == "2023")$us
 
 #Plots
 
-#Sort journeys by date and create cumsum column. 
+#Sort journeys by date and create cumsum column.
 userdata8 <- userdata7 %>% arrange(Sign.Up.Date)
 userdata8$row1 <- 1
 userdata8$cumsum <- cumsum(userdata8$row1)
@@ -358,12 +358,12 @@ mean_journeys_per_user_wales <- round(mean(subset(userdata8, !is.na(userdata8$jo
 
 x_dates <- dmy(c("01/01/21","01/06/21","01/09/21","01/01/22","01/06/22","01/09/22","01/01/23","01/06/23","01/09/23"))
 
-ggplot(subset(userdata9a, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-12-31"), aes(x=Sign.Up.Date, y=cumsum, colour=country, group=country)) + 
-  annotate("rect", xmin=as.Date("2021-06-01"), xmax=as.Date("2021-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") + 
-  annotate("rect", xmin=as.Date("2022-06-01"), xmax=as.Date("2022-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") + 
+ggplot(subset(userdata9a, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-12-31"), aes(x=Sign.Up.Date, y=cumsum, colour=country, group=country)) +
+  annotate("rect", xmin=as.Date("2021-06-01"), xmax=as.Date("2021-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") +
+  annotate("rect", xmin=as.Date("2022-06-01"), xmax=as.Date("2022-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") +
   annotate("rect", xmin=as.Date("2023-06-01"), xmax=as.Date("2023-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") +
-  geom_line(lwd=0.5) + 
-  scale_color_manual(values=c(colorBlind7[1:4], "black"), name="Country", na.translate = F) + 
+  geom_line(lwd=0.5) +
+  scale_color_manual(values=c(colorBlind7[1:4], "black"), name="Country", na.translate = F) +
   theme_minimal() +
   labs(x = "Date", y = "Count of sign-ups",
        #title = "Participation",
@@ -372,20 +372,20 @@ ggplot(subset(userdata9a, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-1
   ) +
   theme(axis.title.x = element_text(margin = margin(t = 10)),
         axis.title.y = element_text(margin = margin(r = 10)),
-        axis.text.x = element_text(angle = 90, vjust = 0, hjust=0)) + 
-  scale_x_date(breaks = x_dates, minor_breaks = "1 month", date_labels = "%b %Y") 
+        axis.text.x = element_text(angle = 90, vjust = 0, hjust=0)) +
+  scale_x_date(breaks = x_dates, minor_breaks = "1 month", date_labels = "%b %Y")
 
 ggsave("Figures/Cumulative count of sign-ups in each country over the lifetime of the Bugs Matter app.pdf", width = 20, height = 10, units = "cm")
 ggsave("Figures/Cumulative count of sign-ups in each country over the lifetime of the Bugs Matter app.png", width = 20, height = 10, units = "cm")
 
 userdata10 <- ddply(userdata9, .(region), transform, cumsum = cumsum(row1))
 
-ggplot(subset(userdata10, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-12-31" & country == "England"), aes(x=Sign.Up.Date, y=cumsum, colour=region, group=region)) + 
-  annotate("rect", xmin=as.Date("2021-06-01"), xmax=as.Date("2021-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") + 
-  annotate("rect", xmin=as.Date("2022-06-01"), xmax=as.Date("2022-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") + 
-  annotate("rect", xmin=as.Date("2023-06-01"), xmax=as.Date("2023-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") + 
-  geom_line(lwd=0.5) + 
-  scale_color_manual(values=c(colorBlind7, "grey", "black"), name="Region", na.translate = F) + 
+ggplot(subset(userdata10, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-12-31" & country == "England"), aes(x=Sign.Up.Date, y=cumsum, colour=region, group=region)) +
+  annotate("rect", xmin=as.Date("2021-06-01"), xmax=as.Date("2021-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") +
+  annotate("rect", xmin=as.Date("2022-06-01"), xmax=as.Date("2022-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") +
+  annotate("rect", xmin=as.Date("2023-06-01"), xmax=as.Date("2023-09-01"), ymin=0, ymax=Inf, alpha=0.2, fill="#72DB41") +
+  geom_line(lwd=0.5) +
+  scale_color_manual(values=c(colorBlind7, "grey", "black"), name="Region", na.translate = F) +
   theme_minimal() +
   labs(x = "Date", y = "Count of sign-ups",
        #title = "Participation",
@@ -394,8 +394,8 @@ ggplot(subset(userdata10, Sign.Up.Date >= "2021-01-01" & Sign.Up.Date <= "2023-1
   ) +
   theme(axis.title.x = element_text(margin = margin(t = 10)),
         axis.title.y = element_text(margin = margin(r = 10)),
-        axis.text.x = element_text(angle = 90, vjust = 0, hjust=0)) + 
-  scale_x_date(breaks = x_dates, minor_breaks = "1 month", date_labels = "%b %Y") 
+        axis.text.x = element_text(angle = 90, vjust = 0, hjust=0)) +
+  scale_x_date(breaks = x_dates, minor_breaks = "1 month", date_labels = "%b %Y")
 ggsave("Figures/Cumulative count of sign-ups in each region in England over the lifetime of the Bugs Matter app.pdf", width = 20, height = 10, units = "cm")
 ggsave("Figures/Cumulative count of sign-ups in each region in England over the lifetime of the Bugs Matter app.png", width = 20, height = 10, units = "cm")
 
@@ -422,12 +422,12 @@ ggplot() +
        #subtitle = "Heat map of total sign-ups for each county over the lifetime of the Bugs Matter app"
   ) +
   theme(axis.title.x = element_text(margin = margin(t = 10)),
-        axis.title.y = element_text(margin = margin(r = 10))) + 
-  theme(legend.margin = margin(1, 1, 1, 4), 
+        axis.title.y = element_text(margin = margin(r = 10))) +
+  theme(legend.margin = margin(1, 1, 1, 4),
         legend.key=element_rect(colour="red")) +
   labs(fill="Count of sign-ups") +
-  scale_fill_viridis_c(limits=c(0,max(countyboundaries3$signups)), 
-                       #breaks=c(0,100,200,300,400,500,600), 
+  scale_fill_viridis_c(limits=c(0,max(countyboundaries3$signups)),
+                       #breaks=c(0,100,200,300,400,500,600),
                        guide=guide_colorbar(frame.colour="black",
                                             draw.ulim=T,
                                             barwidth = 0.6,
