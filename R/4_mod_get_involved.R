@@ -11,17 +11,17 @@ mod_get_involved_ui <- function(id) {
   ns <- NS(id)
   bslib::page_fillable(
     shiny::div(
-      class = "welcome-page",
+      class = "overview-page",
       shiny::div(
-        class = "welcome-page-content",
+        class = "overview-page-content",
         # shiny::div(
-        #   class = "welcome-header",
+        #   class = "overview-header",
         #   shiny::h1(
         #     "Get Involved"
         #   ),
         #   shiny::tags$br(),
         #   shiny::p(
-        #     class = "welcome-lead",
+        #     class = "overview-lead",
         #     "Here, you can keep up-to-date with the findings of Bugs Matter, the global citizen science
         #     survey of ‘bug splats’ on vehicle number plates to monitor flying insect abundance. You can explore
         #     where and how many journeys have been recorded, and see information about the lengths of journeys,
@@ -31,7 +31,7 @@ mod_get_involved_ui <- function(id) {
         # ),
         # shiny::tags$br(),
         shiny::div(
-          class = "welcome-body",
+          class = "overview-body",
           shiny::p(
             "Habitat loss and fragmentation has caused declines in
 biodiversity across the world. The conversion of natural

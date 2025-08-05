@@ -1,4 +1,4 @@
-#' welcome UI Function
+#' overview UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -7,20 +7,20 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_welcome_ui <- function(id) {
+mod_overview_ui <- function(id) {
   ns <- shiny::NS(id)
   bslib::page_fillable(
     shiny::div(
-      class = "welcome-page",
+      class = "overview-page",
       shiny::div(
-        class = "welcome-background-image"
+        class = "overview-background-image"
       ),
       shiny::div(
-        class = "welcome-page-content",
+        class = "overview-page-content",
         shiny::div(
-          class = "welcome-header",
+          class = "overview-header",
           shiny::div(
-            class = "welcome-message",
+            class = "overview-message",
             "Welcome to the"
           ),
           shiny::h1(
@@ -28,7 +28,7 @@ mod_welcome_ui <- function(id) {
           ),
           shiny::tags$br(),
           shiny::p(
-            class = "welcome-lead",
+            class = "overview-lead",
             "Here, you can keep up-to-date with the findings of Bugs Matter, the global citizen science
             survey of ‘bug splats’ on vehicle number plates to monitor flying insect abundance. You can explore
             where and how many journeys have been recorded, and see information about the lengths of journeys,
@@ -38,19 +38,19 @@ mod_welcome_ui <- function(id) {
         ),
         shiny::tags$br(),
         shiny::div(
-          class = "welcome-body",
+          class = "overview-body",
           shiny::h3("At a Glance"),
           shiny::div(
-            class = "welcome-figures",
+            class = "overview-figures",
             shiny::div(
-              class = "row welcome-value-row",
+              class = "row overview-value-row",
               shiny::div(
                 class = "col-sm",
                 bslib::value_box(
-                  class = "welcome-value-box",
+                  class = "overview-value-box",
                   title = "Distance sampled",
                   value = shiny::textOutput(ns("distance")),
-                  showcase = shiny::icon("fa fa-route fa-solid"),
+                  showcase = tags$i(class = "fa fa-route fa-solid"),
                   theme = bslib::value_box_theme(
                     bg = "#3C91E6",
                     fg = "#FFF"
@@ -61,10 +61,10 @@ mod_welcome_ui <- function(id) {
               shiny::div(
                 class = "col-sm",
                 bslib::value_box(
-                  class = "welcome-value-box",
+                  class = "overview-value-box",
                   title = "Splats counted",
                   value = shiny::textOutput(ns("splats")),
-                  showcase = shiny::icon("fa fa-mosquito fa-solid"),
+                  showcase = tags$i(class = "fa fa-mosquito fa-solid"),
                   theme = bslib::value_box_theme(
                     bg = "#58A732",
                     fg = "#FFF"
@@ -75,10 +75,10 @@ mod_welcome_ui <- function(id) {
               shiny::div(
                 class = "col-sm",
                 bslib::value_box(
-                  class = "welcome-value-box",
+                  class = "overview-value-box",
                   title = "Change in splat rate 2021 - 2024",
                   value = shiny::textOutput(ns("trend")),
-                  showcase = shiny::icon("fa fa-chart-line-down fa-solid"),
+                  showcase = tags$i(class = "fa fa-chart-line-down fa-solid"),
                   theme = bslib::value_box_theme(
                     bg = "#F46036",
                     fg = "#FFF"
@@ -88,14 +88,12 @@ mod_welcome_ui <- function(id) {
               )
             ),
             shiny::tags$br(),
-            bslib::card(
-              min_height = 600,
-              bslib::card_header(
-                "Modelled change in splat rate, 2021 to 2024"
-              ),
+            bslib::navset_card_pill(
+              title = "Modelled change in splat rate, 2021 to 2024",
               bslib::card_body(
                 class = "p-0",
-                leaflet::leafletOutput(ns("map"), height = "100%")
+                leaflet::leafletOutput(ns("map"), height = "100%"),
+                min_height = 600
               ),
               full_screen = TRUE
             ),
@@ -158,7 +156,7 @@ greatest proportion of life on Earth."
               ns("next_page"),
               shiny::span(
                 style = "color: white;",
-                "Explore journeys",
+                "Track Participation",
                 shiny::tags$i(
                   class = "fa fa-arrow-right"
                 ),
@@ -172,28 +170,28 @@ greatest proportion of life on Earth."
   )
 }
 
-#' welcome Server Functions
+#' overview Server Functions
 #'
 #' @noRd
-mod_welcome_server <- function(id, conn, next_page) {
+mod_overview_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     pal <- leaflet::colorNumeric("Spectral", -100:100)
 
     output$distance <- shiny::renderText({
-        "SELECT ROUND(SUM(DISTANCE)::NUMERIC, 0) AS length FROM bugs_matter.journeys_server;" %>%
+        "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS length FROM journeys.processed;" %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("length") %>%
         format(big.mark = ",") %>%
-        paste("miles")
+        paste("km")
     })
 
     output$splats <- shiny::renderText({
-      "SELECT SUM(splat_count) AS n_splats FROM bugs_matter.journeys_server;" %>%
+      "SELECT SUM(splat_count) AS n_splats FROM journeys.processed;" %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("n_splats") %>%
-        format(big.mark = ",")
+        prettyNum(big.mark = ",")
     })
 
     output$trend <- shiny::renderText({
@@ -292,7 +290,7 @@ mod_welcome_server <- function(id, conn, next_page) {
 }
 
 ## To be copied in the UI
-# mod_welcome_ui("welcome_1")
+# mod_overview_ui("overview_1")
 
 ## To be copied in the server
-# mod_welcome_server("welcome_1")
+# mod_overview_server("overview_1")

@@ -92,14 +92,47 @@ conn <- DBI::dbConnect(
   sslmode = "prefer"
 )
 
-years <- "SELECT DISTINCT EXTRACT(YEAR FROM j.end) AS year
-          FROM bugs_matter.journeys_app j;" %>%
-  DBI::dbGetQuery(conn, .) %>%
-  dplyr::pull("year") %>%
-  sort(decreasing = TRUE)
-years <- years
+#years - for selecting data by year
+years <- c(2025:2021)
 usethis::use_data(years, overwrite = TRUE)
 
+#regions - for selecting data by country & region
+#manually specify countries to show in app
+regions <- DBI::dbGetQuery(
+  conn,
+  "SELECT code, name, country_code, country_name
+  FROM ref.regions
+  WHERE country_code in ('GBR', 'IRL', 'PRT', 'ESP', 'FRA')
+  ORDER BY name;"
+)
+usethis::use_data(regions, overwrite = TRUE)
+countries <- regions %>%
+  dplyr::group_by(country_code, country_name) %>%
+  dplyr::summarise() %>%
+  dplyr::ungroup() %>%
+  dplyr::rename(name = country_name, code = country_code) %>%
+  dplyr::arrange(code != "GBR", name)
+#dropdown will be grouped by country with 'All <country>' and region options in each group
+region_choices <- lapply(
+  1:nrow(countries),
+  function(i) {
+    country_regions <- regions %>%
+      dplyr::filter(country_code == countries$code[i])
+    all_option <- list(
+      countries$code[i]
+    ) %>%
+      setNames(countries$name[i])
+    country_regions$code %>%
+      setNames(country_regions$name) %>%
+      c(
+        all_option,
+        .
+      )
+  }
+) %>%
+  setNames(countries$name)
+
+usethis::use_data(region_choices, overwrite = TRUE)
 
 # interval <- ceiling(length(dates) / 15)
 
@@ -164,6 +197,8 @@ for (year in years) {
     ))
   )
 }
+
+
 
 
 usethis::use_data(journeys, overwrite = TRUE)
@@ -313,27 +348,6 @@ usethis::use_data(region_centres, overwrite = TRUE)
 # region_choices <- as.list(region_choices$id) %>%
 #   setNames(region_choices$name)
 
-region_choices <- list(
-  "United Kingdom" = "uk",
-  "Scotland" = 11,
-  "Wales" = 10,
-  "Northern Ireland" = 12,
-  "England" = list(
-    "England" = "england",
-    "East Midlands" = 4,
-    "East of England" = 6,
-    "London" = 7,
-    "North East" = 1,
-    "North West" = 2,
-    "South East" = 8,
-    "South West" = 9,
-    "West Midlands" = 5,
-    "Yorkshire and The Humber" = 3
-  )
-)
-
-usethis::use_data(region_choices, overwrite = TRUE)
-
 
 journeys <- "SELECT
         splatcount,
@@ -358,7 +372,7 @@ journeys <- "SELECT
         plantation,
         urban,
         log_cm_miles_offset
-      FROM bugs_matter.journeys_server;" %>%
+      FROM journeys.processed;" %>%
   DBI::dbGetQuery(conn, .) %>%
   dplyr::mutate(year = relevel(as.factor(.$year), ref = "2021"))
 overall_mod <- tryCatch(
@@ -386,7 +400,7 @@ overall_mod <- tryCatch(
     data = journeys
   ),
   error = function(e) {
-    warning(paste("Model failed", input$area, "Error:", e$message))
+    warning(paste("Model failed", input$region, "Error:", e$message))
     return(NULL)
   }
 )

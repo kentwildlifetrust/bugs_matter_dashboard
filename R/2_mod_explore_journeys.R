@@ -13,210 +13,220 @@ library(magrittr)
 
 mod_explore_journeys_ui <- function(id) {
   ns <- shiny::NS(id)
-  bslib::page(
-      shiny::div(
-        class = "data-header",
-        shiny::h2(
-          "Data Collection",
+
+  data_control_row <- shiny::div(
+    class = "data-control-row",
+    shiny::div(
+      class = "data-controls",
+      shiny::selectInput(
+        ns("year"),
+        "Year",
+        choices = c(
+          "All years",
+          bugsMatterDashboard::years
+        ),
+        selected = "2025",
+        width = 150
+      ),
+      shiny::selectInput(
+        ns("region"),
+        "Region",
+        choices = bugsMatterDashboard::region_choices,
+        selected = "GBR",
+        width = 250
+      )
+    ),
+    shiny::actionButton(
+      ns("next_page"),
+      shiny::span(
+        style = "color: white;",
+        "Analyse trends",
+        shiny::tags$i(
+          class = "fa fa-arrow-right"
+        ),
+      ),
+      class = "btn-primary m-2",
+      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+    )
+  )
+
+  map_card <- bslib::navset_card_pill(
+    title = "Routes",
+    height = "100%",
+    full_screen = TRUE,
+    bslib::card_body(
+      padding = c(0, 0, 0, 0),
+      min_height = 400,
+      leaflet::leafletOutput(ns("map"), height = "100%")
+    )
+  )
+
+  temperature_panel <- bslib::nav_panel(
+    "Temperature",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("temperature_histogram"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
           shiny::actionLink(
-              ns("data_collection_info"),
-              shiny::tags$i(class = "fa fa-info-circle")
-          )
-        ),
-         shiny::actionButton(
-          ns("next_page"),
-          shiny::span(
-            style = "color: white;",
-            "Analyse trends",
-            shiny::tags$i(
-              class = "fa fa-arrow-right"
-            ),
+            ns("temperature_histogram_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
           ),
-          class = "btn-primary m-2",
-          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
-        )
-      ),
-      shiny::hr(class = "data-hr"),
-      shiny::div(
-        class = "data-control-row",
-        shiny::div(
-          class = "data-controls",
-          shiny::selectInput(
-            ns("year"),
-            "Year",
-            choices = c("2021 to 2024", bugsMatterDashboard::years),
-            selected = "All",
-            width = 150
-          ),
-          shiny::selectInput(
-            ns("area"),
-            "Area",
-            choices = c(bugsMatterDashboard::region_choices),
-            selected = "uk",
-            width = 250
-          )
-        )
-      ),
-      # shiny::hr(class = "data-header-hr"),
-      shiny::div(
-        class = "cards-container",
-        shiny::div(
-          style = "height: 100%; padding-bottom: var(--_padding); min-width: 350px;",
-          bslib::card(
-            height = "100%",
-            full_screen = TRUE,
-            bslib::card_header(
-              "Routes"
-            ),
-            bslib::card_body(
-              padding = c(0, 0, 0, 0),
-            leaflet::leafletOutput(ns("map"), height = "100%")
-            )
-          )
-        ),
-        shiny::div(
-          style = "height: 100%; display: flex; flex-direction: column; min-width: 350px;",
-          bslib::navset_card_tab(
-            # full_screen = TRUE, #causes page layout to break slightly :(
-            title = "Sampling effort",
-            bslib::nav_panel(
-              "Journeys",
-              bslib::card_body(
-                padding = c(15, 0, 10, 0),
-                shinycssloaders::withSpinner(
-                  plotly::plotlyOutput(
-                    ns("cumulative_journeys_plot"),
-                    height = "100%"
-                  )
-                ),
-                div(
-                  style = "position: absolute; top: 5px; right: 20px;",
-                  bslib::popover(
-                    shiny::actionLink(
-                      ns("cumulative_journeys_info"),
-                      shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 1.5rem;"
-                    ),
-                    "This line plot shows the cumulative number of journeys recorded. Over time, more and more journeys are recorded.",
-                    placement = "bottom"
-                  )
-                )
-              ) %>%
-                shiny::tagAppendAttributes(style = "position: relative;")
-            ),
-            bslib::nav_panel(
-              "Distance travelled",
-              bslib::card_body(
-                padding = c(15, 0, 10, 0),
-                shinycssloaders::withSpinner(
-                  plotly::plotlyOutput(
-                    ns("cumulative_distance_plot"),
-                    height = "100%"
-                  )
-                ),
-                div(
-                  style = "position: absolute; top: 5px; right: 20px;",
-                  bslib::popover(
-                    shiny::actionLink(
-                      ns("cumulative_distance_info"),
-                      shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 1.5rem;"
-                    ),
-                    "This line plot shows the cumulative distance travelled during sampling journeys. Over time, total sampling distance increases.",
-                    placement = "bottom"
-                  )
-                )
-              ) %>%
-                shiny::tagAppendAttributes(style = "position: relative;")
-            ),
-            bslib::nav_panel(
-              "Sign ups",
-              bslib::card_body(
-                padding = c(15, 0, 10, 0),
-                shinycssloaders::withSpinner(
-                  plotly::plotlyOutput(
-                    ns("cumulative_sign_ups"),
-                    height = "100%"
-                  )
-                ),
-                div(
-                  style = "position: absolute; top: 5px; right: 20px;",
-                  bslib::popover(
-                    shiny::actionLink(
-                      ns("cumulative_sign_ups_info"),
-                      shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 1.5rem;"
-                    ),
-                    "This line plot shows the increase in registered citizen scientists over time.",
-                    placement = "bottom"
-                  )
-                )
-              ) %>%
-                shiny::tagAppendAttributes(style = "position: relative;")
-            )
-            # shiny::actionButton(
-            #   ns("open_animation"),
-            #   "Animate"
-            # )
-          ) %>%
-            htmltools::tagAppendAttributes(style = "flex: 1;"),
-          bslib::navset_card_tab(
-            title = "Journey characteristics",
-            # full_screen = TRUE,
-            bslib::nav_panel(
-              "Distance",
-              bslib::card_body(
-                padding = c(15, 0, 10, 0),
-                shinycssloaders::withSpinner(
-                  plotly::plotlyOutput(
-                    ns("distance_histogram"),
-                    height = "100%"
-                  )
-                ),
-                div(
-                  style = "position: absolute; top: 5px; right: 20px;",
-                  bslib::popover(
-                    shiny::actionLink(
-                      ns("distance_histogram_info"),
-                      shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 1.5rem;"
-                    ),
-                    "This histogram plot shows how many journeys of different lengths were recorded. There tends to be more shorter journeys than longer journeys.",
-                    placement = "bottom"
-                  )
-                )
-              ) %>%
-                shiny::tagAppendAttributes(style = "position: relative;")
-            ),
-            bslib::nav_panel(
-              "Vehicle type",
-              bslib::card_body(
-                padding = c(15, 0, 10, 0),
-                shinycssloaders::withSpinner(
-                  plotly::plotlyOutput(
-                    ns("vehicle_bars"),
-                    height = "100%"
-                  )
-                ),
-                div(
-                  style = "position: absolute; top: 5px; right: 20px;",
-                  bslib::popover(
-                    shiny::actionLink(
-                      ns("vehicle_bars_info"),
-                      shiny::tags$i(class = "fa fa-info-circle"),
-                      style = "font-size: 1.5rem;"
-                    ),
-                    "This bar plot shows how many journeys were recorded in different vehicle types. Most journeys are recorded in cars.",
-                    placement = "bottom"
-                  )
-                )
-              ) %>%
-                shiny::tagAppendAttributes(style = "position: relative;")
-            )
-          ) %>%
-            htmltools::tagAppendAttributes(style = "flex: 1; margin-bottom: 0;")
+          "Lorem ipsum.",
+          placement = "bottom"
         )
       )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+  distance_panel <- bslib::nav_panel(
+    "Distance",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("distance_histogram"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("distance_histogram_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "This histogram plot shows how many journeys of different lengths were recorded. There tends to be more shorter journeys than longer journeys.",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+  elevation_panel <- bslib::nav_panel(
+    "Elevation",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("elevation_histogram"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("elevation_histogram_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "This histogram plot shows how many journeys were recorded at different elevation levels. The distribution shows the range of elevations where journeys typically occur.",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+  day_of_year_panel <- bslib::nav_panel(
+    "Day of Year",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("day_of_year_histogram"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("day_of_year_histogram_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "This histogram plot shows how many journeys were recorded on different days of the year. The distribution shows seasonal patterns in journey activity.",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+  vehicle_type_panel <- bslib::nav_panel(
+    "Vehicle type",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("vehicle_bars"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("vehicle_bars_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "This bar plot shows how many journeys were recorded in different vehicle types. Most journeys are recorded in cars.",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+  bslib::page(
+    shiny::div(
+      class = "data-header",
+      shiny::h2(
+        "Journeys",
+        shiny::actionLink(
+            ns("data_collection_info"),
+            shiny::tags$i(class = "fa fa-info-circle")
+        )
+      )
+    ),
+    shiny::hr(class = "data-hr"),
+    data_control_row,
+    # shiny::hr(class = "data-header-hr"),
+    shiny::div(
+      class = "cards-container",
+      shiny::div(
+        style = "height: 100%; padding-bottom: var(--_padding); min-width: 350px;",
+        map_card
+      ),
+      bslib::navset_card_pill(
+        title = "Journey characteristics",
+        # full_screen = TRUE,
+        temperature_panel,
+        distance_panel,
+        elevation_panel,
+        day_of_year_panel,
+        vehicle_type_panel
+      ) %>%
+        htmltools::tagAppendAttributes(style = "flex: 1; margin-bottom: 0;")
+    )
   )
 }
 
@@ -278,24 +288,23 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       ) %>%
         leaflet::addProviderTiles("CartoDB.Positron")
 
-      region_query <- if (tolower(input$area) %in% c("uk")) {
-        "SELECT id, geom FROM bugs_matter.regions_app
-            WHERE id IN (11, 10, 12, 4, 6, 7, 1, 2, 8, 9, 5, 3);"
-      } else if (tolower(input$area) %in% c("england")) {
-        "SELECT id, geom FROM bugs_matter.regions_app
-            WHERE id IN (4, 6, 1, 2, 8, 9, 5, 3, 7);"
-      } else {
+      #get regions for the selected country
+      country_code <- bugsMatterDashboard::regions %>%
+        dplyr::filter(code %in% region_codes()) %>%
+        dplyr::pull(country_code)
+
+      region_boundaries <- "
+      SELECT code, geom
+      FROM ref.regions
+      WHERE code in ({region_codes*})
+      " %>%
         glue::glue_data_sql(
           list(
-            id = as.numeric(input$area)
+            region_codes = region_codes()
           ),
-          "SELECT id, geom FROM bugs_matter.regions_app
-              WHERE id = {id};",
+          .,
           .con = conn
-        )
-      }
-
-      region_boundaries <- region_query %>%
+        ) %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::mutate(geom = sf::st_as_sfc(.$geom)) %>%
         sf::st_as_sf(crs = 4326)
@@ -317,15 +326,16 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
           lat2 = bbox$ymax
         )
 
+      region_param <- if (nchar(input$region) == 3) {
+        paste0("countries/", input$region)
+      } else {
+        paste0("regions/", input$region)
+      }
 
-      url_param <- if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) == "2021 to 2024") {
-        tolower(input$area)
-      } else if (tolower(input$area) %in% c("uk", "england") & tolower(input$year) != "2021 to 2024") {
-        paste0(input$area, "/years/", input$year)
-      } else if (tolower(input$year) == "2021 to 2024") {
-        paste0("regions/", input$area)
-      } else if (tolower(input$year) != "2021 to 2024") {
-        paste0("regions/", input$area, "/years/", input$year)
+      year_param <- if (nchar(input$year) == 4) {
+        paste0("/years/", input$year)
+      } else {
+        ""
       }
 
       vector_grid_js <- sprintf(
@@ -333,7 +343,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
         function(el, x) {
           // Leaflet.VectorGrid is loaded in header
           var vectorGrid = L.vectorGrid.protobuf(
-            'https://bugs-matter-vector-tiles.azurewebsites.net/tiles/%s/{z}/{x}/{y}.pbf', {
+            '%s/tiles/%s%s/{z}/{x}/{y}.pbf', {
               vectorTileLayerStyles: {
                   lines: function(properties, zoom) {
                       return {
@@ -352,261 +362,46 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
           vectorGrid.addTo(this);
         }
       ",
-        url_param
+        ifelse(golem::app_dev(), "http://localhost:3000", "https://bugs-matter-vector-tiles.azurewebsites.net"),
+        region_param,
+        year_param
       )
 
       map %>%
         htmlwidgets::onRender(vector_grid_js)
     })
 
-    #---------------------cumulative frequency plot-----------------------
-    output$cumulative_journeys_plot <- plotly::renderPlotly({
-      min_date <- if (input$year == "2021 to 2024") {
-        "2021-05-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-04-01", input$year)
-      } else {
-        sprintf("%s-05-01", input$year)
-      }
-      max_date <- if (input$year == "2021 to 2024") {
-        "2024-11-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-11-01", input$year)
-      } else {
-        sprintf("%s-10-01", input$year)
-      }
-      counts <- "
-        WITH daily_counts AS (
-        SELECT
-          j.end::DATE AS date,
-          COUNT(*) AS daily_count
-        FROM bugs_matter.journeys_server j
-        WHERE region_id IN ({region_ids*})
-        GROUP BY j.end::DATE
-      ), date_bounds AS (
-        SELECT
-          {min_date}::DATE AS min_date,
-          {max_date}::DATE AS max_date
-      ),  -- No need to select FROM the table here
-      all_dates AS (
-        SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
-        FROM date_bounds
-      )
-      SELECT
-        all_dates.date,
-        COALESCE(daily_counts.daily_count, 0) AS daily_count,
-        SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
-          ORDER BY all_dates.date
-          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS cumulative_count
-      FROM all_dates
-      LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
-      ORDER BY all_dates.date;" %>%
-        glue::glue_data_sql(
-          list(
-            region_ids = get_region_ids(input$area),
-          min_date = min_date,
-          max_date = max_date
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(date = as.Date(date))
 
-      plotly::plot_ly(
-        type = "scatter",
-        mode = "lines",
-        name = ""
-      ) %>%
-        plotly::add_trace(
-          showlegend = FALSE,
-          y = counts$cumulative_count,
-          x = counts$date,
-          line = list(
-            color = "#147331",
-            width = 3
-          )
-        ) %>%
-        plotly::layout(
-          dragmode = FALSE,
-          yaxis = list(title = "Total number of journeys"),
-          xaxis = list(title = "Date")
-        ) %>%
-        plotly::config(
-          displayModeBar = FALSE
-        )
+    region_codes <- reactive({
+      #3 character values are country codes
+      if (nchar(input$region) == 3) {
+        bugsMatterDashboard::regions %>%
+          dplyr::filter(country_code == input$region) %>%
+          dplyr::pull(code)
+      } else {
+        input$region
+      }
     })
 
-
-    #---------------------distance travelled------------------------#
-      output$cumulative_distance_plot <- plotly::renderPlotly({
-      min_date <- if (input$year == "2021 to 2024") {
-        "2021-05-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-04-01", input$year)
+    years <- reactive({
+      if (nchar(input$year) > 4) {
+        return(bugsMatterDashboard::years)
       } else {
-        sprintf("%s-05-01", input$year)
+        as.numeric(input$year)
       }
-      max_date <- if (input$year == "2021 to 2024") {
-        "2024-11-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-11-01", input$year)
-      } else {
-        sprintf("%s-10-01", input$year)
-      }
-      counts <- "
-        WITH daily_counts AS (
-        SELECT
-          j.end::DATE AS date,
-          SUM(j.distance) AS daily_count
-        FROM bugs_matter.journeys_server j
-        WHERE region_id IN ({region_ids*})
-        GROUP BY j.end::DATE
-      ), date_bounds AS (
-        SELECT
-          {min_date}::DATE AS min_date,
-          {max_date}::DATE AS max_date
-      ),  -- No need to select FROM the table here
-      all_dates AS (
-        SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
-        FROM date_bounds
-      )
-      SELECT
-        all_dates.date,
-        COALESCE(daily_counts.daily_count, 0) AS daily_count,
-        ROUND((SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
-          ORDER BY all_dates.date
-          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ))::NUMERIC) AS cumulative_count
-      FROM all_dates
-      LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
-      ORDER BY all_dates.date;" %>%
-        glue::glue_data_sql(
-          list(
-            region_ids = get_region_ids(input$area),
-          min_date = min_date,
-          max_date = max_date
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(date = as.Date(date))
-
-      plotly::plot_ly(
-        type = "scatter",
-        mode = "lines",
-        name = ""
-      ) %>%
-        plotly::add_trace(
-          showlegend = FALSE,
-          y = counts$cumulative_count,
-          x = counts$date,
-          line = list(
-            color = "#147331",
-            width = 3
-          )
-        ) %>%
-        plotly::layout(
-          dragmode = FALSE,
-          yaxis = list(title = "Total distance travelled (miles)"),
-          xaxis = list(title = "Date")
-        ) %>%
-        plotly::config(
-          displayModeBar = FALSE
-        )
     })
 
-    #---------------signed up users----------------------------------#
-     output$cumulative_sign_ups <- plotly::renderPlotly({
-      min_date <- if (input$year == "2021 to 2024") {
-        "2021-05-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-04-01", input$year)
-      } else {
-        sprintf("%s-05-01", input$year)
-      }
-      max_date <- if (input$year == "2021 to 2024") {
-        "2024-11-01"
-      } else if (input$year == "2024") {
-        sprintf("%s-11-01", input$year)
-      } else {
-        sprintf("%s-10-01", input$year)
-      }
-      counts <- "
-        WITH daily_counts AS (
-        SELECT
-          u.sign_up_date::DATE AS date,
-          COUNT(*) AS daily_count
-        FROM bugs_matter.users_app u
-        WHERE region_id IN ({region_ids*})
-        GROUP BY u.sign_up_date::DATE
-      ), date_bounds AS (
-        SELECT
-          {min_date}::DATE AS min_date,
-          {max_date}::DATE AS max_date
-      ),
-      all_dates AS (
-        SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
-        FROM date_bounds
-      )
-      SELECT
-        all_dates.date,
-        COALESCE(daily_counts.daily_count, 0) AS daily_count,
-        SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
-          ORDER BY all_dates.date
-          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS cumulative_count
-      FROM all_dates
-      LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
-      ORDER BY all_dates.date;" %>%
-        glue::glue_data_sql(
-          list(
-            region_ids = get_region_ids(input$area),
-          min_date = min_date,
-          max_date = max_date
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(date = as.Date(date))
-
-      plotly::plot_ly(
-        type = "scatter",
-        mode = "lines",
-        name = ""
-      ) %>%
-        plotly::add_trace(
-          showlegend = FALSE,
-          y = counts$cumulative_count,
-          x = counts$date,
-          line = list(
-            color = "#147331",
-            width = 3
-          )
-        ) %>%
-        plotly::layout(
-          dragmode = FALSE,
-          yaxis = list(title = "Total registered users"),
-          xaxis = list(title = "Date")
-        ) %>%
-        plotly::config(
-          displayModeBar = FALSE
-        )
-    })
 
     #---------------------distance histogram -----------------------#
 
     output$distance_histogram <- plotly::renderPlotly({
-      "SELECT j.distance
-                  FROM bugs_matter.journeys_server j
-                  WHERE j.region_id IN ({region_ids*}) AND j.year IN ({years*});" %>%
+      "SELECT distance
+        FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
         glue::glue_data_sql(
           list(
-            region_ids = get_region_ids(input$area),
-            years = get_years(input$year)
+            region_codes = region_codes(),
+            years = years()
           ),
           .,
           .con = conn
@@ -622,7 +417,103 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       plotly::layout(
         dragmode = FALSE,
         yaxis = list(title = "Number of Journeys"),
-        xaxis = list(title = "Distance (miles)")
+        xaxis = list(title = "Distance (km)")
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
+    })
+
+    #---------------------temperature histogram -----------------------#
+
+    output$temperature_histogram <- plotly::renderPlotly({
+      "SELECT temperature
+        FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
+        glue::glue_data_sql(
+          list(
+            region_codes = region_codes(),
+            years = years()
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("temperature") %>%
+      plotly::plot_ly(
+        x = .,
+        type = "histogram",
+        marker = list(color = "#147331"),
+        name = ""
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(title = "Number of Journeys"),
+        xaxis = list(title = "Temperature (Day Mean °C)")
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
+    })
+
+    #---------------------elevation histogram -----------------------#
+
+    output$elevation_histogram <- plotly::renderPlotly({
+      "SELECT elevation
+        FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
+        glue::glue_data_sql(
+          list(
+            region_codes = region_codes(),
+            years = years()
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("elevation") %>%
+      plotly::plot_ly(
+        x = .,
+        type = "histogram",
+        marker = list(color = "#147331"),
+        name = ""
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(title = "Number of Journeys"),
+        xaxis = list(title = "Mean Elevation (m)")
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
+    })
+
+    #---------------------day of year histogram -----------------------#
+
+    output$day_of_year_histogram <- plotly::renderPlotly({
+      "SELECT day_of_year
+        FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
+        glue::glue_data_sql(
+          list(
+            region_codes = region_codes(),
+            years = years()
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("day_of_year") %>%
+      plotly::plot_ly(
+        x = .,
+        type = "histogram",
+        marker = list(color = "#147331"),
+        name = ""
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(title = "Number of Journeys"),
+        xaxis = list(title = "Day of Year")
       ) %>%
       plotly::config(
         displayModeBar = FALSE
@@ -633,27 +524,31 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
 
     output$vehicle_bars <- plotly::renderPlotly({
       "WITH all_vehicles AS(
-          SELECT DISTINCT (j.vehicle_cl) AS vehicle_cl
-          FROM bugs_matter.journeys_server j
+          SELECT DISTINCT (j.vehicle_class) AS vehicle_class
+          FROM journeys.processed j
         )
-        SELECT all_vehicles.vehicle_cl, COALESCE(COUNT(*), 0) AS count
+        SELECT all_vehicles.vehicle_class, COALESCE(COUNT(*), 0) AS count
         FROM all_vehicles
-        LEFT JOIN bugs_matter.journeys_server j ON all_vehicles.vehicle_cl = j.vehicle_cl
-        WHERE j.region_id IN ({region_ids*}) AND j.year IN ({years*})
-        GROUP BY j.vehicle_cl, all_vehicles.vehicle_cl;" %>%
+        LEFT JOIN journeys.processed j ON all_vehicles.vehicle_class = j.vehicle_class
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*})
+        GROUP BY j.vehicle_class, all_vehicles.vehicle_class
+        ORDER BY count;" %>%
         glue::glue_data_sql(
           list(
-            region_ids = get_region_ids(input$area),
-            years = get_years(input$year)
+            region_codes = region_codes(),
+            years = years()
           ),
           .,
           .con = conn
         ) %>%
         DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(
+          vehicle_class = factor(vehicle_class, levels = rev(.$vehicle_class))
+        ) %>%
       plotly::plot_ly(
         data = .,
         type = "bar",
-        x = ~vehicle_cl,
+        x = ~vehicle_class,
         y = ~count,
         marker = list(color = "#147331")
       ) %>%

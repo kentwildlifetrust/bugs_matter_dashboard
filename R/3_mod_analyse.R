@@ -13,158 +13,161 @@ library(magrittr)
 
 mod_analyse_ui <- function(id) {
   ns <- shiny::NS(id)
-  bslib::page(
+
+  data_header <- shiny::div(
+    class = "data-header",
+    shiny::h2(
+      "Bug Splat Analysis",
+      shiny::actionLink(
+        ns("analysis_info"),
+        shiny::tags$i(class = "fa fa-info-circle")
+      )
+    )
+  )
+
+  data_control_row <- shiny::div(
+    class = "data-control-row",
     shiny::div(
-      class = "data-header",
-      shiny::h2(
-        "Bug Splat Analysis",
-        shiny::actionLink(
-          ns("analysis_info"),
-          shiny::tags$i(class = "fa fa-info-circle")
-        )
+      class = "data-controls",
+      shiny::selectInput(
+        ns("region"),
+        "Region",
+        choices = bugsMatterDashboard::region_choices,
+        selected = "GBR",
+        width = 250
       ),
-      shiny::actionButton(
-        ns("next_page"),
-        shiny::span(
-          style = "color: white;",
-          "Get involved",
-          shiny::tags$i(
-            class = "fa fa-arrow-right"
-          ),
-        ),
-        class = "btn-primary m-2",
-          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
-      )
-    ),
-    shiny::hr(class = "data-hr"),
-    shiny::div(
-      class = "data-control-row",
-      shiny::div(
-        class = "data-controls",
-        shiny::selectInput(
-          ns("area"),
-          "Area",
-          choices = c(bugsMatterDashboard::region_choices),
-          selected = "uk"
-        ),
-        shiny::sliderInput(
-          ns("year"),
-          NULL,
-          min = 2021,
-          max = 2024,
-          value = c(2021, 2024),
-          step = 1,
-          sep = ""
-        ) %>%
+      shiny::sliderInput(
+        ns("year"),
+        NULL,
+        min = min(bugsMatterDashboard::years),
+        max = max(bugsMatterDashboard::years),
+        value = c(min(bugsMatterDashboard::years), max(bugsMatterDashboard::years)),
+        step = 1,
+        sep = ""
+      ) %>%
         shiny::tagAppendAttributes(style = "margin-left: 15px; margin-bottom: calc(1rem - 12px);")
-      )
+      ),
+      tags$a(
+        shiny::actionButton(
+          ns("next_page"),
+          shiny::span(
+            style = "color: white;",
+            "Get involved",
+            shiny::tags$i(
+              class = "fa fa-up-right-from-square"
+            ),
+          ),
+          class = "btn-primary m-2",
+            style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+        ),
+      href = "https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter",
+      target = "_blank"
+    )
+  )
+
+  scatters_card <- bslib::navset_card_pill(
+    # full_screen = TRUE, #causes page layout to break slightly :(
+    title = "Change in splats over time",
+    height = "100%",
+    bslib::nav_panel(
+      "Model predictions",
+      bslib::card_body(
+        padding = c(0, 0, 10, 0),
+        height = "100%",
+        min_height = 400,
+        shinycssloaders::withSpinner(
+          plotly::plotlyOutput(
+            ns("model_predicted"),
+            height = "100%"
+          )
+        ),
+        div(
+          style = "position: absolute; top: 20px; right: 20px;",
+          bslib::popover(
+            shiny::actionLink(
+              ns("model_predicted_info"),
+              shiny::tags$i(class = "fa fa-info-circle"),
+              style = "font-size: 1.5rem;"
+            ),
+            "This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.",
+            placement = "bottom"
+          )
+        )
+      ) %>%
+        shiny::tagAppendAttributes(style = "position: relative;")
     ),
+    bslib::nav_panel(
+      "Cumulative average",
+      bslib::card_body(
+        padding = c(0, 0, 10, 0),
+        shinycssloaders::withSpinner(
+          plotly::plotlyOutput(
+            ns("splat_rate_line"),
+            height = "100%"
+          )
+        ),
+        div(
+          style = "position: absolute; top: 20px; right: 20px;",
+          bslib::popover(
+            shiny::actionLink(
+              ns("cumulative_average_info"),
+              shiny::tags$i(class = "fa fa-info-circle"),
+              style = "font-size: 1.5rem;"
+            ),
+            "This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.",
+            placement = "bottom"
+          )
+        )
+      ) %>%
+        shiny::tagAppendAttributes(style = "position: relative;")
+    )
+  )
+
+  forest_card <- bslib::navset_card_pill(
+    height = "calc(100% - 12px)",
+    full_screen = TRUE,
+    title = "Change in splat rate in response to variables",
+    bslib::card_body(
+      padding = c(0, 0, 10, 0),
+      height = "100%",
+      div(
+        style = "max-height: 100%; overflow-y: auto;",
+        shinycssloaders::withSpinner(
+          plotly::plotlyOutput(
+            ns("forest"),
+            height = 1000
+          )
+        ),
+      ),
+      div(
+        style = "position: absolute; top: 20px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("forest_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  ) %>%
+  shiny::tagAppendAttributes(style = "flex: 1;")
+
+  bslib::page(
+    data_header,
+    shiny::hr(class = "data-hr"),
+    data_control_row,
     # shiny::hr(class = "data-header-hr"),
     shiny::div(
       class = "cards-container",
       shiny::div(
         style = "display: flex; flex-direction: column; min-width: 350px; flex: 1;",
-        bslib::navset_card_tab(
-          # full_screen = TRUE, #causes page layout to break slightly :(
-          title = "Change in splats over time",
-          height = "100%",
-          bslib::nav_panel(
-            "Model predictions",
-            bslib::card_body(
-              padding = c(0, 0, 10, 0),
-              height = "100%",
-              shinycssloaders::withSpinner(
-                plotly::plotlyOutput(
-                  ns("model_predicted"),
-                  height = "100%"
-                )
-              ),
-              div(
-                style = "position: absolute; top: 20px; right: 20px;",
-                bslib::popover(
-                  shiny::actionLink(
-                    ns("model_predicted_info"),
-                    shiny::tags$i(class = "fa fa-info-circle"),
-                    style = "font-size: 1.5rem;"
-                  ),
-                  "This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.",
-                  placement = "bottom"
-                )
-              )
-            ) %>%
-              shiny::tagAppendAttributes(style = "position: relative;")
-          ),
-          bslib::nav_panel(
-            "Cumulative average",
-            bslib::card_body(
-              padding = c(0, 0, 10, 0),
-              shinycssloaders::withSpinner(
-                plotly::plotlyOutput(
-                  ns("splat_rate_line"),
-                  height = "100%"
-                )
-              ),
-              div(
-                style = "position: absolute; top: 20px; right: 20px;",
-                bslib::popover(
-                  shiny::actionLink(
-                    ns("cumulative_average_info"),
-                    shiny::tags$i(class = "fa fa-info-circle"),
-                    style = "font-size: 1.5rem;"
-                  ),
-                  "This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.",
-                  placement = "bottom"
-                )
-              )
-            ) %>%
-              shiny::tagAppendAttributes(style = "position: relative;")
-          ) # ,
-          # bslib::nav_panel(
-          #   "By year",
-          #   bslib::card_body(
-          #     padding = c(0, 0, 10, 0),
-          #     plotly::plotlyOutput(
-          #       ns("splat_rate_box"),
-          #       height = "100%"
-          #     )
-          #   )
-          # )
-        )
+        scatters_card
       ),
-        bslib::card(
-          height = "calc(100% - 12px)",
-          full_screen = TRUE,
-          bslib::card_header(
-            "Change in splat rate in response to variables"
-          ),
-          bslib::card_body(
-            padding = c(0, 0, 10, 0),
-            height = "100%",
-            div(
-              style = "max-height: 100%; overflow-y: auto;",
-              shinycssloaders::withSpinner(
-                plotly::plotlyOutput(
-                  ns("forest"),
-                  height = 1000
-                )
-              ),
-            ),
-            div(
-              style = "position: absolute; top: 20px; right: 20px;",
-              bslib::popover(
-                shiny::actionLink(
-                  ns("forest_info"),
-                  shiny::tags$i(class = "fa fa-info-circle"),
-                  style = "font-size: 1.5rem;"
-                ),
-                "This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.",
-                placement = "bottom"
-              )
-            )
-          ) %>%
-            shiny::tagAppendAttributes(style = "position: relative;")
-        ) %>%
-        shiny::tagAppendAttributes(style = "flex: 1;")
+      forest_card
     )
   )
 }
@@ -217,20 +220,35 @@ mod_analyse_server <- function(id, conn, next_page) {
       )
     })
 
+    shiny::observeEvent(input$close_modal, {
+      shiny::removeModal()
+    })
+
+    region_codes <- reactive({
+      #3 character values are country codes
+      if (nchar(input$region) == 3) {
+        bugsMatterDashboard::regions %>%
+          dplyr::filter(country_code == input$region) %>%
+          dplyr::pull(code)
+      } else {
+        input$region
+      }
+    })
+
     mod <- shiny::reactive({
       journeys <- "SELECT
         splat_count,
-        year,
+        year::TEXT,
         distance,
-        avg_speed,
-        vehicle_cl,
-        vehicle_he,
+        avg_speed_kmh,
+        vehicle_class,
+        vehicle_height,
         hours_since_midnight,
-        dayofyear,
+        day_of_year,
         elevation,
-        temp,
-        lon,
-        lat,
+        temperature,
+        center_lon,
+        center_lat,
         forest,
         shrubland,
         grassland,
@@ -239,12 +257,12 @@ mod_analyse_server <- function(id, conn, next_page) {
         arable,
         urban,
         log_cm_miles_offset
-      FROM bugs_matter.journeys_server
-      WHERE region_id IN ({region_ids*})
+      FROM journeys.processed
+      WHERE region_code IN ({region_codes*})
       AND year >= {baseline_year} AND year <= {comparison_year};" %>%
         glue::glue_data_sql(
           list(
-            region_ids = get_region_ids(input$area),
+            region_codes = region_codes(),
             baseline_year = input$year[1],
             comparison_year = input$year[2]
           ),
@@ -257,15 +275,15 @@ mod_analyse_server <- function(id, conn, next_page) {
         MASS::glm.nb(
           splat_count ~ year +
             distance +
-            avg_speed +
-            vehicle_cl +
-            vehicle_he +
+            avg_speed_kmh +
+            vehicle_class +
+            vehicle_height +
             hours_since_midnight +
-            dayofyear +
+            day_of_year +
             elevation +
-            temp +
-            lon +
-            lat +
+            temperature +
+            center_lon +
+            center_lat +
             forest +
             shrubland +
             grassland +
@@ -277,7 +295,7 @@ mod_analyse_server <- function(id, conn, next_page) {
           data = journeys
         ),
         error = function(e) {
-          warning(paste("Model failed for region:", input$area, "Error:", e$message))
+          warning(paste("Model failed for region:", input$region, "Error:", e$message))
           return(NULL)
         }
       )
@@ -298,15 +316,16 @@ mod_analyse_server <- function(id, conn, next_page) {
           term == "year2022" ~ "Year [2022]",
           term == "year2023" ~ "Year [2023]",
           term == "year2024" ~ "Year [2024]",
-          term == "dayofyear" ~ "Day of Year",
-          term == "lon" ~ "Longitude",
-          term == "lat" ~ "Latitude",
-          term == "avg_speed" ~ "Average Speed",
+          term == "year2025" ~ "Year [2025]",
+          term == "day_of_year" ~ "Day of Year",
+          term == "center_lon" ~ "Longitude",
+          term == "center_lat" ~ "Latitude",
+          term == "avg_speed_kmh" ~ "Average Speed",
           .default = snakecase::to_title_case(term)
         ))
     }) %>%
       shiny::bindCache(
-        input$area,
+        input$region,
         input$year,
         cache = "app"
       )
@@ -408,7 +427,7 @@ mod_analyse_server <- function(id, conn, next_page) {
       sjPlot::get_model_data(mod(), type = "pred", terms = "year")
     }) %>%
       shiny::bindCache(
-        input$area,
+        input$region,
         input$year,
         cache = "app"
       )
@@ -462,14 +481,14 @@ mod_analyse_server <- function(id, conn, next_page) {
         splat_rate
         --AVG(splat_rate) OVER (ORDER BY midpoint_time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS splat_rate
       FROM
-        bugs_matter.journeys_server
+        journeys.processed
       WHERE splat_rate IS NOT NULL AND midpoint_time IS NOT NULL
       ORDER BY
         midpoint_time;
       " %>%
         glue::glue_data_sql(
           list(
-            region_ids = get_region_ids(input$area),
+            region_codes = region_codes(),
             baseline_year = input$year[1],
             comparison_year = input$year[2]
           ),
@@ -479,7 +498,7 @@ mod_analyse_server <- function(id, conn, next_page) {
         DBI::dbGetQuery(conn, .)
     }) %>%
       shiny::bindCache(
-        input$area,
+        input$region,
         input$year,
         cache = "app"
       )

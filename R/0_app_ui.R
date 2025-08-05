@@ -17,25 +17,30 @@ app_ui <- function(request) {
         shiny::span("Matter")
       ),
       bslib::nav_panel(
-        title = "Welcome",
+        title = "Overview",
         value = 1,
-        mod_welcome_ui("welcome_1")
+        mod_overview_ui("overview_1")
+      ),
+      bslib::nav_panel(
+        title = "Participation",
+        value = 2,
+        mod_participation_ui("participation_1")
       ),
       bslib::nav_panel(
         title = "Journeys",
-        value = 2,
+        value = 3,
         mod_explore_journeys_ui("explore_journeys_1")
       ),
       bslib::nav_panel(
         title = "Trends",
-        value = 3,
+        value = 4,
         mod_analyse_ui("analyse_1")
       ),
-      bslib::nav_panel(
-        title = "Get Involved",
-        value = 4,
-        mod_get_involved_ui("get_involved_1")
-      ),
+      # bslib::nav_panel(
+      #   title = "Get Involved",
+      #   value = 5,
+      #   mod_get_involved_ui("get_involved_1")
+      # ),
       theme = theme()
     )
 

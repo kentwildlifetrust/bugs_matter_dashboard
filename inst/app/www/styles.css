@@ -37,11 +37,11 @@ h3 {
   line-height: 1.5rem;
 }
 
-.welcome-page {
+.overview-page {
   position: relative;
 }
 
-.welcome-background-image {
+.overview-background-image {
   position: absolute;
   top: 0;
   left: 0;
@@ -76,7 +76,7 @@ h3 {
   justify-content: end;
 }
 
-.welcome-page-content {
+.overview-page-content {
   max-width: 60rem;
   z-index: 1;
   position: relative;
@@ -84,7 +84,7 @@ h3 {
   padding: 0px 20px;
 }
 
-.welcome-message {
+.overview-message {
   text-shadow: 0px 0px 2px rgba(41, 49, 51, 0.14), 0px 2px 4px rgba(41, 49, 51, 0.16);
   font-size: 1.75rem;
   font-family: 'Adelle';
@@ -100,20 +100,20 @@ h1 {
   color: black;
 }
 
-.welcome-lead {
+.overview-lead {
   font-family: 'Adelle';
   font-size: 1.14rem;
   font-weight: 600;
 }
 
-@media only screen and (max-width: 800px) {
+@media only screen and (max-width: 1200px) {
   h1 {
     font-size: 1.8rem;
   }
-  .welcome-message {
+  .overview-message {
     font-size: 1.14rem;
   }
-  .welcome-lead {
+  .overview-lead {
     font-size: 1rem;
   }
 }
@@ -122,14 +122,14 @@ p {
   font-size: 0.875rem;
 }
 
-.row.welcome-value-row {
+.row.overview-value-row {
   --bs-gutter-x: 0px !important;
   gap: 10px;
 }
-.row.welcome-value-row > .col-sm {
+.row.overview-value-row > .col-sm {
   min-width: 150px;
 }
-.welcome-value-box {
+.overview-value-box {
   height: 100%;
 }
 
@@ -186,7 +186,7 @@ hr.popup-hr {
 }
 
 .data-header {
-  margin: 30px 30px -10px;
+  margin: 30px 30px 5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -215,9 +215,9 @@ hr.data-hr {
   margin-bottom: 3px !important;
 }
 
-@media only screen and (max-width: 800px) {
+@media only screen and (max-width: 1200px) {
   .data-header {
-    margin: 10px 12px -10px;
+    margin: 20px 20px 5px;
   }
 }
 
@@ -238,19 +238,24 @@ hr.data-hr {
   padding: 0 10px;
 } */
 
-
+.card-header {
+  min-height: 56px;
+}
+.nav.nav-pills.card-header-pills>.nav-item>.nav-link.active {
+  color: white !important;
+}
 .cards-container {
   display: grid;
-  grid-template-columns: 2fr 3fr;
+  grid-template-columns: 3fr 2fr;
   gap: var(--bslib-mb-spacer);
   padding: var(--bslib-mb-spacer);
   height: calc(100svh - 230px);
 }
 
-@media only screen and (max-width: 800px) {
+@media only screen and (max-width: 1200px) {
   .cards-container {
     grid-template-columns: 1fr;
-    height: 1500px;
+    height: 1000px;
   }
 }
 
