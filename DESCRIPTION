@@ -26,6 +26,7 @@ Imports:
     pkgload,
     plotly,
     pool,
+    reactable,
     RPostgres,
     sf,
     shiny,
