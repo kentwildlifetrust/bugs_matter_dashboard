@@ -454,6 +454,9 @@ mod_analyse_server <- function(id, conn, next_page) {
       FROM
         journeys.processed
       WHERE splat_rate IS NOT NULL AND midpoint_time IS NOT NULL
+      AND region_code IN ({region_codes*})
+      AND region_code IS NOT NULL
+      AND year >= {baseline_year} AND year <= {comparison_year}
       ORDER BY
         midpoint_time;
       " %>%
