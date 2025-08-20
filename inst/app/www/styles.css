@@ -232,7 +232,7 @@ hr.data-hr {
 
 /*---------range slider-----------------*/
 .irs--shiny .irs-handle, .irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single, .irs--shiny .irs-bar {
-  background-color: #58A732;
+  background-color: #58A732 !important;
 }
 /* .irs.irs--shiny.js-irs-0.irs-with-grid {
   padding: 0 10px;

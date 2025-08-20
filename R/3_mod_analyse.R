@@ -36,17 +36,8 @@ mod_analyse_ui <- function(id) {
         selected = "GBR",
         width = 250
       ),
-      shiny::sliderInput(
-        ns("year"),
-        NULL,
-        min = min(bugsMatterDashboard::years),
-        max = max(bugsMatterDashboard::years),
-        value = c(min(bugsMatterDashboard::years), max(bugsMatterDashboard::years)),
-        step = 1,
-        sep = ""
-      ) %>%
-        shiny::tagAppendAttributes(style = "margin-left: 15px; margin-bottom: calc(1rem - 12px);")
-      ),
+      uiOutput(ns("slider_input"))
+    ),
       tags$a(
         shiny::actionButton(
           ns("next_page"),
@@ -179,6 +170,32 @@ mod_analyse_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    output$slider_input <- renderUI({
+      range <- "SELECT min(year), max(year)
+      FROM journeys.processed
+      WHERE region_code IN ({region_codes*})
+      AND region_code IS NOT NULL;" %>%
+        glue::glue_data_sql(
+          list(
+            region_codes = region_codes()
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .)
+
+      shiny::sliderInput(
+        ns("year"),
+        NULL,
+        min = range$min,
+        max = range$max,
+        value = c(range$min, range$max),
+        step = 1,
+        sep = ""
+      ) %>%
+        shiny::tagAppendAttributes(style = "margin-left: 15px; margin-bottom: calc(1rem - 12px);")
+    })
+
     shiny::observeEvent(input$analysis_info, {
       shiny::showModal(
         shiny::modalDialog(
@@ -236,6 +253,8 @@ mod_analyse_server <- function(id, conn, next_page) {
     })
 
     mod <- shiny::reactive({
+      req(input$year)
+      req(length(input$year) == 2)
       journeys <- "SELECT year::TEXT,
           distance,
           avg_speed_kmh,
@@ -265,7 +284,7 @@ mod_analyse_server <- function(id, conn, next_page) {
           .con = conn
         ) %>%
         DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(year = relevel(as.factor(.$year), ref = as.character(input$year[1])))
+        dplyr::mutate(year = relevel(as.factor(.$year), ref = as.character(max(input$year[1], min(as.numeric(.$year))))))
       tryCatch(
         model(journeys),
         error = function(e) {
