@@ -147,7 +147,7 @@ mod_analyse_ui <- function(id) {
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;"
           ),
-          "This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per mile) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.",
+          "This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per km) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.",
           placement = "bottom"
         )
       )
@@ -194,9 +194,9 @@ mod_analyse_server <- function(id, conn, next_page) {
           shiny::p(
             "To begin exploring the data and calculate simple summary statistics, insect splat counts
             recorded by citizen scientists are converted to a ‘splat rate’ by dividing the insect splat count by
-            the number plate sampling area and the journey distance, expressed in a unit of ‘splats per cm² per mile’.
+            the number plate sampling area and the journey distance, expressed in a unit of ‘splats per cm² per km’.
             This metric makes the data comparable between journeys and is defined as the number of insects sampled
-            per cm² of the number plate every mile. The response variable (insect count) shows a heavily right-skewed
+            per cm² of the number plate every kilometre. The response variable (insect count) shows a heavily right-skewed
             distribution due to the high number of zero and low values, as is typical for count-derived data.
             Therefore, a negative binomial generalized linear model (NB) was used to examine the relative effects
             of survey year, time of day of the journey, calendar date of the journey, average journey temperature,
@@ -236,29 +236,24 @@ mod_analyse_server <- function(id, conn, next_page) {
     })
 
     mod <- shiny::reactive({
-      journeys <- "SELECT
-        splat_count,
-        year::TEXT,
-        distance,
-        avg_speed_kmh,
-        vehicle_class,
-        vehicle_height,
-        hours_since_midnight,
-        day_of_year,
-        elevation,
-        temperature,
-        center_lon,
-        center_lat,
-        forest,
-        shrubland,
-        grassland,
-        wetland,
-        marine,
-        arable,
-        urban,
-        log_cm_miles_offset
+      journeys <- "SELECT year::TEXT,
+          distance,
+          avg_speed_kmh,
+          vehicle_class,
+          time_of_day,
+          day_of_year,
+          elevation,
+          temperature,
+          forest,
+          grassland,
+          wetland,
+          arable,
+          urban,
+          log_cm_km_offset,
+          splat_count
       FROM journeys.processed
       WHERE region_code IN ({region_codes*})
+      AND region_code IS NOT NULL
       AND year >= {baseline_year} AND year <= {comparison_year};" %>%
         glue::glue_data_sql(
           list(
@@ -272,28 +267,7 @@ mod_analyse_server <- function(id, conn, next_page) {
         DBI::dbGetQuery(conn, .) %>%
         dplyr::mutate(year = relevel(as.factor(.$year), ref = as.character(input$year[1])))
       tryCatch(
-        MASS::glm.nb(
-          splat_count ~ year +
-            distance +
-            avg_speed_kmh +
-            vehicle_class +
-            vehicle_height +
-            hours_since_midnight +
-            day_of_year +
-            elevation +
-            temperature +
-            center_lon +
-            center_lat +
-            forest +
-            shrubland +
-            grassland +
-            wetland +
-            marine +
-            arable +
-            urban +
-            stats::offset(log_cm_miles_offset),
-          data = journeys
-        ),
+        model(journeys),
         error = function(e) {
           warning(paste("Model failed for region:", input$region, "Error:", e$message))
           return(NULL)
@@ -304,23 +278,20 @@ mod_analyse_server <- function(id, conn, next_page) {
     forest_data <- shiny::reactive({
       mod() %>%
         broom::tidy(conf.int = TRUE, exponentiate = TRUE) %>%
-        dplyr::filter(!term %in% c("(Intercept)", "stats::offset(log_cm_miles_offset)")) %>%
+        dplyr::filter(!term %in% c("(Intercept)", "stats::offset(log_cm_km_offset)")) %>%
         dplyr::arrange(dplyr::desc(estimate)) %>%
         dplyr::mutate(term = dplyr::case_when(
-          term == "hours_since_midnight" ~ "Time of Day",
-          term == "temp" ~ "Temperature",
-          term == "vehicle_clLCV" ~ "Vehicle [LCV]",
-          term == "vehicle_clOther" ~ "Vehicle [Other]",
-          term == "vehicle_clHCV" ~ "Vehicle [HCV]",
-          term == "vehicle_he" ~ "Vehicle Height",
-          term == "year2022" ~ "Year [2022]",
-          term == "year2023" ~ "Year [2023]",
-          term == "year2024" ~ "Year [2024]",
-          term == "year2025" ~ "Year [2025]",
-          term == "day_of_year" ~ "Day of Year",
-          term == "center_lon" ~ "Longitude",
-          term == "center_lat" ~ "Latitude",
-          term == "avg_speed_kmh" ~ "Average Speed",
+          term == "Time.of.day" ~ "Time of Day",
+          term == "Temperature" ~ "Temperature",
+          term == "Vehicle.typeLCV" ~ "Vehicle [LCV]",
+          term == "Vehicle.typeOther" ~ "Vehicle [Other]",
+          term == "Vehicle.typeHCV" ~ "Vehicle [HCV]",
+          term == "Year2022" ~ "Year [2022]",
+          term == "Year2023" ~ "Year [2023]",
+          term == "Year2024" ~ "Year [2024]",
+          term == "Year2025" ~ "Year [2025]",
+          term == "Day.of.year" ~ "Day of Year",
+          term == "Average.speed" ~ "Average Speed (km/h)",
           .default = snakecase::to_title_case(term)
         ))
     }) %>%
@@ -424,7 +395,7 @@ mod_analyse_server <- function(id, conn, next_page) {
     })
 
     model_predictions <- shiny::reactive({
-      sjPlot::get_model_data(mod(), type = "pred", terms = "year")
+      sjPlot::get_model_data(mod(), type = "pred", terms = "Year")
     }) %>%
       shiny::bindCache(
         input$region,
@@ -514,7 +485,7 @@ mod_analyse_server <- function(id, conn, next_page) {
       ) %>%
         plotly::layout(
           yaxis = list(
-            title = "Splat rate (splats/cm/mile)"
+            title = "Splat rate (splats/cm/km)"
           ),
           xaxis = list(
             title = "Journey Date",

@@ -17,19 +17,18 @@ library(rnaturalearth)
 pool <- dbPool(drv = RPostgres::Postgres(),
                host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
                port = 5432, dbname = "shared",
-               user = Sys.getenv("kwt_user"),
-               password = Sys.getenv("kwt_password"),
+               user = Sys.getenv("user"),
+               password = Sys.getenv("password"),
                sslmode = "prefer")
 
-# dbExecute(pool, 'GRANT SELECT ON TABLE bugs_matter.journeys5 TO "bugsMatterDashboardReadOnly";')
+# dbExecute(pool, 'GRANT SELECT ON TABLE bugs_matter.journeys5 TO "BugsMatterReadOnly";')
 
 # Import shapefiles downloaded from Coreo, join, remove dups, and write to file and PostGIS. ---- ----
-folder_path <- "C:/Users/lawrenceb/Kent Wildlife Trust/EVD - Bugs Matter - General/10. Reporting/1. Analysis/Analysis 2025"
+folder_path <- "C:/Users/euanm/Downloads/OneDrive_1_19-08-2025"
 shp_files <- list.files(path = folder_path, pattern = "\\.shp$", full.names = TRUE, recursive = TRUE)
 print(shp_files)
 journeys <- lapply(shp_files, st_read)
 journeys <- do.call(rbind, journeys)
-
 
 #Add and reformat some variables, and calculate splat rates (splatometer discontinued in 2023). ---- ----
 journeys1 <- journeys %>%

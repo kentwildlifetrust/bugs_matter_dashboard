@@ -195,8 +195,43 @@ mod_overview_server <- function(id, conn, next_page) {
     })
 
     output$trend <- shiny::renderText({
-      paste0(bugsMatterDashboard::overall_trend$estimate, "%")
-    })
+      mod <- DBI::dbGetQuery(
+        conn,
+        "SELECT year::TEXT,
+          distance,
+          avg_speed_kmh,
+          vehicle_class,
+          time_of_day,
+          day_of_year,
+          elevation,
+          temperature,
+          forest,
+          grassland,
+          wetland,
+          arable,
+          urban,
+          log_cm_km_offset,
+          splat_count
+        FROM journeys.processed
+        WHERE region_code IS NOT NULL
+        AND year >= 2021;"
+      ) %>%
+        model()
+
+      est <- cbind(Estimate = coef(mod), confint(mod))
+
+      est1 <- round((1 - exp(est)) * 100, 3) %>% # to show as decrease
+        format(scientific = FALSE) %>% #this one for reporting
+        as.data.frame()
+      trend <- est1$Estimate[row.names(est1) == "Year2024"] %>%
+        as.numeric() %>%
+        round(1)
+      paste0("-", trend, "%")
+    }) %>%
+      bindCache(
+        3,
+        cache = "app"
+      )
 
     output$map <- leaflet::renderLeaflet({
       leaflet::leaflet(
