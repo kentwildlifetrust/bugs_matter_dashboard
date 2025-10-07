@@ -362,7 +362,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
           vectorGrid.addTo(this);
         }
       ",
-        ifelse(golem::app_dev(), "http://localhost:3000", "https://bugs-matter-vector-tiles.azurewebsites.net"),
+        ifelse(golem::app_dev(), "http://journeys-env.eba-bmm2vymk.eu-west-2.elasticbeanstalk.com", "https://journeys.bugsmatter.org"),
         region_param,
         year_param
       )
