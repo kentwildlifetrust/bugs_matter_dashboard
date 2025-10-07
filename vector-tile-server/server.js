@@ -8,7 +8,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 pool = new Pool({
   // Add your database configuration here
@@ -26,7 +26,6 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://127.0.0.1:3838',
   methods: ['GET']       // Specify allowed HTTP methods
 }));
-
 
 // country all years
 app.get('/tiles/countries/:country/:z/:x/:y.pbf', async (req, res) => {
@@ -208,6 +207,10 @@ app.get('/tiles/regions/:region/years/:year/:z/:x/:y.pbf', async (req, res) => {
   }
 });
 
+
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
+});
 
 app.listen(port, () => {
   console.log(`Live tile server listening at http://localhost:${port}`);
