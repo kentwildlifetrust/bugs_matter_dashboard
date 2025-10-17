@@ -157,8 +157,8 @@ app.get('/tiles/world/years/:year/:z/:x/:y.pbf', async (req, res) => {
               END
             ), 
             public.ST_TileEnvelope($1, $2, $3),
-            4096, 64, true,
-          ) AS geom
+            4096, 64, true
+          ) AS geom,
           r.id
         FROM journeys.processed r, bounds
         -- Now use the pre-transformed bounds (in 4326) for intersection test
