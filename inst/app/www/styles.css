@@ -5,6 +5,9 @@
 * {
   font-family: 'Rubik', Helvetica, Sans-Serif;
 }
+.overview-page {
+  background: linear-gradient(to bottom, #c4e8ff 0%, #f7f9fe 100%);
+}
 .tab-pane.active.html-fill-item.html-fill-container.bslib-gap-spacing {
   padding: 0 !important;
 }
@@ -80,7 +83,7 @@ h3 {
   max-width: 60rem;
   z-index: 1;
   position: relative;
-  margin: 200px auto 0 auto;
+  margin: 40px auto 0 auto;
   padding: 0px 20px;
 }
 
@@ -150,7 +153,7 @@ p {
 
 .nav-underline .nav-link.active, .nav-underline .nav-tabs>li>a.active, .nav-underline .nav-pills>li>a.active, .nav-underline :where(ul.nav.navbar-nav > li)>a.active, .nav-underline .show>.nav-link, .nav-underline .in>.nav-link, .nav-underline .nav-tabs>li.show>a, .nav-underline .nav-tabs>li.in>a, .nav-underline .nav-pills>li.show>a, .nav-underline .nav-pills>li.in>a, .nav-underline .show:where(ul.nav.navbar-nav > li)>a, .nav-underline .in:where(ul.nav.navbar-nav > li)>a {
   border: none !important;
-  border-bottom: 2px solid #58A732 !important;
+  border-bottom: 2px solid #72DB41 !important;
 }
 
 .nav-underline .nav-link:not(:empty).active, .nav-underline :where(ul.nav.navbar-nav > li)>a:not(:empty).active, .nav-underline .nav-tabs>li>a:not(:empty).active, .nav-underline .nav-pills>li>a:not(:empty).active {
@@ -180,7 +183,7 @@ p {
   font-size: 0.875rem;
 }
 hr.popup-hr {
-  border-top: 2px solid #58A732;
+  border-top: 2px solid #72DB41;
   margin: 10px -19px 12px;
   opacity: 1;
 }
@@ -232,7 +235,7 @@ hr.data-hr {
 
 /*---------range slider-----------------*/
 .irs--shiny .irs-handle, .irs--shiny .irs-from, .irs--shiny .irs-to, .irs--shiny .irs-single, .irs--shiny .irs-bar {
-  background-color: #58A732 !important;
+  background-color: #72DB41 !important;
 }
 /* .irs.irs--shiny.js-irs-0.irs-with-grid {
   padding: 0 10px;
@@ -242,7 +245,7 @@ hr.data-hr {
   min-height: 56px;
 }
 .nav.nav-pills.card-header-pills>.nav-item>.nav-link.active {
-  color: white !important;
+  color: black !important;
 }
 .cards-container {
   display: grid;
@@ -262,4 +265,8 @@ hr.data-hr {
 /*----------spinner fix-------------*/
 .shiny-spinner-output-container {
   height: 100%;
+}
+
+.tab-pane.html-fill-item.html-fill-containe0r.bslib-gap-spacing.active.show {
+    background: #c4e8ff;
 }

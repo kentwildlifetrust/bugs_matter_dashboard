@@ -12,9 +12,7 @@ mod_overview_ui <- function(id) {
   bslib::page_fillable(
     shiny::div(
       class = "overview-page",
-      shiny::div(
-        class = "overview-background-image"
-      ),
+
       shiny::div(
         class = "overview-page-content",
         shiny::div(
@@ -66,8 +64,8 @@ mod_overview_ui <- function(id) {
                   value = shiny::textOutput(ns("splats")),
                   showcase = tags$i(class = "fa fa-mosquito fa-solid"),
                   theme = bslib::value_box_theme(
-                    bg = "#58A732",
-                    fg = "#FFF"
+                    bg = "#72DB41",
+                    fg = "#000"
                   ),
                   showcase_layout = "top right"
                 )
@@ -80,7 +78,7 @@ mod_overview_ui <- function(id) {
                   value = shiny::textOutput(ns("trend")),
                   showcase = tags$i(class = "fa fa-chart-line-down fa-solid"),
                   theme = bslib::value_box_theme(
-                    bg = "#F46036",
+                    bg = "#000000",
                     fg = "#FFF"
                   ),
                   showcase_layout = "top right"
@@ -155,7 +153,7 @@ greatest proportion of life on Earth."
             shiny::actionButton(
               ns("next_page"),
               shiny::span(
-                style = "color: white;",
+                style = "color: black;",
                 "Track Participation",
                 shiny::tags$i(
                   class = "fa fa-arrow-right"

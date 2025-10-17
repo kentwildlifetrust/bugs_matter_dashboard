@@ -39,7 +39,7 @@ mod_explore_journeys_ui <- function(id) {
     shiny::actionButton(
       ns("next_page"),
       shiny::span(
-        style = "color: white;",
+        style = "color: black;",
         "Analyse trends",
         shiny::tags$i(
           class = "fa fa-arrow-right"

@@ -42,7 +42,7 @@ mod_participation_ui <- function(id) {
     shiny::actionButton(
       ns("next_page"),
       shiny::span(
-        style = "color: white;",
+        style = "color: black;",
         "Explore Journeys",
         shiny::tags$i(
           class = "fa fa-arrow-right"

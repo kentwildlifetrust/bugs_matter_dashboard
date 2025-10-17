@@ -17,7 +17,7 @@ mod_analyse_ui <- function(id) {
   data_header <- shiny::div(
     class = "data-header",
     shiny::h2(
-      "Bug Splat Analysis",
+      "Analysis",
       shiny::actionLink(
         ns("analysis_info"),
         shiny::tags$i(class = "fa fa-info-circle")
@@ -42,7 +42,7 @@ mod_analyse_ui <- function(id) {
         shiny::actionButton(
           ns("next_page"),
           shiny::span(
-            style = "color: white;",
+            style = "color: black;",
             "Get involved",
             shiny::tags$i(
               class = "fa fa-up-right-from-square"
