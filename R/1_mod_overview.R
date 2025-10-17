@@ -27,11 +27,9 @@ mod_overview_ui <- function(id) {
           shiny::tags$br(),
           shiny::p(
             class = "overview-lead",
-            "Here, you can keep up-to-date with the findings of Bugs Matter, the global citizen science
-            survey of ‘bug splats’ on vehicle number plates to monitor flying insect abundance. You can explore
-            where and how many journeys have been recorded, and see information about the lengths of journeys,
-            and the types of vehicles used. You can explore trends in the number of bugs splatted by location and over different time periods.
-            You can also find information on the numbers of users in different parts of the world and how many journeys have been recorded by our top recorders!"
+            "Stay up to date with", tags$strong("Bugs Matter"), " - the global citizen science survey tracking flying insect abundance through ‘bug splats’ on vehicle number plates. 
+            Explore where and how many journeys have been recorded, the distances travelled, and the types of vehicles used. 
+            Discover trends in bug splats across locations and time, and see how our global community of recorders is contributing to the project."
           )
         ),
         shiny::tags$br(),

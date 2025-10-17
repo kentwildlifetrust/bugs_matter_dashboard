@@ -58,6 +58,7 @@ mod_participation_ui <- function(id) {
     height = "100%",
     full_screen = TRUE,
     bslib::card_body(
+      max_height = "calc(100svh - 330px)",
       padding = c(15, 15, 0, 15),
       reactable::reactableOutput(ns("leaderboard"), height = "100%")
     )
@@ -316,7 +317,12 @@ mod_participation_server <- function(id, conn, next_page) {
           ),
           defaultColDef = reactable::colDef(
             align = "left"
-          )
+          ),
+          sortable = TRUE,
+          filterable = TRUE,
+          defaultPageSize = 100,
+          height = "100%",
+          showSortable = TRUE
         )
       } else {
         reactable::reactable(
@@ -344,48 +350,40 @@ mod_participation_server <- function(id, conn, next_page) {
           ),
           defaultColDef = reactable::colDef(
             align = "left"
-          )
+          ),
+          sortable = TRUE,
+          filterable = TRUE,
+          defaultPageSize = 100,
+          showSortable = TRUE
         )
       }
     })
 
           #---------------------cumulative number of journeys-----------------------
       output$cumulative_journeys <- plotly::renderPlotly({
-        years <- if (nchar(input$year) > 4) {
-          rev(bugsMatterDashboard::years)
+        years_vec <- if (nchar(input$year) > 4) {
+          bugsMatterDashboard::years
         } else {
-          input$year
+          as.numeric(input$year)
         }
 
-        p <- plotly::plot_ly(
-          type = "scatter",
-          mode = "lines"
-        )
+        start_year <- min(years_vec, na.rm = TRUE)
+        end_year <- max(years_vec, na.rm = TRUE)
 
-        # Define colors for different years
-        colors <- c("#147331", "#2E8B57", "#3CB371", "#20B2AA")
+        min_date <- sprintf("%s-04-01", start_year)
+        if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
+          max_date <- format(Sys.Date(), "%Y-%m-%d")
+        } else {
+          max_date <- sprintf("%s-10-30", end_year)
+        }
 
-        # Calculate cumulative total from previous years
-        cumulative_previous <- 0
-
-        for (i in seq_along(years)) {
-          year <- years[i]
-          color <- colors[i]
-
-          min_date <- sprintf("%s-04-01", year)
-          # For current year, use today's date, otherwise use Oct 30
-          if (year == as.numeric(format(Sys.Date(), "%Y"))) {
-            max_date <- format(Sys.Date(), "%Y-%m-%d")
-          } else {
-            max_date <- sprintf("%s-10-30", year)
-          }
-          counts <- "
-            WITH daily_counts AS (
+        counts <- "
+          WITH daily_counts AS (
             SELECT
               j.end_timestamp::DATE AS date,
               COUNT(*) AS daily_count
             FROM journeys.processed j
-            WHERE EXTRACT(YEAR FROM j.end_timestamp) = {year}
+            WHERE EXTRACT(YEAR FROM j.end_timestamp) IN ({years*})
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
@@ -406,51 +404,37 @@ mod_participation_server <- function(id, conn, next_page) {
           FROM all_dates
           LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
           ORDER BY all_dates.date;" %>%
-            glue::glue_data_sql(
-              list(
-                year = year,
-                min_date = min_date,
-                max_date = max_date
-              ),
-              .,
-              .con = conn
-            ) %>%
-            DBI::dbGetQuery(conn, .) %>%
-            dplyr::mutate(
-              date = as.Date(date),
-              # Convert to day-of-year for x-axis (Apr 1 = day 1)
-              day_of_year = as.numeric(format(date, "%j")) - as.numeric(format(as.Date(sprintf("%s-04-01", year)), "%j")) + 1,
-              # Add the cumulative total from previous years
-              stacked_cumulative = cumulative_count + cumulative_previous
-            )
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date
+            ),
+            .,
+            .con = conn
+          ) %>%
+          DBI::dbGetQuery(conn, .) %>%
+          dplyr::mutate(date = as.Date(date))
 
-          # Update cumulative total for next year
-          if (nrow(counts) > 0) {
-            cumulative_previous <- cumulative_previous + max(counts$cumulative_count, na.rm = TRUE)
-          }
-
-          p <- p %>%
-            plotly::add_trace(
-              name = as.character(year),
-              y = counts$stacked_cumulative,
-              x = counts$day_of_year,
-              line = list(
-                color = color,
-                width = 3
-              ),
-              showlegend = TRUE
-            )
-        }
-
-        p <- p %>%
+        plotly::plot_ly(
+          type = "scatter",
+          mode = "lines"
+        ) %>%
+          plotly::add_trace(
+            name = "Total",
+            y = counts$cumulative_count,
+            x = counts$date,
+            line = list(
+              color = "#147331",
+              width = 3
+            ),
+            showlegend = FALSE
+          ) %>%
           plotly::layout(
             dragmode = FALSE,
             yaxis = list(title = "Total number of journeys"),
             xaxis = list(
-              title = "Date",
-              tickmode = "array",
-              tickvals = c(1, 32, 62, 93, 123, 154, 184),
-              ticktext = c("Apr 1", "May 1", "Jun 1", "Jul 1", "Aug 1", "Sep 1", "Oct 1")
+              title = "Date"
             )
           ) %>%
           plotly::config(
@@ -461,41 +445,29 @@ mod_participation_server <- function(id, conn, next_page) {
 
     #---------------------distance travelled------------------------#
      output$cumulative_distance <- plotly::renderPlotly({
-        years <- if (nchar(input$year) > 4) {
-          rev(bugsMatterDashboard::years)
+        years_vec <- if (nchar(input$year) > 4) {
+          bugsMatterDashboard::years
         } else {
-          input$year
+          as.numeric(input$year)
         }
 
-        p <- plotly::plot_ly(
-          type = "scatter",
-          mode = "lines"
-        )
+        start_year <- min(years_vec, na.rm = TRUE)
+        end_year <- max(years_vec, na.rm = TRUE)
 
-        # Define colors for different years
-        colors <- c("#147331", "#2E8B57", "#3CB371", "#20B2AA")
+        min_date <- sprintf("%s-04-01", start_year)
+        if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
+          max_date <- format(Sys.Date(), "%Y-%m-%d")
+        } else {
+          max_date <- sprintf("%s-10-30", end_year)
+        }
 
-        # Calculate cumulative total from previous years
-        cumulative_previous <- 0
-
-        for (i in seq_along(years)) {
-          year <- years[i]
-          color <- colors[i]
-
-          min_date <- sprintf("%s-04-01", year)
-          # For current year, use today's date, otherwise use Oct 30
-          if (year == as.numeric(format(Sys.Date(), "%Y"))) {
-            max_date <- format(Sys.Date(), "%Y-%m-%d")
-          } else {
-            max_date <- sprintf("%s-10-30", year)
-          }
-          counts <- "
-            WITH daily_counts AS (
+        counts <- "
+          WITH daily_counts AS (
             SELECT
               j.end_timestamp::DATE AS date,
               SUM(j.distance) AS daily_distance
             FROM journeys.processed j
-            WHERE EXTRACT(YEAR FROM j.end_timestamp) = {year}
+            WHERE EXTRACT(YEAR FROM j.end_timestamp) IN ({years*})
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
@@ -516,51 +488,37 @@ mod_participation_server <- function(id, conn, next_page) {
           FROM all_dates
           LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
           ORDER BY all_dates.date;" %>%
-            glue::glue_data_sql(
-              list(
-                year = year,
-                min_date = min_date,
-                max_date = max_date
-              ),
-              .,
-              .con = conn
-            ) %>%
-            DBI::dbGetQuery(conn, .) %>%
-            dplyr::mutate(
-              date = as.Date(date),
-              # Convert to day-of-year for x-axis (Apr 1 = day 1)
-              day_of_year = as.numeric(format(date, "%j")) - as.numeric(format(as.Date(sprintf("%s-04-01", year)), "%j")) + 1,
-              # Add the cumulative total from previous years
-              stacked_cumulative = cumulative_distance + cumulative_previous
-            )
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date
+            ),
+            .,
+            .con = conn
+          ) %>%
+          DBI::dbGetQuery(conn, .) %>%
+          dplyr::mutate(date = as.Date(date))
 
-          # Update cumulative total for next year
-          if (nrow(counts) > 0) {
-            cumulative_previous <- cumulative_previous + max(counts$cumulative_distance, na.rm = TRUE)
-          }
-
-          p <- p %>%
-            plotly::add_trace(
-              name = as.character(year),
-              y = counts$stacked_cumulative,
-              x = counts$day_of_year,
-              line = list(
-                color = color,
-                width = 3
-              ),
-              showlegend = TRUE
-            )
-        }
-
-        p <- p %>%
+        plotly::plot_ly(
+          type = "scatter",
+          mode = "lines"
+        ) %>%
+          plotly::add_trace(
+            name = "Total",
+            y = counts$cumulative_distance,
+            x = counts$date,
+            line = list(
+              color = "#147331",
+              width = 3
+            ),
+            showlegend = FALSE
+          ) %>%
           plotly::layout(
             dragmode = FALSE,
             yaxis = list(title = "Total distance travelled (km)"),
             xaxis = list(
-              title = "Date",
-              tickmode = "array",
-              tickvals = c(1, 32, 62, 93, 123, 154, 184),
-              ticktext = c("Apr 1", "May 1", "Jun 1", "Jul 1", "Aug 1", "Sep 1", "Oct 1")
+              title = "Date"
             )
           ) %>%
           plotly::config(
@@ -571,105 +529,80 @@ mod_participation_server <- function(id, conn, next_page) {
 
     #---------------signed up users----------------------------------#
     output$cumulative_sign_ups <- plotly::renderPlotly({
-      years <- if (nchar(input$year) > 4) {
-        rev(bugsMatterDashboard::years)
+      years_vec <- if (nchar(input$year) > 4) {
+        bugsMatterDashboard::years
       } else {
-        input$year
+        as.numeric(input$year)
       }
-      p <- plotly::plot_ly(
-         type = "scatter",
-         mode = "lines"
-       )
 
-       # Define colors for different years
-       colors <- c("#147331", "#2E8B57", "#3CB371", "#20B2AA")
+      start_year <- min(years_vec, na.rm = TRUE)
+      end_year <- max(years_vec, na.rm = TRUE)
 
-       # Calculate cumulative total from previous years
-       cumulative_previous <- 0
+      min_date <- sprintf("%s-04-01", start_year)
+      if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
+        max_date <- format(Sys.Date(), "%Y-%m-%d")
+      } else {
+        max_date <- sprintf("%s-10-30", end_year)
+      }
 
-       for (i in seq_along(years)) {
-         year <- years[i]
-         color <- colors[i]
+      counts <- "
+        WITH daily_counts AS (
+          SELECT
+            s.user_created_at::DATE AS date,
+            COUNT(*) AS daily_count
+          FROM sign_ups.raw s
+          WHERE EXTRACT(YEAR FROM s.user_created_at) IN ({years*})
+          GROUP BY s.user_created_at::DATE
+        ), date_bounds AS (
+          SELECT
+            {min_date}::DATE AS min_date,
+            {max_date}::DATE AS max_date
+        ),
+        all_dates AS (
+          SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
+          FROM date_bounds
+        )
+        SELECT
+          all_dates.date,
+          COALESCE(daily_counts.daily_count, 0) AS daily_count,
+          SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
+            ORDER BY all_dates.date
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+          ) AS cumulative_count
+        FROM all_dates
+        LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
+        ORDER BY all_dates.date;" %>%
+        glue::glue_data_sql(
+          list(
+            years = years_vec,
+            min_date = min_date,
+            max_date = max_date
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(date = as.Date(date))
 
-         min_date <- sprintf("%s-04-01", year)
-         # For current year, use today's date, otherwise use Oct 30
-         if (year == as.numeric(format(Sys.Date(), "%Y"))) {
-           max_date <- format(Sys.Date(), "%Y-%m-%d")
-         } else {
-           max_date <- sprintf("%s-10-30", year)
-         }
-         counts <- "
-           WITH daily_counts AS (
-           SELECT
-             s.user_created_at::DATE AS date,
-             COUNT(*) AS daily_count
-           FROM sign_ups.raw s
-           WHERE EXTRACT(YEAR FROM s.user_created_at) = {year}
-           GROUP BY s.user_created_at::DATE
-         ), date_bounds AS (
-           SELECT
-             {min_date}::DATE AS min_date,
-             {max_date}::DATE AS max_date
-         ),
-         all_dates AS (
-           SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
-           FROM date_bounds
-         )
-         SELECT
-           all_dates.date,
-           COALESCE(daily_counts.daily_count, 0) AS daily_count,
-           SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
-             ORDER BY all_dates.date
-             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-           ) AS cumulative_count
-         FROM all_dates
-         LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
-         ORDER BY all_dates.date;" %>%
-           glue::glue_data_sql(
-             list(
-               year = year,
-               min_date = min_date,
-               max_date = max_date
-             ),
-             .,
-             .con = conn
-           ) %>%
-           DBI::dbGetQuery(conn, .) %>%
-           dplyr::mutate(
-             date = as.Date(date),
-             # Convert to day-of-year for x-axis (Apr 1 = day 1)
-             day_of_year = as.numeric(format(date, "%j")) - as.numeric(format(as.Date(sprintf("%s-04-01", year)), "%j")) + 1,
-             # Add the cumulative total from previous years
-             stacked_cumulative = cumulative_count + cumulative_previous
-           )
-
-         # Update cumulative total for next year
-         if (nrow(counts) > 0) {
-           cumulative_previous <- cumulative_previous + max(counts$cumulative_count, na.rm = TRUE)
-         }
-
-         p <- p %>%
-           plotly::add_trace(
-             name = as.character(year),
-             y = counts$stacked_cumulative,
-             x = counts$day_of_year,
-             line = list(
-               color = color,
-               width = 3
-             ),
-             showlegend = TRUE
-           )
-       }
-
-      p <- p %>%
+      plotly::plot_ly(
+        type = "scatter",
+        mode = "lines"
+      ) %>%
+        plotly::add_trace(
+          name = "Total",
+          y = counts$cumulative_count,
+          x = counts$date,
+          line = list(
+            color = "#147331",
+            width = 3
+          ),
+          showlegend = FALSE
+        ) %>%
         plotly::layout(
           dragmode = FALSE,
           yaxis = list(title = "Total registered users"),
           xaxis = list(
-            title = "Date",
-            tickmode = "array",
-            tickvals = c(1, 32, 62, 93, 123, 154, 184),
-            ticktext = c("Apr 1", "May 1", "Jun 1", "Jul 1", "Aug 1", "Sep 1", "Oct 1")
+            title = "Date"
           )
         ) %>%
         plotly::config(

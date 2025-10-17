@@ -362,7 +362,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
           vectorGrid.addTo(this);
         }
       ",
-        ifelse(golem::app_dev(), "http://127.0.0.1:3838", "https://journeys.bugsmatter.org"),
+        ifelse(golem::app_dev(), "http://127.0.0.1:5000", "https://journeys.bugsmatter.org"),
         region_param,
         year_param
       )
@@ -523,15 +523,18 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #---------------------vehicle type bars -----------------------#
 
     output$vehicle_bars <- plotly::renderPlotly({
-      "WITH all_vehicles AS(
-          SELECT DISTINCT (j.vehicle_class) AS vehicle_class
-          FROM journeys.processed j
+      "WITH all_vehicles(vehicle_class) AS (
+          SELECT v FROM (VALUES ('Other'), ('Car'), ('HCV'), ('LCV')) AS t(v)
         )
-        SELECT all_vehicles.vehicle_class, COALESCE(COUNT(*), 0) AS count
+        SELECT
+          CASE WHEN all_vehicles.vehicle_class = 'HCV' THEN 'HGV' ELSE all_vehicles.vehicle_class END AS vehicle_class,
+          COALESCE(COUNT(j.vehicle_class), 0) AS count
         FROM all_vehicles
-        LEFT JOIN journeys.processed j ON all_vehicles.vehicle_class = j.vehicle_class
-        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*})
-        GROUP BY j.vehicle_class, all_vehicles.vehicle_class
+        LEFT JOIN journeys.processed j
+          ON all_vehicles.vehicle_class = j.vehicle_class
+         AND j.region_code IN ({region_codes*})
+         AND j.year IN ({years*})
+        GROUP BY all_vehicles.vehicle_class
         ORDER BY count;" %>%
         glue::glue_data_sql(
           list(

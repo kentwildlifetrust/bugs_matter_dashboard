@@ -253,6 +253,7 @@ hr.data-hr {
   gap: var(--bslib-mb-spacer);
   padding: var(--bslib-mb-spacer);
   height: calc(100svh - 230px);
+  margin-bottom: 33px;
 }
 
 @media only screen and (max-width: 1200px) {
