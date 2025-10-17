@@ -60,7 +60,9 @@ mod_participation_ui <- function(id) {
     bslib::card_body(
       max_height = "calc(100svh - 330px)",
       padding = c(15, 15, 0, 15),
-      reactable::reactableOutput(ns("leaderboard"), height = "100%")
+      shinycssloaders::withSpinner(
+        reactable::reactableOutput(ns("leaderboard"), height = "100%")
+      )
     )
   )
 
@@ -244,6 +246,7 @@ mod_participation_server <- function(id, conn, next_page) {
           GROUP BY s.region_code
         )
           SELECT r.name,
+          r.country_name,
           COALESCE(s.n_sign_ups, 0) AS n_sign_ups,
           COALESCE(COUNT(*), 0) AS n_journeys,
           ROUND(COALESCE(SUM(j.distance), 0)::NUMERIC) AS distance
@@ -251,7 +254,7 @@ mod_participation_server <- function(id, conn, next_page) {
           LEFT JOIN ref.regions r ON j.region_code = r.code
           LEFT JOIN sign_ups s ON j.region_code = s.region_code
           WHERE j.year in ({years*})
-          GROUP BY r.name, s.n_sign_ups
+          GROUP BY r.name, s.n_sign_ups, r.country_name
           ORDER BY n_journeys DESC;
         " %>%
           glue::glue_data_sql(
@@ -263,17 +266,17 @@ mod_participation_server <- function(id, conn, next_page) {
           ) %>%
             DBI::dbGetQuery(conn, .) %>%
             dplyr::mutate(rank = 1:nrow(.)) %>%
-            dplyr::select(rank, name, n_journeys, distance, n_sign_ups)
+            dplyr::select(rank, name, country_name, n_journeys, distance, n_sign_ups)
       } else {
         data <- "
-        SELECT 'User in ' | r.name | AS name,
-        TO_CHAR(s.user_created_at, 'YYYY-MM-DD') AS sign_up_date,
+        SELECT 'User in ' || r.name AS name,
+        EXTRACT(YEAR FROM s.user_created_at)::INT AS sign_up_year,
         COALESCE(COUNT(j.id), 0) AS n_journeys,
         ROUND(COALESCE(SUM(j.distance), 0)::NUMERIC) AS distance
         FROM sign_ups.with_region s
         LEFT JOIN journeys.processed j ON s.id = j.user_id AND j.year in ({years*})
         LEFT JOIN ref.regions r ON s.region_code = r.code
-        GROUP BY s.user_username, r.name, sign_up_date
+        GROUP BY s.user_username, r.name, EXTRACT(YEAR FROM s.user_created_at)
         ORDER BY n_journeys DESC
         LIMIT 20;
         " %>%
@@ -286,7 +289,7 @@ mod_participation_server <- function(id, conn, next_page) {
           ) %>%
             DBI::dbGetQuery(conn, .) %>%
             dplyr::mutate(rank = 1:nrow(.)) %>%
-            dplyr::select(rank, name, n_journeys, distance, sign_up_date)
+            dplyr::select(rank, name, sign_up_year, n_journeys, distance)
       }
 
       # Configure table columns based on view type
@@ -301,6 +304,9 @@ mod_participation_server <- function(id, conn, next_page) {
             ),
             name = reactable::colDef(
               name = "Region"
+            ),
+            country_name = reactable::colDef(
+              name = "Country"
             ),
             n_sign_ups = reactable::colDef(
               name = "Sign-ups",
@@ -336,8 +342,8 @@ mod_participation_server <- function(id, conn, next_page) {
             name = reactable::colDef(
               name = "Username"
             ),
-            sign_up_date = reactable::colDef(
-              name = "Sign-up Date"
+            sign_up_year = reactable::colDef(
+              name = "Sign-up Year"
             ),
             n_journeys = reactable::colDef(
               name = "Journeys",
