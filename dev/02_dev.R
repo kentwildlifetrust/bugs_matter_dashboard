@@ -86,7 +86,7 @@ conn <- DBI::dbConnect(
   drv = RPostgres::Postgres(),
   host = "kwt-postgresql-azdb-1.postgres.database.azure.com",
   port = 5432,
-  dbname = "shared",
+  dbname = "bugs_matter",
   user = Sys.getenv("USER"),
   password = Sys.getenv("PASSWORD"),
   sslmode = "prefer"
@@ -131,6 +131,11 @@ region_choices <- lapply(
   }
 ) %>%
   setNames(countries$name)
+
+region_choices <- c(
+  list(`All regions` = "world"),
+  region_choices
+)
 
 usethis::use_data(region_choices, overwrite = TRUE)
 

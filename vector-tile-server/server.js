@@ -27,6 +27,49 @@ app.use(cors({
   methods: ['GET']       // Specify allowed HTTP methods
 }));
 
+// world all years
+app.get('/tiles/world/:z/:x/:y.pbf', async (req, res) => {
+  const { z, x, y } = req.params;
+  // Build the SQL query with parameter substitution (using template literals or parameterized queries)
+  const sql = `
+    WITH
+      -- Compute tile envelope once and transform it to EPSG:4326
+      bounds AS (
+        SELECT public.ST_Transform(public.ST_TileEnvelope($1, $2, $3), 4326) AS geom
+      ),
+      mvt_data AS (
+        SELECT
+          public.ST_AsMVTGeom(
+            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
+            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            4096, 64, true
+          ) AS geom,
+          r.id
+        FROM journeys.processed r, bounds
+        -- Now use the pre-transformed bounds (in 4326) for intersection test
+        WHERE public.ST_Intersects(r.geom, bounds.geom)
+      )
+    SELECT public.ST_AsMVT(mvt_data.*, 'lines', 4096, 'geom') AS tile
+    FROM mvt_data;
+  `;
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(sql, [z, x, y]);
+    client.release();
+
+    if (result.rows.length > 0 && result.rows[0].tile) {
+      res.setHeader('Content-Type', 'application/x-protobuf');
+      res.send(result.rows[0].tile);
+    } else {
+      res.status(204).send(); // No content if nothing matches
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Tile generation error");
+  }
+});
+
 // country all years
 app.get('/tiles/countries/:country/:z/:x/:y.pbf', async (req, res) => {
   const { country, z, x, y } = req.params;
@@ -70,6 +113,51 @@ app.get('/tiles/countries/:country/:z/:x/:y.pbf', async (req, res) => {
     res.status(500).send("Tile generation error");
   }
 });
+
+// world by year
+app.get('/tiles/world/years/:year/:z/:x/:y.pbf', async (req, res) => {
+  const { year, z, x, y } = req.params;
+  // Build the SQL query with parameter substitution (using template literals or parameterized queries)
+  const sql = `
+    WITH
+      -- Compute tile envelope once and transform it to EPSG:4326
+      bounds AS (
+        SELECT public.ST_Transform(public.ST_TileEnvelope($1, $2, $3), 4326) AS geom
+      ),
+      mvt_data AS (
+        SELECT
+          public.ST_AsMVTGeom(
+            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
+            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            4096, 64, true
+          ) AS geom,
+          r.id
+        FROM journeys.processed r, bounds
+        -- Now use the pre-transformed bounds (in 4326) for intersection test
+        WHERE public.ST_Intersects(r.geom, bounds.geom)
+        AND r.year = $4
+      )
+    SELECT public.ST_AsMVT(mvt_data.*, 'lines', 4096, 'geom') AS tile
+    FROM mvt_data;
+  `;
+
+  try {
+    const client = await pool.connect();
+    const result = await client.query(sql, [z, x, y, year]);
+    client.release();
+
+    if (result.rows.length > 0 && result.rows[0].tile) {
+      res.setHeader('Content-Type', 'application/x-protobuf');
+      res.send(result.rows[0].tile);
+    } else {
+      res.status(204).send(); // No content if nothing matches
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Tile generation error");
+  }
+});
+
 
 // UK by year
 app.get('/tiles/countries/:country/years/:year/:z/:x/:y.pbf', async (req, res) => {

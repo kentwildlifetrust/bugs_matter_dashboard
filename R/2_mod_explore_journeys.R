@@ -32,7 +32,7 @@ mod_explore_journeys_ui <- function(id) {
         ns("region"),
         "Region",
         choices = bugsMatterDashboard::region_choices,
-        selected = "GBR",
+        selected = "world",
         width = 250
       )
     ),
@@ -280,12 +280,29 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       shiny::removeModal()
     })
 
+    
+
+    region_codes <- reactive({
+      #3 character values are country codes
+      if (input$region == "world") {
+        bugsMatterDashboard::regions %>%
+          dplyr::pull(code)
+      } else if (nchar(input$region) == 3) {
+        bugsMatterDashboard::regions %>%
+          dplyr::filter(country_code == input$region) %>%
+          dplyr::pull(code)
+      } else {
+        input$region
+      }
+    })
+
     #---------------------journeys map-----------------------#
 
     output$map <- leaflet::renderLeaflet({
       map <- leaflet::leaflet(
         options = leaflet::leafletOptions(maxZoom = 12, zoomControl = FALSE)
       ) %>%
+        leaflet::setMaxBounds(-12 - 10, 30 - 10, 35 + 10, 61 + 10) %>%
         leaflet::addProviderTiles("CartoDB.Positron")
 
       #get regions for the selected country
@@ -326,7 +343,9 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
           lat2 = bbox$ymax
         )
 
-      region_param <- if (nchar(input$region) == 3) {
+      region_param <- if (input$region == "world") {
+        "world"
+      } else if (nchar(input$region) == 3) {
         paste0("countries/", input$region)
       } else {
         paste0("regions/", input$region)
@@ -369,18 +388,6 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
 
       map %>%
         htmlwidgets::onRender(vector_grid_js)
-    })
-
-
-    region_codes <- reactive({
-      #3 character values are country codes
-      if (nchar(input$region) == 3) {
-        bugsMatterDashboard::regions %>%
-          dplyr::filter(country_code == input$region) %>%
-          dplyr::pull(code)
-      } else {
-        input$region
-      }
     })
 
     years <- reactive({
@@ -535,7 +542,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
          AND j.region_code IN ({region_codes*})
          AND j.year IN ({years*})
         GROUP BY all_vehicles.vehicle_class
-        ORDER BY count;" %>%
+        ORDER BY vehicle_class DESC;" %>%
         glue::glue_data_sql(
           list(
             region_codes = region_codes(),
