@@ -22,25 +22,20 @@ app_ui <- function(request) {
         mod_overview_ui("overview_1")
       ),
       bslib::nav_panel(
-        title = "Participation",
-        value = 2,
-        mod_participation_ui("participation_1")
-      ),
-      bslib::nav_panel(
         title = "Journeys",
-        value = 3,
+        value = 2,
         mod_explore_journeys_ui("explore_journeys_1")
       ),
       bslib::nav_panel(
         title = "Trends",
-        value = 4,
-        mod_analyse_ui("analyse_1")
+        value = 3,
+        mod_trends_ui("trends_1")
       ),
-      # bslib::nav_panel(
-      #   title = "Get Involved",
-      #   value = 5,
-      #   mod_get_involved_ui("get_involved_1")
-      # ),
+      bslib::nav_panel(
+        title = "Participation",
+        value = 4,
+        mod_participation_ui("participation_1")
+      ),
       theme = theme()
     )
 

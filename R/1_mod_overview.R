@@ -154,7 +154,7 @@ greatest proportion of life on Earth."
               ns("next_page"),
               shiny::span(
                 style = "color: black;",
-                "Track Participation",
+                "Explore journeys",
                 shiny::tags$i(
                   class = "fa fa-arrow-right"
                 ),
@@ -228,7 +228,7 @@ mod_overview_server <- function(id, conn, next_page) {
     }) %>%
       bindCache(
         3,
-        cache = "app"
+        cache = cachem::cache_disk("./cache")
       )
 
     output$map <- leaflet::renderLeaflet({

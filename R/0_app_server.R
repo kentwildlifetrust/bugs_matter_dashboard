@@ -31,7 +31,5 @@ app_server <- function(input, output, session) {
   mod_overview_server("overview_1", conn, next_page)
   mod_participation_server("participation_1", conn, next_page)
   mod_explore_journeys_server("explore_journeys_1", conn, next_page)
-  mod_analyse_server("analyse_1", conn, next_page)
-  # mod_get_involved_server("get_involved_1", conn)
+  mod_trends_server("trends_1", conn, next_page)
 }
-##
