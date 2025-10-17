@@ -169,6 +169,62 @@ mod_explore_journeys_ui <- function(id) {
       shiny::tagAppendAttributes(style = "position: relative;")
   )
 
+  speed_panel <- bslib::nav_panel(
+    "Speed",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("speed_histogram"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("speed_histogram_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+  
+  time_of_day_panel <- bslib::nav_panel(
+    "Time of day",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("time_of_day_histogram"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("time_of_day_histogram_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+
   vehicle_type_panel <- bslib::nav_panel(
     "Vehicle type",
     bslib::card_body(
@@ -189,6 +245,33 @@ mod_explore_journeys_ui <- function(id) {
             style = "font-size: 1.5rem;"
           ),
           "This bar plot shows how many journeys were recorded in different vehicle types. Most journeys are recorded in cars.",
+          placement = "bottom"
+        )
+      )
+    ) %>%
+      shiny::tagAppendAttributes(style = "position: relative;")
+  )
+
+  land_cover_panel <- bslib::nav_panel(
+    "Land cover",
+    bslib::card_body(
+      padding = c(15, 0, 10, 0),
+      min_height = 400,
+      shinycssloaders::withSpinner(
+        plotly::plotlyOutput(
+          ns("land_cover_jitter"),
+          height = "100%"
+        )
+      ),
+      div(
+        style = "position: absolute; top: 5px; right: 20px;",
+        bslib::popover(
+          shiny::actionLink(
+            ns("land_cover_jitter_info"),
+            shiny::tags$i(class = "fa fa-info-circle"),
+            style = "font-size: 1.5rem;"
+          ),
+          "This jitter plot shows the distribution of land cover proportions for each journey. Each point represents the proportion of a specific land cover type encountered during a journey.",
           placement = "bottom"
         )
       )
@@ -223,7 +306,10 @@ mod_explore_journeys_ui <- function(id) {
         distance_panel,
         elevation_panel,
         day_of_year_panel,
-        vehicle_type_panel
+        speed_panel,
+        time_of_day_panel,
+        vehicle_type_panel,
+        land_cover_panel
       ) %>%
         htmltools::tagAppendAttributes(style = "flex: 1; margin-bottom: 0;")
     )
@@ -527,6 +613,77 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       )
     })
 
+    #---------------------speed histogram -----------------------#
+
+    output$speed_histogram <- plotly::renderPlotly({
+      "SELECT avg_speed_kmh
+        FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
+        glue::glue_data_sql(
+          list(
+            region_codes = region_codes(),
+            years = years()
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("avg_speed_kmh") %>%
+      plotly::plot_ly(
+        x = .,
+        type = "histogram",
+        marker = list(color = "#147331"),
+        name = ""
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(title = "Number of Journeys"),
+        xaxis = list(title = "Average speed (km/h)")
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
+    })
+
+    #---------------------time of day histogram -----------------------#
+
+    output$time_of_day_histogram <- plotly::renderPlotly({
+      "SELECT time_of_day
+        FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
+        glue::glue_data_sql(
+          list(
+            region_codes = region_codes(),
+            years = years()
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("time_of_day") %>%
+        # Build POSIXct timestamps using a fixed date so Plotly treats as date/time
+        { paste0("2000-01-01 ", ., ":00") } %>%
+        { as.POSIXct(., format = "%Y-%m-%d %H:%M:%S", tz = "UTC") } %>%
+      plotly::plot_ly(
+        x = .,
+        type = "histogram",
+        marker = list(color = "#147331"),
+        name = ""
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(title = "Number of Journeys"),
+        xaxis = list(
+          title = "Time of day",
+          type = "date",
+          tickformat = "%H:%M"
+        )
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
+    })
+
     #---------------------vehicle type bars -----------------------#
 
     output$vehicle_bars <- plotly::renderPlotly({
@@ -576,6 +733,72 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       next_page(next_page() + 1)
     })
 
+    #---------------------land cover jitter -----------------------#
+
+    output$land_cover_jitter <- plotly::renderPlotly({
+      land_cover_data <- "SELECT forest, shrubland, arable, urban, grassland, wetland, marine, pasture
+        FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
+        glue::glue_data_sql(
+          list(
+            region_codes = region_codes(),
+            years = years()
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        # Reshape data from wide to long format for jitter plot
+        tidyr::pivot_longer(
+          cols = everything(),
+          names_to = "land_cover_type",
+          values_to = "proportion"
+        ) %>%
+        # Clean up land cover type names
+        dplyr::mutate(
+          land_cover_type = dplyr::case_when(
+            land_cover_type == "rural_garden" ~ "Rural Garden",
+            land_cover_type == "shrubland" ~ "Shrubland",
+            TRUE ~ stringr::str_to_title(land_cover_type)
+          )
+        )
+      land_cover_levels <- sort(unique(land_cover_data$land_cover_type))
+      land_cover_data <- land_cover_data %>%
+        dplyr::mutate(
+          level_index = as.numeric(factor(land_cover_type, levels = land_cover_levels)),
+          x_jitter = level_index + stats::runif(dplyr::n(), -0.25, 0.25)
+        )
+
+      plotly::plot_ly(
+        data = land_cover_data,
+        x = ~x_jitter,
+        y = ~proportion,
+        type = "scatter",
+        mode = "markers",
+        marker = list(
+          color = "#147331",
+          opacity = 0.6,
+          size = 4
+        )
+      ) %>%
+      plotly::layout(
+        dragmode = FALSE,
+        yaxis = list(
+          title = "Proportion Coverage",
+          range = c(0, 1)
+        ),
+        xaxis = list(
+          title = "Land cover type",
+          tickangle = 45,
+          tickmode = "array",
+          tickvals = seq_along(land_cover_levels),
+          ticktext = land_cover_levels
+        )
+      ) %>%
+      plotly::config(
+        displayModeBar = FALSE
+      )
+    })
 
     # output$map <- leaflet::renderLeaflet({
     #   map <- leaflet::leaflet() %>%
