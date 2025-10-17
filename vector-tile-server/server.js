@@ -40,8 +40,18 @@ app.get('/tiles/world/:z/:x/:y.pbf', async (req, res) => {
       mvt_data AS (
         SELECT
           public.ST_AsMVTGeom(
-            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
-            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            public.ST_Simplify(
+              public.ST_Transform(r.geom, 3857), 
+              CASE 
+                WHEN $1 <= 3 THEN 4000  
+                WHEN $1 <= 4 THEN 2000 
+                WHEN $1 <= 8 THEN 500
+                WHEN $1 <= 10 THEN 100 
+                WHEN $1 <= 12 THEN 20 
+                ELSE 5               
+              END
+            ), 
+            public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
           r.id
@@ -76,20 +86,28 @@ app.get('/tiles/countries/:country/:z/:x/:y.pbf', async (req, res) => {
   // Build the SQL query with parameter substitution (using template literals or parameterized queries)
   const sql = `
     WITH
-      -- Compute tile envelope once and transform it to EPSG:4326
       bounds AS (
         SELECT public.ST_Transform(public.ST_TileEnvelope($1, $2, $3), 4326) AS geom
       ),
       mvt_data AS (
         SELECT
           public.ST_AsMVTGeom(
-            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
-            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            public.ST_Simplify(
+              public.ST_Transform(r.geom, 3857), 
+              CASE 
+                WHEN $1 <= 3 THEN 4000  
+                WHEN $1 <= 4 THEN 2000 
+                WHEN $1 <= 8 THEN 500
+                WHEN $1 <= 10 THEN 100 
+                WHEN $1 <= 12 THEN 20 
+                ELSE 5               
+              END
+            ), 
+            public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
           r.id
         FROM journeys.processed r, bounds
-        -- Now use the pre-transformed bounds (in 4326) for intersection test
         WHERE public.ST_Intersects(r.geom, bounds.geom)
         AND country_code=$4
       )
@@ -127,10 +145,20 @@ app.get('/tiles/world/years/:year/:z/:x/:y.pbf', async (req, res) => {
       mvt_data AS (
         SELECT
           public.ST_AsMVTGeom(
-            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
-            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
-            4096, 64, true
-          ) AS geom,
+            public.ST_Simplify(
+              public.ST_Transform(r.geom, 3857), 
+              CASE 
+                WHEN $1 <= 3 THEN 4000  
+                WHEN $1 <= 4 THEN 2000 
+                WHEN $1 <= 8 THEN 500
+                WHEN $1 <= 10 THEN 100 
+                WHEN $1 <= 12 THEN 20 
+                ELSE 5               
+              END
+            ), 
+            public.ST_TileEnvelope($1, $2, $3),
+            4096, 64, true,
+          ) AS geom
           r.id
         FROM journeys.processed r, bounds
         -- Now use the pre-transformed bounds (in 4326) for intersection test
@@ -165,20 +193,28 @@ app.get('/tiles/countries/:country/years/:year/:z/:x/:y.pbf', async (req, res) =
   // Build the SQL query with parameter substitution (using template literals or parameterized queries)
   const sql = `
     WITH
-      -- Compute tile envelope once and transform it to EPSG:4326
       bounds AS (
         SELECT public.ST_Transform(public.ST_TileEnvelope($1, $2, $3), 4326) AS geom
       ),
       mvt_data AS (
         SELECT
           public.ST_AsMVTGeom(
-            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
-            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            public.ST_Simplify(
+              public.ST_Transform(r.geom, 3857), 
+              CASE 
+                WHEN $1 <= 3 THEN 4000  
+                WHEN $1 <= 4 THEN 2000 
+                WHEN $1 <= 8 THEN 500
+                WHEN $1 <= 10 THEN 100 
+                WHEN $1 <= 12 THEN 20 
+                ELSE 5               
+              END
+            ),
+            public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
           r.id
         FROM journeys.processed r, bounds
-        -- Now use the pre-transformed bounds (in 4326) for intersection test
         WHERE public.ST_Intersects(r.geom, bounds.geom)
         AND r.year = $4
         AND country_code=$5
@@ -211,20 +247,28 @@ app.get('/tiles/regions/:region/:z/:x/:y.pbf', async (req, res) => {
   // ChatGPT made this optimised query to generate .pbf tiles dynamically
   const query = `
     WITH
-      -- Compute tile envelope once and transform it to EPSG:4326
       bounds AS (
         SELECT public.ST_Transform(public.ST_TileEnvelope($1, $2, $3), 4326) AS geom
       ),
       mvt_data AS (
         SELECT
           public.ST_AsMVTGeom(
-            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
-            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            public.ST_Simplify(
+              public.ST_Transform(r.geom, 3857), 
+              CASE 
+                WHEN $1 <= 3 THEN 4000  
+                WHEN $1 <= 4 THEN 2000 
+                WHEN $1 <= 8 THEN 500
+                WHEN $1 <= 10 THEN 100 
+                WHEN $1 <= 12 THEN 20 
+                ELSE 5               
+              END
+            ),
+            public.ST_TileEnvelope($1, $2, $3), 
             4096, 64, true
           ) AS geom,
           r.id
         FROM journeys.processed r, bounds
-        -- Now use the pre-transformed bounds (in 4326) for intersection test
         WHERE public.ST_Intersects(r.geom, bounds.geom) AND
         r.region_code=$4
       )
@@ -256,20 +300,28 @@ app.get('/tiles/regions/:region/years/:year/:z/:x/:y.pbf', async (req, res) => {
   // ChatGPT made this optimised query to generate .pbf tiles dynamically
   const query = `
     WITH
-      -- Compute tile envelope once and transform it to EPSG:4326
       bounds AS (
         SELECT public.ST_Transform(public.ST_TileEnvelope($1, $2, $3), 4326) AS geom
       ),
       mvt_data AS (
         SELECT
           public.ST_AsMVTGeom(
-            public.ST_Transform(r.geom, 3857),  -- transform feature to 3857 for tile encoding
-            public.ST_TileEnvelope($1, $2, $3),      -- use the original tile envelope in 3857
+            public.ST_Simplify(
+              public.ST_Transform(r.geom, 3857), 
+              CASE 
+                WHEN $1 <= 3 THEN 4000  
+                WHEN $1 <= 4 THEN 2000 
+                WHEN $1 <= 8 THEN 500
+                WHEN $1 <= 10 THEN 100 
+                WHEN $1 <= 12 THEN 20 
+                ELSE 5               
+              END
+            ),
+            public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
           r.id
         FROM journeys.processed r, bounds
-        -- Now use the pre-transformed bounds (in 4326) for intersection test
         WHERE public.ST_Intersects(r.geom, bounds.geom) AND
         r.region_code=$4 AND
         r.year = $5
