@@ -27,8 +27,8 @@ mod_overview_ui <- function(id) {
           shiny::tags$br(),
           shiny::p(
             class = "overview-lead",
-            "Stay up to date with", tags$strong("Bugs Matter"), " - the global citizen science survey tracking flying insect abundance through ‘bug splats’ on vehicle number plates. 
-            Explore where and how many journeys have been recorded, the distances travelled, and the types of vehicles used. 
+            "Stay up to date with", tags$strong("Bugs Matter"), " - the global citizen science survey tracking flying insect abundance through ‘bug splats’ on vehicle number plates.
+            Explore where and how many journeys have been recorded, the distances travelled, and the types of vehicles used.
             Discover trends in bug splats across locations and time, and see how our global community of recorders is contributing to the project."
           )
         ),
@@ -72,7 +72,7 @@ mod_overview_ui <- function(id) {
                 class = "col-sm",
                 bslib::value_box(
                   class = "overview-value-box",
-                  title = "Change in splat rate 2021 - 2024",
+                  title = "Yearly change in splat rate 2021 - 2025",
                   value = shiny::textOutput(ns("trend")),
                   showcase = tags$i(class = "fa fa-chart-line-down fa-solid"),
                   theme = bslib::value_box_theme(
@@ -85,7 +85,7 @@ mod_overview_ui <- function(id) {
             ),
             shiny::tags$br(),
             bslib::navset_card_pill(
-              title = "Modelled change in splat rate, 2021 to 2024",
+              title = "Modelled change in splat rate, 2021 to 2025",
               bslib::card_body(
                 class = "p-0",
                 leaflet::leafletOutput(ns("map"), height = "100%"),
@@ -173,7 +173,7 @@ mod_overview_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    pal <- leaflet::colorNumeric("Spectral", -100:100)
+    pal <- leaflet::colorNumeric("Spectral", -50:50)
 
     output$distance <- shiny::renderText({
         "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS length FROM journeys.processed;" %>%
@@ -191,43 +191,14 @@ mod_overview_server <- function(id, conn, next_page) {
     })
 
     output$trend <- shiny::renderText({
-      mod <- DBI::dbGetQuery(
+      DBI::dbGetQuery(
         conn,
-        "SELECT year::TEXT,
-          distance,
-          avg_speed_kmh,
-          vehicle_class,
-          time_of_day,
-          day_of_year,
-          elevation,
-          temperature,
-          forest,
-          grassland,
-          wetland,
-          arable,
-          urban,
-          log_cm_km_offset,
-          splat_count
-        FROM journeys.processed
-        WHERE region_code IS NOT NULL
-        AND year >= 2021;"
+        "SELECT est FROM analysis.yearly_change WHERE region = 'global' LIMIT 1;"
       ) %>%
-        model()
-
-      est <- cbind(Estimate = coef(mod), confint(mod))
-
-      est1 <- round((1 - exp(est)) * 100, 3) %>% # to show as decrease
-        format(scientific = FALSE) %>% #this one for reporting
-        as.data.frame()
-      trend <- est1$Estimate[row.names(est1) == "Year2024"] %>%
-        as.numeric() %>%
-        round(1)
-      paste0("-", trend, "%")
-    }) %>%
-      bindCache(
-        3,
-        cache = cachem::cache_disk("./cache")
-      )
+        dplyr::pull("est") %>%
+        round(1) %>%
+        paste0("%")
+    })
 
     output$map <- leaflet::renderLeaflet({
       leaflet::leaflet(
@@ -238,28 +209,45 @@ mod_overview_server <- function(id, conn, next_page) {
     })
 
     shiny::observe({
+      data <- sf::st_read(
+        conn,
+        query = "SELECT -1 * round(t.est, 1) AS est,
+        r.name,
+        -1 * round(t.low, 1) AS low,
+        -1 * round(t.high, 1) AS high,
+        t.p_value,
+        st_x(st_centroid(r.geom)) AS lon,
+        st_y(st_centroid(r.geom)) AS lat,
+        r.geom
+        FROM ref.regions r
+        LEFT JOIN analysis.yearly_change t ON r.code = t.region
+        WHERE r.code IN (
+          SELECT DISTINCT region_code FROM journeys.processed
+        );"
+      )
       leaflet::leafletProxy("map") %>%
         leaflet::addPolygons(
-          data = bugsMatterDashboard::region_trends,
+          data = data,
           color = "gray",
           weight = 1,
           opacity = 1,
           fillOpacity = 0.5,
-          fillColor = ~ pal(estimate),
+          fillColor = ~ pal(est),
           popup = ~ mapply(
             function(region_name,
-                     estimate,
+                     est,
                      low,
-                     high) {
-              if (!is.na(estimate)) {
+                     high,
+                     p_value) {
+              if (!is.na(est)) {
                 return(sprintf(
                   '<div class="popup-title">%s</div>
                   <hr class="popup-hr" />
-                  <div class="map-stat-large">%s%%</div>
-                  <div class="map-stat-small">Change in splat rate between 2021 and 2024.<div><br>
+                  <div class="map-stat-small">Statistically significant trend<div>
+                  <span class="map-stat-large">%s%% </span>per year<br></br>
                   <div class="map-stat-small">95%% confidence interval: %s%% to %s%%</div>',
                   region_name,
-                  estimate,
+                  est,
                   low,
                   high
                 ))
@@ -267,22 +255,23 @@ mod_overview_server <- function(id, conn, next_page) {
                 return(sprintf(
                   '<div class="popup-title">%s</div>
                 <hr class="popup-hr" />
-                <div class="map-stat-small">Insufficient data</div>',
+                <div class="map-stat-small">No statistically significant trend</div>',
                   region_name
                 ))
               }
             },
-            region_name,
-            estimate,
+            name,
+            est,
             low,
             high,
+            p_value,
             SIMPLIFY = FALSE
           ) %>%
             unname()
         ) %>%
         leaflet::addLabelOnlyMarkers(
-          lat = bugsMatterDashboard::region_centres$lat,
-          lng = bugsMatterDashboard::region_centres$lng,
+          lat = data$lat,
+          lng = data$lon,
           label = mapply(
             function(low, high) {
               if (is.na(low) | is.na(high)) {
@@ -296,8 +285,8 @@ mod_overview_server <- function(id, conn, next_page) {
               }
               return('<i class="fa fa-solid fa-minus map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
             },
-            low = bugsMatterDashboard::region_centres$low,
-            high = bugsMatterDashboard::region_centres$high,
+            low = data$low,
+            high = data$high,
             SIMPLIFY = FALSE
           ) %>%
             lapply(htmltools::HTML),
@@ -309,8 +298,10 @@ mod_overview_server <- function(id, conn, next_page) {
         ) %>%
         leaflet::addLegend(
           pal = pal,
-          values = bugsMatterDashboard::region_trends$estimate,
-          opacity = 1
+          values = data$est,
+          opacity = 1,
+          title = "Annual change in splat rate",
+          labFormat = leaflet::labelFormat(suffix = "%")
         )
     })
 

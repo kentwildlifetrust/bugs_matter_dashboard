@@ -33,7 +33,7 @@ mod_trends_ui <- function(id) {
         ns("region"),
         "Region",
         choices = bugsMatterDashboard::region_choices,
-        selected = "GBR",
+        selected = "world",
         width = 250
       ),
       uiOutput(ns("slider_input"))
@@ -243,7 +243,10 @@ mod_trends_server <- function(id, conn, next_page) {
 
     region_codes <- reactive({
       #3 character values are country codes
-      if (nchar(input$region) == 3) {
+      if (input$region == "world") {
+        bugsMatterDashboard::regions %>%
+          dplyr::pull(code)
+      } else if (nchar(input$region) == 3) {
         bugsMatterDashboard::regions %>%
           dplyr::filter(country_code == input$region) %>%
           dplyr::pull(code)
@@ -255,25 +258,31 @@ mod_trends_server <- function(id, conn, next_page) {
     mod <- shiny::reactive({
       req(input$year)
       req(length(input$year) == 2)
-      journeys <- "SELECT year::TEXT,
+      journeys <- "SELECT year,
           distance,
           avg_speed_kmh,
           vehicle_class,
+          vehicle_height,
           time_of_day,
           day_of_year,
           elevation,
           temperature,
-          forest,
-          grassland,
-          wetland,
-          arable,
-          urban,
+          center_lat,
+          center_lon,
+          midpoint_time,
+          forest * 100 AS forest,
+          shrubland * 100 AS shrubland,
+          grassland * 100 AS grassland,
+          wetland * 100 AS wetland,
+          arable * 100 AS arable,
+          urban * 100 AS urban,
+          pasture * 100 AS pasture,
+          marine * 100 AS marine,
           log_cm_km_offset,
           splat_count
-      FROM journeys.processed
-      WHERE region_code IN ({region_codes*})
-      AND region_code IS NOT NULL
-      AND year >= {baseline_year} AND year <= {comparison_year};" %>%
+        FROM journeys.processed
+        WHERE region_code IS NOT NULL AND region_code IN ({region_codes*})
+        AND year >= {baseline_year} AND year <= {comparison_year};" %>%
         glue::glue_data_sql(
           list(
             region_codes = region_codes(),
@@ -284,7 +293,12 @@ mod_trends_server <- function(id, conn, next_page) {
           .con = conn
         ) %>%
         DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(year = relevel(as.factor(.$year), ref = as.character(max(input$year[1], min(as.numeric(.$year))))))
+        dplyr::mutate(
+          vehicle_class = as.factor(vehicle_class),
+          year = as.integer(year),
+          time_of_day = as.numeric(lubridate::hms(format(midpoint_time, "%H:%M:%S"))) / 3600,
+          temperature = ifelse(is.na(temperature), mean(.$temperature, na.rm = TRUE), temperature)
+        )
       tryCatch(
         model(journeys),
         error = function(e) {
@@ -295,10 +309,31 @@ mod_trends_server <- function(id, conn, next_page) {
     })
 
     forest_data <- shiny::reactive({
-      mod() %>%
-        broom::tidy(conf.int = TRUE, exponentiate = TRUE) %>%
+      est <- confint(mod(), parm = "beta_", level = 0.95) %>%
+        as.data.frame()
+      est1 <- est[rownames(est) != "(Intercept)", , drop = FALSE]
+      pvals <- summary(mod())$coefficients$cond[, 4]
+      pvals <- data.frame(
+        term = names(pvals),
+        p_value = unname(pvals)
+      )
+      est2 <- 1 - exp(est1)
+      est2 <- est2 %>%
+          as.data.frame() %>%
+          dplyr::mutate(term = row.names(est1)) %>%
+          dplyr::left_join(
+            pvals,
+            by = "term"
+          ) %>%
+          dplyr::rename(
+            low = "2.5 %",
+            high = "97.5 %",
+            estimate = "Estimate"
+          )
+      row.names(est2) <- est2$term
+      est2 %>%
         dplyr::filter(!term %in% c("(Intercept)", "stats::offset(log_cm_km_offset)")) %>%
-        dplyr::arrange(dplyr::desc(estimate)) %>%
+        dplyr::arrange(estimate) %>%
         dplyr::mutate(term = dplyr::case_when(
           term == "Time.of.day" ~ "Time of Day",
           term == "Temperature" ~ "Temperature",
@@ -315,9 +350,10 @@ mod_trends_server <- function(id, conn, next_page) {
         ))
     }) %>%
       shiny::bindCache(
+        x = .,
         input$region,
         input$year,
-        cache = "app"
+        cache = cachem::cache_disk("./.cache")
       )
 
     add_forest_trace <- function(p, model_data, color) {
@@ -332,8 +368,8 @@ mod_trends_server <- function(id, conn, next_page) {
         error_x = list(
           type = "data",
           symmetric = FALSE,
-          array = model_data$conf.high - model_data$conf.low,
-          arrayminus = model_data$estimate - model_data$conf.low,
+          array = model_data$estimate - model_data$low,
+          arrayminus = model_data$estimate - model_data$low,
           color = color
         ),
         marker = list(size = 10, color = color),
@@ -343,7 +379,7 @@ mod_trends_server <- function(id, conn, next_page) {
         hovertext = ~ paste0(
           "Variable: ", term, "<br>",
           "Estimate: ", label, "<br>",
-          "CI: [", round(conf.low, 2), ", ", round(conf.high, 2), "]<br>"
+          "CI: [", round(low, 2), ", ", round(high, 2), "]<br>"
         )
       )
     }
@@ -353,34 +389,24 @@ mod_trends_server <- function(id, conn, next_page) {
         dplyr::mutate(
           term = factor(term, levels = term),
           sig = dplyr::case_when(
-            p.value < 0.001 ~ "***",
-            p.value < 0.01 ~ "**",
-            p.value < 0.05 ~ "*",
+            p_value < 0.001 ~ "***",
+            p_value < 0.01 ~ "**",
+            p_value < 0.05 ~ "*",
             TRUE ~ ""
           ),
           color = dplyr::case_when(
-            conf.high < 1 ~ "red",
-            conf.low > 1 ~ "green",
+            p_value > 0.05 ~ "darkgray",
+            estimate < 0 ~ "red",
+            estimate > 0 ~ "green",
             .default = "darkgray"
           )
         ) %>%
         dplyr::mutate(
-          label = ifelse(
-            estimate < 0.01,
-            paste("< 0.01", sig),
-            ifelse(
-              estimate > 100,
-              paste("> 100", sig),
-              paste(format(round(estimate, 2), nsmall = 2), sig)
-            )
-          )
+          label = paste(format(round(estimate, 2), nsmall = 2), sig)
         )
+      print(model_data)
       p <- plotly::plot_ly() %>%
         # Add green points (sig > 1)
-        add_forest_trace(
-          model_data = dplyr::filter(model_data, color == "green"),
-          color = "green"
-        ) %>%
         add_forest_trace(
           model_data = dplyr::filter(model_data, color == "red"),
           color = "red"
@@ -389,12 +415,16 @@ mod_trends_server <- function(id, conn, next_page) {
           model_data = dplyr::filter(model_data, color == "darkgray"),
           color = "darkgray"
         ) %>%
+        add_forest_trace(
+          model_data = dplyr::filter(model_data, color == "green"),
+          color = "green"
+        ) %>%
         plotly::layout(
           xaxis = list(
-            title = "Incidence rate ratios",
-            type = "log",
-            tickvals = c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100),
-            ticktext = c("0.0001", "0.001", "0.01", "0.1", "1", "10", "100"),
+            title = "Effect",
+            # type = "log",
+            # tickvals = c(0.0001, 0.001, 0.01, 0.1, 1, 10, 100),
+            # ticktext = c("0.0001", "0.001", "0.01", "0.1", "1", "10", "100"),
             showgrid = FALSE,
             tickfont = list(size = 10),
             ticks = "outside"
@@ -423,7 +453,8 @@ mod_trends_server <- function(id, conn, next_page) {
       )
 
     output$model_predicted <- plotly::renderPlotly({
-      model_data <- as.data.frame(model_predictions())
+      model_data <- as.data.frame(model_predictions()) %>%
+        dplyr::rename(low = conf.low, high = conf.high)
       int_ticks <- sort(unique(model_data$x))
       plotly::plot_ly(
         showlegend = FALSE,
@@ -434,8 +465,8 @@ mod_trends_server <- function(id, conn, next_page) {
         error_y = list(
           type = "data",
           symmetric = FALSE,
-          array = model_data$conf.high - model_data$conf.low,
-          arrayminus = model_data$predicted - model_data$conf.low,
+          array = model_data$high - model_data$low,
+          arrayminus = model_data$predicted - model_data$low,
           color = "black"
         ),
         marker = list(size = 10, color = "black"),
@@ -443,7 +474,7 @@ mod_trends_server <- function(id, conn, next_page) {
         hovertext = ~ paste0(
           "Year: ", x, "<br>",
           "Predicted splat count: ", round(predicted, 2), "<br>",
-          "CI: [", round(conf.low, 2), ", ", round(conf.high, 2), "]<br>"
+          "CI: [", round(low, 2), ", ", round(high, 2), "]<br>"
         )
       ) %>%
         plotly::layout(
