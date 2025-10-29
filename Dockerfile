@@ -1,8 +1,8 @@
-FROM rocker/verse:4.4.2
+FROM rocker/verse:4.5.1
 
 # Install system dependencies
 RUN apt-get update -y && \
-    apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev libicu-dev make zlib1g-dev pandoc libpng-dev cmake libgdal-dev gdal-bin libgeos-dev libproj-dev libsqlite3-dev libudunits2-dev libpq-dev \
+    apt-get -y install libcurl4-openssl-dev libssl-dev libxml2-dev libicu-dev make cmake zlib1g-dev pandoc libpng-dev libgdal-dev gdal-bin libgeos-dev libproj-dev libsqlite3-dev libudunits2-dev libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Create a directory in the image and set wd to it
@@ -10,7 +10,7 @@ WORKDIR /build
 
 # Install remotes and renv
 RUN R -q -e "options(warn=2); install.packages('remotes')"
-RUN R -q -e 'options(warn=2); remotes::install_version("renv", version = "1.1.1")'
+RUN R -q -e 'options(warn=2); remotes::install_version("renv", version = "1.1.5")'
 
 #private GitHub dependencies - we need to pass in GITHUB_PAT to be used by renv::restore()
 #don't forget to adjust docker-build.yml

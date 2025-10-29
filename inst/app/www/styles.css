@@ -135,6 +135,10 @@ p {
 .overview-value-box {
   height: 100%;
 }
+.trend-value-box {
+  flex: 1;
+  max-width: 300px;
+}
 
 .value-box-title {
   font-size: 0.875rem !important;

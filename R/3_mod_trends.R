@@ -22,6 +22,22 @@ mod_trends_ui <- function(id) {
         ns("analysis_info"),
         shiny::tags$i(class = "fa fa-info-circle")
       )
+    ),
+    tags$a(
+      shiny::actionButton(
+        ns("next_page"),
+        shiny::span(
+          style = "color: black;",
+          "Track participation",
+          shiny::tags$i(
+            class = "fa fa-arrow-right"
+          ),
+        ),
+        class = "btn-primary m-2",
+          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+      ),
+      href = "https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter",
+      target = "_blank"
     )
   )
 
@@ -36,23 +52,18 @@ mod_trends_ui <- function(id) {
         selected = "world",
         width = 250
       ),
-      uiOutput(ns("slider_input"))
+      # uiOutput(ns("slider_input"))
     ),
-      tags$a(
-        shiny::actionButton(
-          ns("next_page"),
-          shiny::span(
-            style = "color: black;",
-            "Track participation",
-            shiny::tags$i(
-              class = "fa fa-arrow-right"
-            ),
-          ),
-          class = "btn-primary m-2",
-            style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
-        ),
-      href = "https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter",
-      target = "_blank"
+    bslib::value_box(
+      class = "trend-value-box",
+      title = "Yearly change in splat rate",
+      value = shiny::textOutput(ns("trend")),
+      # showcase = tags$i(class = "fa fa-chart-line-down fa-solid"),
+      theme = bslib::value_box_theme(
+        bg = "#000000",
+        fg = "#FFF"
+      ),
+      showcase_layout = "top right"
     )
   )
 
@@ -170,31 +181,31 @@ mod_trends_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    output$slider_input <- renderUI({
-      range <- "SELECT min(year), max(year)
-      FROM journeys.processed
-      WHERE region_code IN ({region_codes*})
-      AND region_code IS NOT NULL;" %>%
-        glue::glue_data_sql(
-          list(
-            region_codes = region_codes()
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .)
+    # output$slider_input <- renderUI({
+    #   range <- "SELECT min(year), max(year)
+    #   FROM journeys.processed
+    #   WHERE region_code IN ({region_codes*})
+    #   AND region_code IS NOT NULL;" %>%
+    #     glue::glue_data_sql(
+    #       list(
+    #         region_codes = region_codes()
+    #       ),
+    #       .,
+    #       .con = conn
+    #     ) %>%
+    #     DBI::dbGetQuery(conn, .)
 
-      shiny::sliderInput(
-        ns("year"),
-        NULL,
-        min = range$min,
-        max = range$max,
-        value = c(range$min, range$max),
-        step = 1,
-        sep = ""
-      ) %>%
-        shiny::tagAppendAttributes(style = "margin-left: 15px; margin-bottom: calc(1rem - 12px);")
-    })
+    #   shiny::sliderInput(
+    #     ns("year"),
+    #     NULL,
+    #     min = range$min,
+    #     max = range$max,
+    #     value = c(range$min, range$max),
+    #     step = 1,
+    #     sep = ""
+    #   ) %>%
+    #     shiny::tagAppendAttributes(style = "margin-left: 15px; margin-bottom: calc(1rem - 12px);")
+    # })
 
     shiny::observeEvent(input$analysis_info, {
       shiny::showModal(
@@ -256,8 +267,6 @@ mod_trends_server <- function(id, conn, next_page) {
     })
 
     mod <- shiny::reactive({
-      req(input$year)
-      req(length(input$year) == 2)
       journeys <- "SELECT year,
           distance,
           avg_speed_kmh,
@@ -281,13 +290,10 @@ mod_trends_server <- function(id, conn, next_page) {
           log_cm_km_offset,
           splat_count
         FROM journeys.processed
-        WHERE region_code IS NOT NULL AND region_code IN ({region_codes*})
-        AND year >= {baseline_year} AND year <= {comparison_year};" %>%
+        WHERE region_code IS NOT NULL AND region_code IN ({region_codes*});" %>%
         glue::glue_data_sql(
           list(
-            region_codes = region_codes(),
-            baseline_year = input$year[1],
-            comparison_year = input$year[2]
+            region_codes = region_codes()
           ),
           .,
           .con = conn
@@ -307,6 +313,7 @@ mod_trends_server <- function(id, conn, next_page) {
         }
       )
     })
+
 
     forest_data <- shiny::reactive({
       est <- confint(mod(), parm = "beta_", level = 0.95) %>%
@@ -340,10 +347,6 @@ mod_trends_server <- function(id, conn, next_page) {
           term == "Vehicle.typeLCV" ~ "Vehicle [LCV]",
           term == "Vehicle.typeOther" ~ "Vehicle [Other]",
           term == "Vehicle.typeHCV" ~ "Vehicle [HCV]",
-          term == "Year2022" ~ "Year [2022]",
-          term == "Year2023" ~ "Year [2023]",
-          term == "Year2024" ~ "Year [2024]",
-          term == "Year2025" ~ "Year [2025]",
           term == "Day.of.year" ~ "Day of Year",
           term == "Average.speed" ~ "Average Speed (km/h)",
           .default = snakecase::to_title_case(term)
@@ -352,9 +355,17 @@ mod_trends_server <- function(id, conn, next_page) {
       shiny::bindCache(
         x = .,
         input$region,
-        input$year,
         cache = cachem::cache_disk("./.cache")
       )
+
+    output$trend <- shiny::renderText({
+      val <- forest_data() %>%
+        dplyr::filter(term == "Year") %>%
+        dplyr::pull("estimate") %>%
+        round(1)
+
+      paste0("-", val * 100, "%")
+    })
 
     add_forest_trace <- function(p, model_data, color) {
       plotly::add_trace(
@@ -448,7 +459,6 @@ mod_trends_server <- function(id, conn, next_page) {
     }) %>%
       shiny::bindCache(
         input$region,
-        input$year,
         cache = "app"
       )
 
@@ -506,15 +516,12 @@ mod_trends_server <- function(id, conn, next_page) {
       WHERE splat_rate IS NOT NULL AND midpoint_time IS NOT NULL
       AND region_code IN ({region_codes*})
       AND region_code IS NOT NULL
-      AND year >= {baseline_year} AND year <= {comparison_year}
       ORDER BY
         midpoint_time;
       " %>%
         glue::glue_data_sql(
           list(
-            region_codes = region_codes(),
-            baseline_year = input$year[1],
-            comparison_year = input$year[2]
+            region_codes = region_codes()
           ),
           .,
           .con = conn
@@ -523,7 +530,6 @@ mod_trends_server <- function(id, conn, next_page) {
     }) %>%
       shiny::bindCache(
         input$region,
-        input$year,
         cache = "app"
       )
 
@@ -542,8 +548,8 @@ mod_trends_server <- function(id, conn, next_page) {
           ),
           xaxis = list(
             title = "Journey Date",
-            tickvals = input$year[1]:input$year[2],
-            ticktext = input$year[1]:input$year[2],
+            tickvals = 2021:2025,
+            ticktext = 2021:2025,
             showgrid = TRUE,
             gridcolor = "lightgray",
             gridwidth = 1
