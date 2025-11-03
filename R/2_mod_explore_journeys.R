@@ -17,7 +17,7 @@ mod_explore_journeys_ui <- function(id) {
   data_header <- shiny::div(
     class = "data-header",
     shiny::h2(
-      "Journeys",
+      shiny::span(id = ns("journeys_title"), "Journeys"),
       shiny::actionLink(
           ns("data_collection_info"),
           shiny::tags$i(class = "fa fa-info-circle")
@@ -346,9 +346,18 @@ mod_explore_journeys_ui <- function(id) {
 #' journeys_map Server Functions
 #'
 #' @noRd
-mod_explore_journeys_server <- function(id, conn, next_page) {
+mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organisation_choices) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    shiny::observeEvent(email_filter(), {
+      title <- if (is.null(email_filter())) {
+        "Journeys"
+      } else {
+        paste0("Journeys - ", names(organisation_choices[organisation_choices == email_filter()]))
+      }
+      shinyjs::html(id = "journeys_title", html = title)
+    }, ignoreNULL = FALSE)
 
     shiny::observeEvent(input$data_collection_info, {
       shiny::showModal(
@@ -419,11 +428,10 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
 
 
     #---------------------stats boxes-----------------------#
-
-
     output$distance <- shiny::renderText({
+      query <- if (is.null(email_filter())) {
         "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS distance FROM journeys.processed
-        WHERE region_code IN ({region_codes*}) AND year IN ({years*});;" %>%
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
           glue::glue_data_sql(
             list(
               region_codes = region_codes(),
@@ -431,14 +439,31 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
             ),
             .,
             .con = conn
-          ) %>%
-          DBI::dbGetQuery(conn, .) %>%
-          dplyr::pull("distance") %>%
-          format(big.mark = ",") %>%
-          paste("km")
+          )
+      } else {
+        "SELECT ROUND(SUM(j.distance)::NUMERIC, 0) AS distance
+        FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+      query %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::pull("distance") %>%
+        format(big.mark = ",") %>%
+        paste("km")
     })
 
     output$count <- shiny::renderText({
+      query <- if (is.null(email_filter())) {
         "SELECT COUNT(*) AS count FROM journeys.processed
         WHERE region_code IN ({region_codes*}) AND year IN ({years*});;" %>%
           glue::glue_data_sql(
@@ -448,7 +473,22 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
             ),
             .,
             .con = conn
-          ) %>%
+          )
+      } else {
+        "SELECT COUNT(*) AS count FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+      query %>%
           DBI::dbGetQuery(conn, .) %>%
           dplyr::pull("count") %>%
           format(big.mark = ",")
@@ -552,65 +592,101 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #---------------------distance histogram -----------------------#
 
     output$distance_histogram <- plotly::renderPlotly({
-      "SELECT distance
+      query <- if (is.null(email_filter())) {
+        "SELECT distance
         FROM journeys.processed
         WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
-        glue::glue_data_sql(
-          list(
-            region_codes = region_codes(),
-            years = years()
-          ),
-          .,
-          .con = conn
-        ) %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          )
+      } else {
+        "SELECT j.distance
+        FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+
+      query %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("distance") %>%
-      plotly::plot_ly(
-        x = .,
-        type = "histogram",
-        marker = list(color = "#147331"),
-        name = ""
-      ) %>%
-      plotly::layout(
-        dragmode = FALSE,
-        yaxis = list(title = "Number of Journeys"),
-        xaxis = list(title = "Distance (km)")
-      ) %>%
-      plotly::config(
-        displayModeBar = FALSE
-      )
+        plotly::plot_ly(
+          x = .,
+          type = "histogram",
+          marker = list(color = "#147331"),
+          name = ""
+        ) %>%
+        plotly::layout(
+          dragmode = FALSE,
+          yaxis = list(title = "Number of Journeys"),
+          xaxis = list(title = "Distance (km)")
+        ) %>%
+        plotly::config(
+          displayModeBar = FALSE
+        )
     })
 
     #---------------------temperature histogram -----------------------#
 
     output$temperature_histogram <- plotly::renderPlotly({
-      "SELECT temperature
+      query <- if (is.null(email_filter())) {
+        "SELECT temperature
         FROM journeys.processed
         WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
-        glue::glue_data_sql(
-          list(
-            region_codes = region_codes(),
-            years = years()
-          ),
-          .,
-          .con = conn
-        ) %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          )
+      } else {
+        "SELECT j.temperature
+        FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+
+      query %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("temperature") %>%
-      plotly::plot_ly(
-        x = .,
-        type = "histogram",
-        marker = list(color = "#147331"),
-        name = ""
-      ) %>%
-      plotly::layout(
-        dragmode = FALSE,
-        yaxis = list(title = "Number of Journeys"),
-        xaxis = list(title = "Temperature (Day Mean °C)")
-      ) %>%
-      plotly::config(
-        displayModeBar = FALSE
-      )
+        plotly::plot_ly(
+          x = .,
+          type = "histogram",
+          marker = list(color = "#147331"),
+          name = ""
+        ) %>%
+        plotly::layout(
+          dragmode = FALSE,
+          yaxis = list(title = "Number of Journeys"),
+          xaxis = list(title = "Temperature (Day Mean °C)")
+        ) %>%
+        plotly::config(
+          displayModeBar = FALSE
+        )
     })
 
     #---------------------elevation histogram -----------------------#
@@ -648,49 +724,83 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #---------------------day of year histogram -----------------------#
 
     output$day_of_year_histogram <- plotly::renderPlotly({
-      "SELECT day_of_year
+      query <- if (is.null(email_filter())) {
+        "SELECT day_of_year
         FROM journeys.processed
         WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
-        glue::glue_data_sql(
-          list(
-            region_codes = region_codes(),
-            years = years()
-          ),
-          .,
-          .con = conn
-        ) %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          )
+      } else {
+        "SELECT j.day_of_year
+        FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+      query %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("day_of_year") %>%
-      plotly::plot_ly(
-        x = .,
-        type = "histogram",
-        marker = list(color = "#147331"),
-        name = ""
-      ) %>%
-      plotly::layout(
-        dragmode = FALSE,
-        yaxis = list(title = "Number of Journeys"),
-        xaxis = list(title = "Day of Year")
-      ) %>%
-      plotly::config(
-        displayModeBar = FALSE
-      )
+        plotly::plot_ly(
+          x = .,
+          type = "histogram",
+          marker = list(color = "#147331"),
+          name = ""
+        ) %>%
+        plotly::layout(
+          dragmode = FALSE,
+          yaxis = list(title = "Number of Journeys"),
+          xaxis = list(title = "Day of Year")
+        ) %>%
+        plotly::config(
+          displayModeBar = FALSE
+        )
     })
 
     #---------------------speed histogram -----------------------#
 
     output$speed_histogram <- plotly::renderPlotly({
-      "SELECT avg_speed_kmh
+      query <- if (is.null(email_filter())) {
+        "SELECT avg_speed_kmh
         FROM journeys.processed
         WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
-        glue::glue_data_sql(
-          list(
-            region_codes = region_codes(),
-            years = years()
-          ),
-          .,
-          .con = conn
-        ) %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          )
+      } else {
+        "SELECT j.avg_speed_kmh
+        FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+      query %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("avg_speed_kmh") %>%
       plotly::plot_ly(
@@ -712,17 +822,34 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #---------------------time of day histogram -----------------------#
 
     output$time_of_day_histogram <- plotly::renderPlotly({
-      "SELECT time_of_day
+      query <- if (is.null(email_filter())) {
+        "SELECT time_of_day
         FROM journeys.processed
         WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
-        glue::glue_data_sql(
-          list(
-            region_codes = region_codes(),
-            years = years()
-          ),
-          .,
-          .con = conn
-        ) %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          )
+      } else {
+        "SELECT j.time_of_day
+        FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+      query %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("time_of_day") %>%
         # Build POSIXct timestamps using a fixed date so Plotly treats as date/time
@@ -751,7 +878,8 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #---------------------vehicle type bars -----------------------#
 
     output$vehicle_bars <- plotly::renderPlotly({
-      "WITH all_vehicles(vehicle_class) AS (
+      query <- if (is.null(email_filter())) {
+        "WITH all_vehicles(vehicle_class) AS (
           SELECT v FROM (VALUES ('Other'), ('Car'), ('HCV'), ('LCV')) AS t(v)
         )
         SELECT
@@ -764,6 +892,41 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
          AND j.year IN ({years*})
         GROUP BY all_vehicles.vehicle_class
         ORDER BY vehicle_class DESC;" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          )
+      } else {
+        "WITH all_vehicles(vehicle_class) AS (
+          SELECT v FROM (VALUES ('Other'), ('Car'), ('HCV'), ('LCV')) AS t(v)
+        )
+        SELECT
+          CASE WHEN all_vehicles.vehicle_class = 'HCV' THEN 'HGV' ELSE all_vehicles.vehicle_class END AS vehicle_class,
+          COALESCE(COUNT(j.vehicle_class), 0) AS count
+        FROM all_vehicles
+        LEFT JOIN journeys.processed j
+          ON all_vehicles.vehicle_class = j.vehicle_class
+         AND j.region_code IN ({region_codes*})
+         AND j.year IN ({years*})
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE s.user_id LIKE {email_pattern}
+        GROUP BY all_vehicles.vehicle_class
+        ORDER BY vehicle_class DESC;" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+      query %>%
         glue::glue_data_sql(
           list(
             region_codes = region_codes(),
@@ -800,9 +963,35 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
     #---------------------land cover jitter -----------------------#
 
     output$land_cover_jitter <- plotly::renderPlotly({
-      land_cover_data <- "SELECT forest, shrubland, arable, urban, grassland, wetland, marine, pasture
+      query <- if (is.null(email_filter())) {
+        "SELECT forest, shrubland, arable, urban, grassland, wetland, marine, pasture
         FROM journeys.processed
         WHERE region_code IN ({region_codes*}) AND year IN ({years*});" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          )
+      } else {
+        "SELECT j.forest, j.shrubland, j.arable, j.urban, j.grassland, j.wetland, j.marine, j.pasture
+        FROM journeys.processed j
+        LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+        WHERE j.region_code IN ({region_codes*}) AND j.year IN ({years*}) AND s.user_email LIKE {email_pattern};" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+      }
+
+      land_cover_data <- query %>%
         glue::glue_data_sql(
           list(
             region_codes = region_codes(),

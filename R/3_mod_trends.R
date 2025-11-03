@@ -56,8 +56,8 @@ mod_trends_ui <- function(id) {
     ),
     bslib::value_box(
       class = "data-control-value-box",
-      title = "Journey count",
-      value = shiny::textOutput(ns("journey_count")),
+      title = "Trend",
+      value = shiny::textOutput(ns("trend")),
       # showcase = tags$i(class = "fa fa-chart-line-down fa-solid"),
       theme = bslib::value_box_theme(
         bg = "#000000",

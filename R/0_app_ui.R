@@ -36,6 +36,9 @@ app_ui <- function(request) {
         value = 4,
         mod_participation_ui("participation_1")
       ),
+      bslib::nav_item(
+        actionButton("log_in", "Log in")
+      ),
       theme = theme()
     )
 

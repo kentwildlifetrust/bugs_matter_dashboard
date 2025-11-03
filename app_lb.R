@@ -757,7 +757,6 @@ or may lose suitable habitats due to shifting climate zones."))
 
     # Plot 1 - Mean splat rate over time
     output$trendPlot1 <- renderPlot({
-      browser()
       ggplot2::ggplot(data = mod_data, ggplot2::aes(x = midpoint_time)) +
         ggplot2::geom_line(lwd=0.5, data = mod_data,  ggplot2::aes(y=dplyr::cummean(mod_data$splat_rate)), color="black") +
         ggplot2::theme_minimal(base_size = 12) +

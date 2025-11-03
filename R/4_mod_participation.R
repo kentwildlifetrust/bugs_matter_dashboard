@@ -148,7 +148,7 @@ mod_participation_ui <- function(id) {
       shiny::div(
         class = "data-header",
         shiny::h2(
-          "Participation",
+          shiny::span(id = ns("participation_title"), "Participation"),
           shiny::actionLink(
               ns("participation_info"),
               shiny::tags$i(class = "fa fa-info-circle")
@@ -179,9 +179,18 @@ mod_participation_ui <- function(id) {
 #' journeys_map Server Functions
 #'
 #' @noRd
-mod_participation_server <- function(id, conn, next_page) {
+mod_participation_server <- function(id, conn, next_page, email_filter, organisation_choices) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
+
+    shiny::observeEvent(email_filter(), {
+      title <- if (is.null(email_filter())) {
+        "Participation"
+      } else {
+        paste0("Participation - ", names(organisation_choices[organisation_choices == email_filter()]))
+      }
+      shinyjs::html(id = "participation_title", html = title)
+    }, ignoreNULL = FALSE)
 
     shiny::observeEvent(input$data_collection_info, {
       shiny::showModal(
@@ -238,28 +247,44 @@ mod_participation_server <- function(id, conn, next_page) {
     output$leaderboard <- reactable::renderReactable({
       if (input$regions_or_users == "Regions") {
         data <- "
-        WITH sign_ups AS (
+        WITH sign_up_counts AS (
           SELECT s.region_code,
           COUNT(*) AS n_sign_ups
           FROM sign_ups.with_region s
           WHERE s.year in ({years*})
+            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
           GROUP BY s.region_code
+        ), journey_counts AS (
+          SELECT SUM(distance) AS distance,
+          COUNT(*) AS n_journeys,
+          region_code
+          FROM journeys.processed j
+          LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+          WHERE j.year in ({years*})
+            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
+          GROUP BY j.region_code
+        ), total_journey_counts AS (
+          SELECT COUNT(*) AS n_journeys,
+          region_code
+          FROM journeys.processed j
+          LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+          GROUP BY j.region_code
         )
           SELECT r.name,
           r.country_name,
           COALESCE(s.n_sign_ups, 0) AS n_sign_ups,
-          COALESCE(COUNT(*), 0) AS n_journeys,
-          ROUND(COALESCE(SUM(j.distance), 0)::NUMERIC) AS distance
-          FROM journeys.processed j
-          LEFT JOIN ref.regions r ON j.region_code = r.code
-          LEFT JOIN sign_ups s ON j.region_code = s.region_code
-          WHERE j.year in ({years*})
-          GROUP BY r.name, s.n_sign_ups, r.country_name
-          ORDER BY n_journeys DESC;
+          COALESCE(j.n_journeys, 0) AS n_journeys,
+          ROUND(COALESCE(j.distance, 0)::NUMERIC) AS distance
+          FROM ref.regions r
+          LEFT JOIN journey_counts j ON r.code = j.region_code
+          LEFT JOIN total_journey_counts jt ON r.code = jt.region_code
+          LEFT JOIN sign_up_counts s ON r.code = s.region_code
+          ORDER BY COALESCE(j.n_journeys, 0) DESC, COALESCE(jt.n_journeys, 0) DESC, r.country_name ASC, r.name ASC;
         " %>%
           glue::glue_data_sql(
             list(
-              years = years()
+              years = years(),
+              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
             ),
             .,
             .con = conn
@@ -274,15 +299,18 @@ mod_participation_server <- function(id, conn, next_page) {
         COALESCE(COUNT(j.id), 0) AS n_journeys,
         ROUND(COALESCE(SUM(j.distance), 0)::NUMERIC) AS distance
         FROM sign_ups.with_region s
-        LEFT JOIN journeys.processed j ON s.id = j.user_id AND j.year in ({years*})
+        LEFT JOIN journeys.processed j ON s.id = j.user_id
+          AND j.year in ({years*})
+          AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
         LEFT JOIN ref.regions r ON s.region_code = r.code
         GROUP BY s.user_username, r.name, EXTRACT(YEAR FROM s.user_created_at)
-        ORDER BY n_journeys DESC
+        ORDER BY COALESCE(COUNT(j.id), 0) DESC
         LIMIT 20;
         " %>%
           glue::glue_data_sql(
             list(
-              years = years()
+              years = years(),
+              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
             ),
             .,
             .con = conn
@@ -389,7 +417,9 @@ mod_participation_server <- function(id, conn, next_page) {
               j.end_timestamp::DATE AS date,
               COUNT(*) AS daily_count
             FROM journeys.processed j
+            LEFT JOIN sign_ups.raw s ON j.user_id = s.id
             WHERE EXTRACT(YEAR FROM j.end_timestamp) IN ({years*})
+              AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
@@ -414,7 +444,8 @@ mod_participation_server <- function(id, conn, next_page) {
             list(
               years = years_vec,
               min_date = min_date,
-              max_date = max_date
+              max_date = max_date,
+              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
             ),
             .,
             .con = conn
@@ -473,7 +504,9 @@ mod_participation_server <- function(id, conn, next_page) {
               j.end_timestamp::DATE AS date,
               SUM(j.distance) AS daily_distance
             FROM journeys.processed j
+            LEFT JOIN sign_ups.raw s ON j.user_id = s.id
             WHERE EXTRACT(YEAR FROM j.end_timestamp) IN ({years*})
+              AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
@@ -498,7 +531,8 @@ mod_participation_server <- function(id, conn, next_page) {
             list(
               years = years_vec,
               min_date = min_date,
-              max_date = max_date
+              max_date = max_date,
+              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
             ),
             .,
             .con = conn
@@ -558,6 +592,7 @@ mod_participation_server <- function(id, conn, next_page) {
             COUNT(*) AS daily_count
           FROM sign_ups.raw s
           WHERE EXTRACT(YEAR FROM s.user_created_at) IN ({years*})
+            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
           GROUP BY s.user_created_at::DATE
         ), date_bounds AS (
           SELECT
@@ -582,7 +617,8 @@ mod_participation_server <- function(id, conn, next_page) {
           list(
             years = years_vec,
             min_date = min_date,
-            max_date = max_date
+            max_date = max_date,
+              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
           ),
           .,
           .con = conn
