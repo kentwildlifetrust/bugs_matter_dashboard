@@ -27,16 +27,6 @@ mod_participation_ui <- function(id) {
         ),
         selected = "All years",
         width = 150
-      ),
-      shiny::selectInput(
-        ns("regions_or_users"),
-        "Regions or Users",
-        choices = c(
-          "Regions",
-          "Users"
-        ),
-        selected = "Regions",
-        width = 150
       )
     ),
     shiny::actionButton(
@@ -53,17 +43,34 @@ mod_participation_ui <- function(id) {
     )
   )
 
-  table_card <- bslib::navset_card_pill(
-    title = "Leaderboard",
-    height = "100%",
-    full_screen = TRUE,
+  region_leaderboard <- bslib::nav_panel(
+    "Regions",
     bslib::card_body(
       max_height = "calc(100svh - 330px)",
       padding = c(15, 15, 0, 15),
       shinycssloaders::withSpinner(
-        reactable::reactableOutput(ns("leaderboard"), height = "100%")
+        reactable::reactableOutput(ns("region_leaderboard"), height = "100%")
       )
     )
+  )
+
+  user_leaderboard <- bslib::nav_panel(
+    "Users",
+    bslib::card_body(
+      max_height = "calc(100svh - 330px)",
+      padding = c(15, 15, 0, 15),
+      shinycssloaders::withSpinner(
+        reactable::reactableOutput(ns("user_leaderboard"), height = "100%")
+      )
+    )
+  )
+
+  table_card <- bslib::navset_card_pill(
+    title = "Leaderboard",
+    height = "100%",
+    full_screen = TRUE,
+    region_leaderboard,
+    user_leaderboard
   )
 
   sign_ups_panel <- bslib::nav_panel(
@@ -145,34 +152,34 @@ mod_participation_ui <- function(id) {
   )
 
   bslib::page(
-      shiny::div(
-        class = "data-header",
-        shiny::h2(
-          shiny::span(id = ns("participation_title"), "Participation"),
-          shiny::actionLink(
-              ns("participation_info"),
-              shiny::tags$i(class = "fa fa-info-circle")
-          )
+    shiny::div(
+      class = "data-header",
+      shiny::h2(
+        shiny::span(id = ns("participation_title"), "Participation"),
+        shiny::actionLink(
+          ns("participation_info"),
+          shiny::tags$i(class = "fa fa-info-circle")
         )
-      ),
-      shiny::hr(class = "data-hr"),
-      data_control_row,
-      # shiny::hr(class = "data-header-hr"),
-      shiny::div(
-      class = "cards-container",
-        shiny::div(
-          style = "height: 100%; padding-bottom: var(--_padding); min-width: 350px;",
-          table_card
-        ),
-        bslib::navset_card_tab(
-          title = "Cumulative Participation",
-          # full_screen = TRUE,
-          journeys_panel,
-          distance_panel,
-          sign_ups_panel
-        ) %>%
-          htmltools::tagAppendAttributes(style = "flex: 1; margin-bottom: 0; min-height: 600px;")
       )
+    ),
+    shiny::hr(class = "data-hr"),
+    data_control_row,
+    # shiny::hr(class = "data-header-hr"),
+    shiny::div(
+      class = "cards-container",
+      shiny::div(
+        style = "height: 100%; padding-bottom: var(--_padding); min-width: 350px;",
+        table_card
+      ),
+      bslib::navset_card_pill(
+        title = "Cumulative Participation",
+        # full_screen = TRUE,
+        journeys_panel,
+        distance_panel,
+        sign_ups_panel
+      ) %>%
+        htmltools::tagAppendAttributes(style = "flex: 1; margin-bottom: 0; min-height: 600px;")
+    )
   )
 }
 
@@ -183,14 +190,17 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    shiny::observeEvent(email_filter(), {
-      title <- if (is.null(email_filter())) {
-        "Participation"
-      } else {
-        paste0("Participation - ", names(organisation_choices[organisation_choices == email_filter()]))
-      }
-      shinyjs::html(id = "participation_title", html = title)
-    }, ignoreNULL = FALSE)
+    shiny::observeEvent(email_filter(),
+      {
+        title <- if (is.null(email_filter())) {
+          "Participation"
+        } else {
+          paste0("Participation - ", names(organisation_choices[organisation_choices == email_filter()]))
+        }
+        shinyjs::html(id = "participation_title", html = title)
+      },
+      ignoreNULL = FALSE
+    )
 
     shiny::observeEvent(input$data_collection_info, {
       shiny::showModal(
@@ -205,7 +215,7 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
             )
           ),
           shiny::p(
-              "Prior to commencing a journey, citizen scientists clean the front number plate of their vehicle to
+            "Prior to commencing a journey, citizen scientists clean the front number plate of their vehicle to
               remove any residual insects. The app requests a checkbox confirmation that the number plate has been
               cleaned. Upon starting a journey, citizen scientists tap a button in the app to begin recording the
               journey route using the mobile device’s GPS. This provides crucial data on the length, duration,
@@ -215,18 +225,18 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
               the front number plate of their vehicle. The journey route, the number of insect splats, and a photograph
               of the number plate are submitted via the app. Citizen scientists are asked to participate only on
               essential journeys and not to make journeys specifically to take part in the survey."
-            ),
-            shiny::p(
-              "Prior to the analysis, some steps are taken to clean the data and remove outliers. Journeys with
+          ),
+          shiny::p(
+            "Prior to the analysis, some steps are taken to clean the data and remove outliers. Journeys with
               GPS errors are removed from the dataset. These errors are caused by a drop-out of background tracking
               due to GPS signal being lost by the device, and they appear as long straight lines between distant
                   locations. Very short journeys, very fast journeys, very slow journeys, or journeys with over 500
                   insect splats are removed from the dataset.  Finally, all journeys during which rainfall occurred
                   were omitted from the dataset due to the high chance that rainfall could dislodge insects from
                   number plates and create inaccurate splat counts."
-            ),
-            easyClose = TRUE,
-            footer = NULL
+          ),
+          easyClose = TRUE,
+          footer = NULL
         )
       )
     })
@@ -244,13 +254,20 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
     })
     #---------------------leaderboard_table-----------------------#
 
-    output$leaderboard <- reactable::renderReactable({
-      if (input$regions_or_users == "Regions") {
-        data <- "
+    output$region_leaderboard <- reactable::renderReactable({
+      data <- "
         WITH sign_up_counts AS (
           SELECT s.region_code,
           COUNT(*) AS n_sign_ups
           FROM sign_ups.with_region s
+          WHERE s.year in ({years*})
+            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
+          GROUP BY s.region_code
+        ), participants_counts AS (
+          SELECT s.region_code,
+          COUNT(DISTINCT j.user_id) AS n_participants
+          FROM journeys.processed j
+          LEFT JOIN sign_ups.with_region s ON j.user_id = s.id
           WHERE s.year in ({years*})
             AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
           GROUP BY s.region_code
@@ -273,27 +290,77 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
           SELECT r.name,
           r.country_name,
           COALESCE(s.n_sign_ups, 0) AS n_sign_ups,
+          COALESCE(p.n_participants, 0) AS n_participants,
+          100 * COALESCE(p.n_participants, 0::NUMERIC) / s.n_sign_ups AS conversion_rate,
           COALESCE(j.n_journeys, 0) AS n_journeys,
-          ROUND(COALESCE(j.distance, 0)::NUMERIC) AS distance
+          ROUND(COALESCE(j.distance, 0::NUMERIC)) AS distance
           FROM ref.regions r
           LEFT JOIN journey_counts j ON r.code = j.region_code
           LEFT JOIN total_journey_counts jt ON r.code = jt.region_code
           LEFT JOIN sign_up_counts s ON r.code = s.region_code
+          LEFT JOIN participants_counts p ON r.code = p.region_code
           ORDER BY COALESCE(j.n_journeys, 0) DESC, COALESCE(jt.n_journeys, 0) DESC, r.country_name ASC, r.name ASC;
         " %>%
-          glue::glue_data_sql(
-            list(
-              years = years(),
-              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-            ),
-            .,
-            .con = conn
-          ) %>%
-            DBI::dbGetQuery(conn, .) %>%
-            dplyr::mutate(rank = 1:nrow(.)) %>%
-            dplyr::select(rank, name, country_name, n_journeys, distance, n_sign_ups)
-      } else {
-        data <- "
+        glue::glue_data_sql(
+          list(
+            years = years(),
+            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(rank = 1:nrow(.)) %>%
+        dplyr::select(rank, name, country_name, n_sign_ups, n_participants, conversion_rate, n_journeys, distance)
+      # Configure table columns based on view type
+      reactable::reactable(
+        data,
+        columns = list(
+          rank = reactable::colDef(
+            name = "#",
+            width = 50,
+            align = "center"
+          ),
+          name = reactable::colDef(
+            name = "Region"
+          ),
+          country_name = reactable::colDef(
+            name = "Country"
+          ),
+          n_sign_ups = reactable::colDef(
+            name = "Sign-ups",
+            format = reactable::colFormat(separators = TRUE)
+          ),
+          n_participants = reactable::colDef(
+            name = "Participants",
+            format = reactable::colFormat(separators = TRUE)
+          ),
+          conversion_rate = reactable::colDef(
+            name = "Conversion rate",
+            format = reactable::colFormat(suffix = "%", digits = 0)
+          ),
+          n_journeys = reactable::colDef(
+            name = "Journeys",
+            format = reactable::colFormat(separators = TRUE)
+          ),
+          distance = reactable::colDef(
+            name = "Distance (km)",
+            format = reactable::colFormat(separators = TRUE)
+          )
+        ),
+        defaultColDef = reactable::colDef(
+          align = "left"
+        ),
+        sortable = TRUE,
+        filterable = TRUE,
+        defaultPageSize = 100,
+        height = "100%",
+        showSortable = TRUE
+      )
+    })
+
+    output$user_leaderboard <- reactable::renderReactable({
+      data <- "
         SELECT 'User in ' || r.name AS name,
         EXTRACT(YEAR FROM s.user_created_at)::INT AS sign_up_year,
         COALESCE(COUNT(j.id), 0) AS n_journeys,
@@ -307,111 +374,69 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
         ORDER BY COALESCE(COUNT(j.id), 0) DESC
         LIMIT 20;
         " %>%
-          glue::glue_data_sql(
-            list(
-              years = years(),
-              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-            ),
-            .,
-            .con = conn
-          ) %>%
-            DBI::dbGetQuery(conn, .) %>%
-            dplyr::mutate(rank = 1:nrow(.)) %>%
-            dplyr::select(rank, name, sign_up_year, n_journeys, distance)
-      }
+        glue::glue_data_sql(
+          list(
+            years = years(),
+            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
+          ),
+          .,
+          .con = conn
+        ) %>%
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(rank = 1:nrow(.)) %>%
+        dplyr::select(rank, name, sign_up_year, n_journeys, distance)
 
-      # Configure table columns based on view type
-      if (input$regions_or_users == "Regions") {
-        reactable::reactable(
-          data,
-          columns = list(
-            rank = reactable::colDef(
-              name = "#",
-              width = 50,
-              align = "center"
-            ),
-            name = reactable::colDef(
-              name = "Region"
-            ),
-            country_name = reactable::colDef(
-              name = "Country"
-            ),
-            n_sign_ups = reactable::colDef(
-              name = "Sign-ups",
-              format = reactable::colFormat(separators = TRUE)
-            ),
-            n_journeys = reactable::colDef(
-              name = "Journeys",
-              format = reactable::colFormat(separators = TRUE)
-            ),
-            distance = reactable::colDef(
-              name = "Distance (km)",
-              format = reactable::colFormat(separators = TRUE)
-            )
+      reactable::reactable(
+        data,
+        columns = list(
+          rank = reactable::colDef(
+            name = "#",
+            width = 50,
+            align = "center"
           ),
-          defaultColDef = reactable::colDef(
-            align = "left"
+          name = reactable::colDef(
+            name = "Username"
           ),
-          sortable = TRUE,
-          filterable = TRUE,
-          defaultPageSize = 100,
-          height = "100%",
-          showSortable = TRUE
-        )
-      } else {
-        reactable::reactable(
-          data,
-          columns = list(
-            rank = reactable::colDef(
-              name = "#",
-              width = 50,
-              align = "center"
-            ),
-            name = reactable::colDef(
-              name = "Username"
-            ),
-            sign_up_year = reactable::colDef(
-              name = "Sign-up Year"
-            ),
-            n_journeys = reactable::colDef(
-              name = "Journeys",
-              format = reactable::colFormat(separators = TRUE)
-            ),
-            distance = reactable::colDef(
-              name = "Distance (km)",
-              format = reactable::colFormat(separators = TRUE)
-            )
+          sign_up_year = reactable::colDef(
+            name = "Sign-up Year"
           ),
-          defaultColDef = reactable::colDef(
-            align = "left"
+          n_journeys = reactable::colDef(
+            name = "Journeys",
+            format = reactable::colFormat(separators = TRUE)
           ),
-          sortable = TRUE,
-          filterable = TRUE,
-          defaultPageSize = 100,
-          showSortable = TRUE
-        )
-      }
+          distance = reactable::colDef(
+            name = "Distance (km)",
+            format = reactable::colFormat(separators = TRUE)
+          )
+        ),
+        defaultColDef = reactable::colDef(
+          align = "left"
+        ),
+        sortable = TRUE,
+        filterable = TRUE,
+        defaultPageSize = 100,
+        showSortable = TRUE
+      )
     })
+    #---------------------cumulative number of journeys-----------------------
+    output$cumulative_journeys <- plotly::renderPlotly({
+      years_vec <- if (nchar(input$year) > 4) {
+        bugsMatterDashboard::years
+      } else {
+        as.numeric(input$year)
+      }
 
-          #---------------------cumulative number of journeys-----------------------
-      output$cumulative_journeys <- plotly::renderPlotly({
-        years_vec <- if (nchar(input$year) > 4) {
-          bugsMatterDashboard::years
-        } else {
-          as.numeric(input$year)
-        }
+      start_year <- min(years_vec, na.rm = TRUE)
+      end_year <- max(years_vec, na.rm = TRUE)
 
-        start_year <- min(years_vec, na.rm = TRUE)
-        end_year <- max(years_vec, na.rm = TRUE)
+      min_date <- sprintf("%s-04-01", start_year)
+      if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
+        max_date <- format(Sys.Date(), "%Y-%m-%d")
+      } else {
+        max_date <- sprintf("%s-10-30", end_year)
+      }
 
-        min_date <- sprintf("%s-04-01", start_year)
-        if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
-          max_date <- format(Sys.Date(), "%Y-%m-%d")
-        } else {
-          max_date <- sprintf("%s-10-30", end_year)
-        }
-
-        counts <- "
+      counts <- "
           WITH daily_counts AS (
             SELECT
               j.end_timestamp::DATE AS date,
@@ -440,65 +465,65 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
           FROM all_dates
           LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
           ORDER BY all_dates.date;" %>%
-          glue::glue_data_sql(
-            list(
-              years = years_vec,
-              min_date = min_date,
-              max_date = max_date,
-              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-            ),
-            .,
-            .con = conn
-          ) %>%
-          DBI::dbGetQuery(conn, .) %>%
-          dplyr::mutate(date = as.Date(date))
-
-        plotly::plot_ly(
-          type = "scatter",
-          mode = "lines"
+        glue::glue_data_sql(
+          list(
+            years = years_vec,
+            min_date = min_date,
+            max_date = max_date,
+            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
+          ),
+          .,
+          .con = conn
         ) %>%
-          plotly::add_trace(
-            name = "Total",
-            y = counts$cumulative_count,
-            x = counts$date,
-            line = list(
-              color = "#147331",
-              width = 3
-            ),
-            showlegend = FALSE
-          ) %>%
-          plotly::layout(
-            dragmode = FALSE,
-            yaxis = list(title = "Total number of journeys"),
-            xaxis = list(
-              title = "Date"
-            )
-          ) %>%
-          plotly::config(
-            displayModeBar = FALSE
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(date = as.Date(date))
+
+      plotly::plot_ly(
+        type = "scatter",
+        mode = "lines"
+      ) %>%
+        plotly::add_trace(
+          name = "Total",
+          y = counts$cumulative_count,
+          x = counts$date,
+          line = list(
+            color = "#147331",
+            width = 3
+          ),
+          showlegend = FALSE
+        ) %>%
+        plotly::layout(
+          dragmode = FALSE,
+          yaxis = list(title = "Total number of journeys"),
+          xaxis = list(
+            title = "Date"
           )
-      })
+        ) %>%
+        plotly::config(
+          displayModeBar = FALSE
+        )
+    })
 
 
     #---------------------distance travelled------------------------#
-     output$cumulative_distance <- plotly::renderPlotly({
-        years_vec <- if (nchar(input$year) > 4) {
-          bugsMatterDashboard::years
-        } else {
-          as.numeric(input$year)
-        }
+    output$cumulative_distance <- plotly::renderPlotly({
+      years_vec <- if (nchar(input$year) > 4) {
+        bugsMatterDashboard::years
+      } else {
+        as.numeric(input$year)
+      }
 
-        start_year <- min(years_vec, na.rm = TRUE)
-        end_year <- max(years_vec, na.rm = TRUE)
+      start_year <- min(years_vec, na.rm = TRUE)
+      end_year <- max(years_vec, na.rm = TRUE)
 
-        min_date <- sprintf("%s-04-01", start_year)
-        if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
-          max_date <- format(Sys.Date(), "%Y-%m-%d")
-        } else {
-          max_date <- sprintf("%s-10-30", end_year)
-        }
+      min_date <- sprintf("%s-04-01", start_year)
+      if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
+        max_date <- format(Sys.Date(), "%Y-%m-%d")
+      } else {
+        max_date <- sprintf("%s-10-30", end_year)
+      }
 
-        counts <- "
+      counts <- "
           WITH daily_counts AS (
             SELECT
               j.end_timestamp::DATE AS date,
@@ -527,44 +552,44 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
           FROM all_dates
           LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
           ORDER BY all_dates.date;" %>%
-          glue::glue_data_sql(
-            list(
-              years = years_vec,
-              min_date = min_date,
-              max_date = max_date,
-              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-            ),
-            .,
-            .con = conn
-          ) %>%
-          DBI::dbGetQuery(conn, .) %>%
-          dplyr::mutate(date = as.Date(date))
-
-        plotly::plot_ly(
-          type = "scatter",
-          mode = "lines"
+        glue::glue_data_sql(
+          list(
+            years = years_vec,
+            min_date = min_date,
+            max_date = max_date,
+            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
+          ),
+          .,
+          .con = conn
         ) %>%
-          plotly::add_trace(
-            name = "Total",
-            y = counts$cumulative_distance,
-            x = counts$date,
-            line = list(
-              color = "#147331",
-              width = 3
-            ),
-            showlegend = FALSE
-          ) %>%
-          plotly::layout(
-            dragmode = FALSE,
-            yaxis = list(title = "Total distance travelled (km)"),
-            xaxis = list(
-              title = "Date"
-            )
-          ) %>%
-          plotly::config(
-            displayModeBar = FALSE
+        DBI::dbGetQuery(conn, .) %>%
+        dplyr::mutate(date = as.Date(date))
+
+      plotly::plot_ly(
+        type = "scatter",
+        mode = "lines"
+      ) %>%
+        plotly::add_trace(
+          name = "Total",
+          y = counts$cumulative_distance,
+          x = counts$date,
+          line = list(
+            color = "#147331",
+            width = 3
+          ),
+          showlegend = FALSE
+        ) %>%
+        plotly::layout(
+          dragmode = FALSE,
+          yaxis = list(title = "Total distance travelled (km)"),
+          xaxis = list(
+            title = "Date"
           )
-      })
+        ) %>%
+        plotly::config(
+          displayModeBar = FALSE
+        )
+    })
 
 
     #---------------signed up users----------------------------------#
@@ -618,7 +643,7 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
             years = years_vec,
             min_date = min_date,
             max_date = max_date,
-              email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
+            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
           ),
           .,
           .con = conn
