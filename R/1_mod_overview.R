@@ -73,7 +73,7 @@ mod_overview_ui <- function(id) {
                 bslib::value_box(
                   class = "overview-value-box",
                   title = "Yearly change in splat rate 2021 - 2025",
-                  value = shiny::textOutput(ns("trend")),
+                  value = shiny::uiOutput(ns("trend")),
                   showcase = tags$i(class = "fa fa-chart-line-down fa-solid"),
                   theme = bslib::value_box_theme(
                     bg = "#000000",
@@ -85,7 +85,7 @@ mod_overview_ui <- function(id) {
             ),
             shiny::tags$br(),
             bslib::navset_card_pill(
-              title = "Modelled change in splat rate, 2021 to 2025",
+              title = "Modelled yearly change in splat rate",
               bslib::card_body(
                 class = "p-0",
                 leaflet::leafletOutput(ns("map"), height = "100%"),
@@ -109,14 +109,14 @@ phenomenon’, a term given to the anecdotal observation that fewer insect splat
 the windscreens of cars now compared to a decade or
 several decades ago. These observations, which have also
 been reported from empirical data",
-            bslib::tooltip(shiny::a("[1]", class = "ref-link ref-link-nospace"), "Møller, 2019", placement = "top"),
+            bslib::tooltip(shiny::a("[2]", class = "ref-link ref-link-nospace"), "Møller, 2019", placement = "top"),
             ", have been
 interpreted as an indicator of major global declines in insect
 abundance."
           ),
           shiny::p(
             "A growing body of evidence",
-            bslib::tooltip(shiny::a("[2]", class = "ref-link"), "Fox et al., 2013; Hallmann et al.,
+            bslib::tooltip(shiny::a("[3]", class = "ref-link"), "Fox et al., 2013; Hallmann et al.,
 2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas
 et al., 2019; van der Sluijs, 2020; Macadam et al., 2020;
 Outhwaite, McCann and Newbold, 2022", placement = "top"),
@@ -173,7 +173,7 @@ mod_overview_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    pal <- leaflet::colorNumeric("Spectral", -50:50)
+    pal <- leaflet::colorNumeric("Spectral", -30:30)
 
     output$distance <- shiny::renderText({
         "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS length FROM journeys.processed;" %>%
@@ -190,14 +190,29 @@ mod_overview_server <- function(id, conn, next_page) {
         prettyNum(big.mark = ",")
     })
 
-    output$trend <- shiny::renderText({
-      DBI::dbGetQuery(
+    output$trend <- shiny::renderUI({
+      vals <- DBI::dbGetQuery(
         conn,
-        "SELECT est FROM analysis.yearly_change WHERE region = 'global' LIMIT 1;"
+        "SELECT est, low, high, p_value FROM analysis.yearly_change WHERE region = 'global' LIMIT 1;"
       ) %>%
-        dplyr::pull("est") %>%
-        round(1) %>%
-        paste0("%")
+        dplyr::mutate(
+          est = paste0(round(est, 1), "%"),
+          low = paste0(round(low, 1), "%"),
+          high = paste0(round(high, 1), "%"),
+          p_value = scales::pvalue(p_value, accuracy = 0.001)
+        )
+
+      div(
+        vals$est,
+        bslib::tooltip(
+          shiny::a(
+            "[1]",
+            class = "ref-link ref-link-nospace"
+          ),
+          sprintf("%s confidence interval: %s to %s, p %s", "95%", vals$low, vals$high, vals$p_value),
+          placement = "bottom"
+        )
+      )
     })
 
     output$map <- leaflet::renderLeaflet({
@@ -233,6 +248,10 @@ mod_overview_server <- function(id, conn, next_page) {
           opacity = 1,
           fillOpacity = 0.5,
           fillColor = ~ pal(est),
+          highlightOptions = leaflet::highlightOptions(
+            bringToFront = TRUE,
+            weight = 2
+          ),
           popup = ~ mapply(
             function(region_name,
                      est,
@@ -245,11 +264,13 @@ mod_overview_server <- function(id, conn, next_page) {
                   <hr class="popup-hr" />
                   <div class="map-stat-small">Statistically significant trend<div>
                   <span class="map-stat-large">%s%% </span>per year<br></br>
-                  <div class="map-stat-small">95%% confidence interval: %s%% to %s%%</div>',
+                  <div class="map-stat-small">95%% confidence interval: %s%% to %s%%</div>
+                  <div class="map-stat-small">p %s</div>',
                   region_name,
                   est,
                   low,
-                  high
+                  high,
+                  scales::pvalue(p_value, accuracy = 0.001)
                 ))
               } else {
                 return(sprintf(
@@ -269,33 +290,33 @@ mod_overview_server <- function(id, conn, next_page) {
           ) %>%
             unname()
         ) %>%
-        leaflet::addLabelOnlyMarkers(
-          lat = data$lat,
-          lng = data$lon,
-          label = mapply(
-            function(low, high) {
-              if (is.na(low) | is.na(high)) {
-                return()
-              }
-              if (low < 0 & high < 0) {
-                return('<i class="fa fa-solid fa-down map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
-              }
-              if (low > 0 & high > 0) {
-                return('<i class="fa fa-solid fa-up map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
-              }
-              return('<i class="fa fa-solid fa-minus map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
-            },
-            low = data$low,
-            high = data$high,
-            SIMPLIFY = FALSE
-          ) %>%
-            lapply(htmltools::HTML),
-          labelOptions = leaflet::labelOptions(
-            noHide = TRUE, # Show label all the time
-            direction = "center",
-            textOnly = TRUE
-          )
-        ) %>%
+        # leaflet::addLabelOnlyMarkers(
+        #   lat = data$lat,
+        #   lng = data$lon,
+        #   label = mapply(
+        #     function(low, high) {
+        #       if (is.na(low) | is.na(high)) {
+        #         return()
+        #       }
+        #       if (low < 0 & high < 0) {
+        #         return('<i class="fa fa-solid fa-down map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
+        #       }
+        #       if (low > 0 & high > 0) {
+        #         return('<i class="fa fa-solid fa-up map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
+        #       }
+        #       return('<i class="fa fa-solid fa-minus map-data-icon" style="font-size: 1.5rem; color: #000"></i>')
+        #     },
+        #     low = data$low,
+        #     high = data$high,
+        #     SIMPLIFY = FALSE
+        #   ) %>%
+        #     lapply(htmltools::HTML),
+        #   labelOptions = leaflet::labelOptions(
+        #     noHide = TRUE, # Show label all the time
+        #     direction = "center",
+        #     textOnly = TRUE
+        #   )
+        # ) %>%
         leaflet::addLegend(
           pal = pal,
           values = data$est,

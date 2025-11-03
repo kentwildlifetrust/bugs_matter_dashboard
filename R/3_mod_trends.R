@@ -55,9 +55,9 @@ mod_trends_ui <- function(id) {
       # uiOutput(ns("slider_input"))
     ),
     bslib::value_box(
-      class = "trend-value-box",
-      title = "Yearly change in splat rate",
-      value = shiny::textOutput(ns("trend")),
+      class = "data-control-value-box",
+      title = "Journey count",
+      value = shiny::textOutput(ns("journey_count")),
       # showcase = tags$i(class = "fa fa-chart-line-down fa-solid"),
       theme = bslib::value_box_theme(
         bg = "#000000",

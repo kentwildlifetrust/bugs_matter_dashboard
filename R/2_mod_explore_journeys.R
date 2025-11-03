@@ -14,6 +14,30 @@ library(magrittr)
 mod_explore_journeys_ui <- function(id) {
   ns <- shiny::NS(id)
 
+  data_header <- shiny::div(
+    class = "data-header",
+    shiny::h2(
+      "Journeys",
+      shiny::actionLink(
+          ns("data_collection_info"),
+          shiny::tags$i(class = "fa fa-info-circle")
+      )
+    ),
+    shiny::actionButton(
+      ns("next_page"),
+      shiny::span(
+        style = "color: black;",
+        "Analyse trends",
+        shiny::tags$i(
+          class = "fa fa-arrow-right"
+        ),
+      ),
+      class = "btn-primary m-2",
+      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+    )
+  )
+
+
   data_control_row <- shiny::div(
     class = "data-control-row",
     shiny::div(
@@ -35,18 +59,30 @@ mod_explore_journeys_ui <- function(id) {
         selected = "world",
         width = 250
       )
+      # uiOutput(ns("slider_input"))
     ),
-    shiny::actionButton(
-      ns("next_page"),
-      shiny::span(
-        style = "color: black;",
-        "Analyse trends",
-        shiny::tags$i(
-          class = "fa fa-arrow-right"
+    div(
+      class = "data-control-value-row",
+      bslib::value_box(
+        class = "data-control-value-box",
+        title = "Number of journeys",
+        value = shiny::textOutput(ns("count")),
+        theme = bslib::value_box_theme(
+          bg = "#3C91E6",
+          fg = "#000"
         ),
+        showcase_layout = "top right"
       ),
-      class = "btn-primary m-2",
-      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+      bslib::value_box(
+        class = "data-control-value-box",
+        title = "Distance sampled",
+        value = shiny::textOutput(ns("distance")),
+        theme = bslib::value_box_theme(
+          bg = "#72DB41",
+          fg = "#FFF"
+        ),
+        showcase_layout = "top right"
+      )
     )
   )
 
@@ -196,7 +232,7 @@ mod_explore_journeys_ui <- function(id) {
       shiny::tagAppendAttributes(style = "position: relative;")
   )
 
-  
+
   time_of_day_panel <- bslib::nav_panel(
     "Time of day",
     bslib::card_body(
@@ -280,16 +316,7 @@ mod_explore_journeys_ui <- function(id) {
   )
 
   bslib::page(
-    shiny::div(
-      class = "data-header",
-      shiny::h2(
-        "Journeys",
-        shiny::actionLink(
-            ns("data_collection_info"),
-            shiny::tags$i(class = "fa fa-info-circle")
-        )
-      )
-    ),
+    data_header,
     shiny::hr(class = "data-hr"),
     data_control_row,
     # shiny::hr(class = "data-header-hr"),
@@ -366,7 +393,7 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       shiny::removeModal()
     })
 
-    
+
 
     region_codes <- reactive({
       #3 character values are country codes
@@ -380,6 +407,51 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
       } else {
         input$region
       }
+    })
+
+    years <- reactive({
+      if (nchar(input$year) > 4) {
+        return(bugsMatterDashboard::years)
+      } else {
+        as.numeric(input$year)
+      }
+    })
+
+
+    #---------------------stats boxes-----------------------#
+
+
+    output$distance <- shiny::renderText({
+        "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS distance FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});;" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          ) %>%
+          DBI::dbGetQuery(conn, .) %>%
+          dplyr::pull("distance") %>%
+          format(big.mark = ",") %>%
+          paste("km")
+    })
+
+    output$count <- shiny::renderText({
+        "SELECT COUNT(*) AS count FROM journeys.processed
+        WHERE region_code IN ({region_codes*}) AND year IN ({years*});;" %>%
+          glue::glue_data_sql(
+            list(
+              region_codes = region_codes(),
+              years = years()
+            ),
+            .,
+            .con = conn
+          ) %>%
+          DBI::dbGetQuery(conn, .) %>%
+          dplyr::pull("count") %>%
+          format(big.mark = ",")
     })
 
     #---------------------journeys map-----------------------#
@@ -474,14 +546,6 @@ mod_explore_journeys_server <- function(id, conn, next_page) {
 
       map %>%
         htmlwidgets::onRender(vector_grid_js)
-    })
-
-    years <- reactive({
-      if (nchar(input$year) > 4) {
-        return(bugsMatterDashboard::years)
-      } else {
-        as.numeric(input$year)
-      }
     })
 
 
