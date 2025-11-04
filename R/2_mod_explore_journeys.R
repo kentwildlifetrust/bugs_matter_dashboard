@@ -319,7 +319,7 @@ mod_explore_journeys_ui <- function(id) {
             style = "font-size: 1.5rem;",
             `aria-label` = "Information about land cover violin plot"
           ),
-          "This violin plot shows the distribution of land cover proportions for each journey. The width represents the number of journeys that had that encountered that proportion of habitat. Horizontal lines show the mean habitat.",
+          "This violin plot displays the distribution of land cover proportions for each land cover type. The width of each violin represents the density of journeys at different proportion values. Horizontal lines indicate the mean proportion for each land cover type.",
           placement = "bottom"
         )
       )
