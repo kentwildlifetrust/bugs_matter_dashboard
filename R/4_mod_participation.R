@@ -33,7 +33,8 @@ mod_participation_ui <- function(id) {
         ),
       ),
       class = "btn-primary m-2",
-      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
+      onclick = "window.open('https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter#how-to-take-part', '_blank');"
     )
   )
 
@@ -204,7 +205,7 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
       ignoreNULL = FALSE
     )
 
-    shiny::observeEvent(input$data_collection_info, {
+    shiny::observeEvent(input$participation_info, {
       shiny::showModal(
         shiny::modalDialog(
           shiny::div(
