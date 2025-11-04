@@ -109,54 +109,35 @@ mod_overview_ui <- function(id) {
           shiny::tags$br(),
           shiny::h3("About the Project"),
           shiny::p(
-            "The Bugs Matter citizen science survey uses an innovative
-method for large-scale indiscriminate monitoring of flying
-insect populations. Citizen scientists record the number
-of insect splats on their vehicle number plates following
-a journey, having first removed any residual insects from
-previous journeys. It has the potential to provide an efficient,
-standardised and scalable approach to monitor trends in
-insect abundance across local, regional and global scales. The sampling technique is based on the ‘windscreen
-phenomenon’, a term given to the anecdotal observation that fewer insect splats appear on
-the windscreens of cars now compared to a decade or
-several decades ago. These observations, which have also
-been reported from empirical data",
-            bslib::tooltip(shiny::a("[2]", class = "ref-link ref-link-nospace", `aria-label` = "Reference: Møller, 2019"), "Møller, 2019", placement = "top"),
-            ", have been
-interpreted as an indicator of major global declines in insect
-abundance."
+            "Evidence suggests insect abundance and distribution are declining in parts of the world",
+            bslib::tooltip(
+              shiny::a(
+                "[2]",
+                class = "ref-link ref-link-nospace",
+                `aria-label` = "References: Conrad et al., 2006; Forister et al., 2019; Fox, 2013; Fox et al., 2021, 2023; Goulson, 2019; Hallmann et al., 2017; Harris et al., 2019; Møller, 2019; Outhwaite et al., 2020; Sánchez-Bayo & Wyckhuys, 2019; van der Sluijs, 2020; Van Klink et al., 2020; Van Strien et al., 2019; Wagner, 2019; Wagner, Grames, et al., 2021; Wepprich et al., 2019"
+              ),
+              "References: Conrad et al., 2006; Forister et al., 2019; Fox, 2013; Fox et al., 2021, 2023; Goulson, 2019; Hallmann et al., 2017; Harris et al., 2019; Møller, 2019; Outhwaite et al., 2020; Sánchez-Bayo & Wyckhuys, 2019; van der Sluijs, 2020; Van Klink et al., 2020; Van Strien et al., 2019; Wagner, 2019; Wagner, Grames, et al., 2021; Wepprich et al., 2019",
+              placement = "top"
+            ),
+            ", but whether net declines are occurring at a global scale remains uncertain.
+            Understanding how insects are faring should be a global priority.
+            Invertebrates play far more critical roles in ecosystems than most large animals,
+            and their decline could have catastrophic consequences for the Earth’s natural systems - and for human survival itself. "
           ),
           shiny::p(
-            "A growing body of evidence",
-            bslib::tooltip(shiny::a("[3]", class = "ref-link", `aria-label` = "Reference: Fox et al., 2013; Hallmann et al., 2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas et al., 2019; van der Sluijs, 2020; Macadam et al., 2020; Outhwaite, McCann and Newbold, 2022"), "Fox et al., 2013; Hallmann et al.,
-            2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas
-            et al., 2019; van der Sluijs, 2020; Macadam et al., 2020;
-            Outhwaite, McCann and Newbold, 2022", placement = "top"),
-            "highlights population
-declines in insects and other invertebrates at UK and global
-scales. These declines, which are evident across all functional
-groups of insects (herbivores, detritivores, parasitoids,
-predators and pollinators), could have catastrophic impacts
-on the Earth’s natural systems and human survivability
-on our planet. Invertebrates are functionally of greater
-importance than large-bodied fauna, and in terms of biomass,
-bioabundance and species diversity, they make up the
-greatest proportion of life on Earth."
+            "The Bugs Matter citizen science survey uses an innovative method for large-scale indiscriminate monitoring of flying insect populations.
+            Citizen scientists record the number of insect splats on their vehicle number plates following a journey,
+            having first removed any residual insects from previous journeys. The sampling technique is based on the ‘windscreen phenomenon’,
+            a term given to the anecdotal observation that fewer insect splats appear on the windscreens of cars now compared to a decade or several decades ago.
+            It has the potential to provide an efficient, standardised and scalable approach to monitor trends in insect abundance across local,
+            regional and global scales."
           ),
           shiny::p(
-            htmltools::HTML("The Bugs Matter citizen science survey took place throughout the UK between 1<sup>st</sup> June and 31<sup>st</sup>
-            August in 2021, 2022 and 2023, and between 1<sup>st</sup> May and 30<sup>th</sup> September in 2024, using the Bugs Matter
-            mobile application. In 2021 and 2022, users received a standardised sampling grid,
-            termed a ‘splatometer’, in the post after they had signed up in the application.
-            However, in 2023 the whole number plate was used to count insect splats."
-          )),
-          shiny::p(
-            "The Bugs Matter app is available to download for free from the Apple App Store and Google Play.
-            The app was built by Natural Apptitude and uses the Coreo data collection system. Within the app,
-            users add details about the vehicle used for sampling, and are asked to confirm whether their number
-            plate measures to standard UK dimensions, and if not, asked to manually input the
-            dimensions of their number plate. Multiple vehicles can be added by a single user. Vehicle specification
-            information is used in the analysis to determine if different types of vehicles sample insects differently."
+            "The Bugs Matter citizen science survey is adminstered by Kent Wildlife Trust and Buglife,
+            in partnership with the RSPB, Openreach and Amazon Web Services.
+            It has been running in the UK since 2021 and is gradually expanding to other countries.
+            The Bugs Matter app is available to download for free from the Apple App Store and Google Play.
+            The app was built by Natural Apptitude and uses the Coreo data collection system."
           ),
           shiny::div(
             style = "display: flex; justify-content: right; margin-bottom: 60px;",
@@ -167,7 +148,7 @@ greatest proportion of life on Earth."
                 "Explore journeys",
                 shiny::tags$i(
                   class = "fa fa-arrow-right"
-                ),
+                )
               ),
               class = "btn-primary m-2",
               `aria-label` = "Navigate to Explore journeys page"

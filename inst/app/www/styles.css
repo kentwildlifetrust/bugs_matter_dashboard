@@ -95,6 +95,10 @@ h3 {
   color: black;
 }
 
+.overview-message > strong {
+  font-weight: 500;
+}
+
 h1 {
   font-family: 'Adelle';
   font-weight: 700;
