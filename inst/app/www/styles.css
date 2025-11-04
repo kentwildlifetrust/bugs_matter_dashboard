@@ -289,3 +289,7 @@ hr.data-hr {
 .tab-pane.html-fill-item.html-fill-containe0r.bslib-gap-spacing.active.show {
     background: #c4e8ff;
 }
+
+.info.legend.leaflet-control > div:nth-child(5) {
+  display: none;
+}

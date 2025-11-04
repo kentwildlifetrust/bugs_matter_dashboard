@@ -14,6 +14,29 @@ library(magrittr)
 mod_participation_ui <- function(id) {
   ns <- shiny::NS(id)
 
+  data_header <- shiny::div(
+    class = "data-header",
+    shiny::h2(
+      shiny::span(id = ns("participation_title"), "Participation"),
+      shiny::actionLink(
+        ns("participation_info"),
+        shiny::tags$i(class = "fa fa-info-circle")
+      )
+    ),
+    shiny::actionButton(
+      ns("next_page"),
+      shiny::span(
+        style = "color: black;",
+        "Get involved",
+        shiny::tags$i(
+          class = "fa fa-up-right-from-square"
+        ),
+      ),
+      class = "btn-primary m-2",
+      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+    )
+  )
+
   data_control_row <- shiny::div(
     class = "data-control-row",
     shiny::div(
@@ -28,18 +51,6 @@ mod_participation_ui <- function(id) {
         selected = "All years",
         width = 150
       )
-    ),
-    shiny::actionButton(
-      ns("next_page"),
-      shiny::span(
-        style = "color: black;",
-        "Get involved",
-        shiny::tags$i(
-          class = "fa fa-up-right-from-square"
-        ),
-      ),
-      class = "btn-primary m-2",
-      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
     )
   )
 
@@ -152,16 +163,7 @@ mod_participation_ui <- function(id) {
   )
 
   bslib::page(
-    shiny::div(
-      class = "data-header",
-      shiny::h2(
-        shiny::span(id = ns("participation_title"), "Participation"),
-        shiny::actionLink(
-          ns("participation_info"),
-          shiny::tags$i(class = "fa fa-info-circle")
-        )
-      )
-    ),
+    data_header,
     shiny::hr(class = "data-hr"),
     data_control_row,
     # shiny::hr(class = "data-header-hr"),

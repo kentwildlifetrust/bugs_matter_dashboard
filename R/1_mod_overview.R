@@ -35,7 +35,18 @@ mod_overview_ui <- function(id) {
         shiny::tags$br(),
         shiny::div(
           class = "overview-body",
-          shiny::h3("At a Glance"),
+          shiny::h3(
+            "Global stats",
+            bslib::popover(
+              shiny::actionLink(
+                ns("global_stats_info"),
+                shiny::tags$i(class = "fa fa-info-circle"),
+                style = "font-size: 1.5rem;"
+              ),
+              "These statistics are based on a cleaned dataset. Approximately one fifth of the data has been ommited.",
+              placement = "bottom"
+            )
+          ),
           shiny::div(
             class = "overview-figures",
             shiny::div(
@@ -85,7 +96,7 @@ mod_overview_ui <- function(id) {
             ),
             shiny::tags$br(),
             bslib::navset_card_pill(
-              title = "Modelled yearly change in splat rate",
+              title = "Modelled yearly change in splat rate by region",
               bslib::card_body(
                 class = "p-0",
                 leaflet::leafletOutput(ns("map"), height = "100%"),
@@ -259,7 +270,7 @@ mod_overview_server <- function(id, conn, next_page) {
                      high,
                      p_value) {
               if (!is.na(est)) {
-                return(sprintf(
+                sprintf(
                   '<div class="popup-title">%s</div>
                   <hr class="popup-hr" />
                   <div class="map-stat-small">Statistically significant trend<div>
@@ -271,14 +282,14 @@ mod_overview_server <- function(id, conn, next_page) {
                   low,
                   high,
                   scales::pvalue(p_value, accuracy = 0.001)
-                ))
+                )
               } else {
-                return(sprintf(
+                sprintf(
                   '<div class="popup-title">%s</div>
                 <hr class="popup-hr" />
                 <div class="map-stat-small">No statistically significant trend</div>',
                   region_name
-                ))
+                )
               }
             },
             name,
@@ -321,7 +332,7 @@ mod_overview_server <- function(id, conn, next_page) {
           pal = pal,
           values = data$est,
           opacity = 1,
-          title = "Annual change in splat rate",
+          title = "Yearly change in splat rate",
           labFormat = leaflet::labelFormat(suffix = "%")
         )
     })

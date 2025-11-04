@@ -116,7 +116,7 @@ mod_explore_journeys_ui <- function(id) {
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;"
           ),
-          "Lorem ipsum.",
+          "This histogram plot shows how many journeys were recorded in different ambient air temperatures.",
           placement = "bottom"
         )
       )
@@ -224,7 +224,7 @@ mod_explore_journeys_ui <- function(id) {
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;"
           ),
-          "",
+          "This histogram plot shows how many journeys were recorded at different average speeds.",
           placement = "bottom"
         )
       )
@@ -252,7 +252,7 @@ mod_explore_journeys_ui <- function(id) {
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;"
           ),
-          "",
+          "This histogram plot shows how many journeys were recorded at different times of the day. ",
           placement = "bottom"
         )
       )
