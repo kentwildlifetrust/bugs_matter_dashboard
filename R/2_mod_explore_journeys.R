@@ -304,7 +304,7 @@ mod_explore_journeys_ui <- function(id) {
       min_height = 400,
       shinycssloaders::withSpinner(
         plotly::plotlyOutput(
-          ns("land_cover_jitter"),
+          ns("land_cover_violin"),
           height = "100%"
         )
       ),
@@ -312,12 +312,12 @@ mod_explore_journeys_ui <- function(id) {
         style = "position: absolute; top: 5px; right: 20px;",
         bslib::popover(
           shiny::actionLink(
-            ns("land_cover_jitter_info"),
+            ns("land_cover_violin_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;",
-            `aria-label` = "Information about land cover jitter plot"
+            `aria-label` = "Information about land cover violin plot"
           ),
-          "This jitter plot shows the distribution of land cover proportions for each journey. Each point represents the proportion of a specific land cover type encountered during a journey.",
+          "This violin plot shows the distribution of land cover proportions for each journey. The width represents the number of journeys that had that encountered that proportion of habitat. Horizontal lines show the mean habitat.",
           placement = "bottom"
         )
       )
@@ -971,9 +971,9 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
       next_page(next_page() + 1)
     })
 
-    #---------------------land cover jitter -----------------------#
+    #---------------------land cover violin -----------------------#
 
-    output$land_cover_jitter <- plotly::renderPlotly({
+    output$land_cover_violin <- plotly::renderPlotly({
       query <- if (is.null(email_filter())) {
         "SELECT forest, shrubland, arable, urban, grassland, wetland, marine, pasture
         FROM journeys.processed
@@ -1012,7 +1012,7 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
           .con = conn
         ) %>%
         DBI::dbGetQuery(conn, .) %>%
-        # Reshape data from wide to long format for jitter plot
+        # Reshape data from wide to long format for violin plot
         tidyr::pivot_longer(
           cols = everything(),
           names_to = "land_cover_type",
@@ -1026,27 +1026,63 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
             TRUE ~ stringr::str_to_title(land_cover_type)
           )
         )
-      land_cover_levels <- sort(unique(land_cover_data$land_cover_type))
-      land_cover_data <- land_cover_data %>%
-        dplyr::mutate(
-          level_index = as.numeric(factor(land_cover_type, levels = land_cover_levels)),
-          x_jitter = level_index + stats::runif(dplyr::n(), -0.25, 0.25)
-        )
 
-      plotly::plot_ly(
-        data = land_cover_data,
-        x = ~x_jitter,
-        y = ~proportion,
-        type = "scatter",
-        mode = "markers",
-        marker = list(
-          color = "#147331",
+      land_cover_levels <- sort(unique(land_cover_data$land_cover_type))
+
+      # Calculate mean proportions for each land cover type
+      mean_proportions <- land_cover_data %>%
+        dplyr::group_by(land_cover_type) %>%
+        dplyr::summarise(
+          mean_proportion = mean(proportion, na.rm = TRUE),
+          .groups = "drop"
+        ) %>%
+        dplyr::arrange(match(land_cover_type, land_cover_levels))
+
+      # Create base plot
+      p <- plotly::plot_ly()
+
+      # Add violin plots for each land cover type
+      for (i in seq_along(land_cover_levels)) {
+        cover_type <- land_cover_levels[i]
+        cover_data <- land_cover_data %>%
+          dplyr::filter(land_cover_type == cover_type) %>%
+          dplyr::pull(proportion)
+
+        p <- p %>% plotly::add_trace(
+          x = rep(i, length(cover_data)),
+          y = cover_data,
+          type = "violin",
+          name = cover_type,
+          side = "both",
+          width = 0.6,
+          fillcolor = "#147331",
+          line = list(color = "#147331"),
           opacity = 0.6,
-          size = 4
+          showlegend = FALSE,
+          hoverinfo = "y",
+          points = FALSE,
+          box = list(visible = FALSE),
+          meanline = list(visible = FALSE)
         )
-      ) %>%
+      }
+
+      # Create horizontal line shapes for each mean
+      mean_shapes <- lapply(seq_along(land_cover_levels), function(i) {
+        list(
+          type = "line",
+          x0 = i - 0.3,
+          x1 = i + 0.3,
+          y0 = mean_proportions$mean_proportion[i],
+          y1 = mean_proportions$mean_proportion[i],
+          line = list(color = "black", width = 2),
+          layer = "above"
+        )
+      })
+
+      p <- p %>%
       plotly::layout(
         dragmode = FALSE,
+        shapes = mean_shapes,
         yaxis = list(
           title = "Proportion Coverage",
           range = c(0, 1)
@@ -1062,6 +1098,8 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
       plotly::config(
         displayModeBar = FALSE
       )
+
+      p
     })
 
     # output$map <- leaflet::renderLeaflet({
