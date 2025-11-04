@@ -189,6 +189,10 @@ p {
   margin-right: -0.2rem;
 }
 
+.ref-link-light {
+  color: #72DB41;
+}
+
 .map-stat-large {
   font-family: 'Adelle';
   font-size: 1.43rem;
@@ -263,7 +267,7 @@ hr.data-hr {
   min-height: 56px;
 }
 .nav.nav-pills.card-header-pills>.nav-item>.nav-link.active {
-  color: black !important;
+  font-weight: 400;
 }
 .cards-container {
   display: grid;
@@ -292,4 +296,10 @@ hr.data-hr {
 
 .info.legend.leaflet-control > div:nth-child(5) {
   display: none;
+}
+
+.bslib-nav-item.nav-item:last-child {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
 }

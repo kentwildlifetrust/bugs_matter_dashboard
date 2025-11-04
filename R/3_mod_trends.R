@@ -20,24 +20,27 @@ mod_trends_ui <- function(id) {
       "Trend Analysis",
       shiny::actionLink(
         ns("analysis_info"),
-        shiny::tags$i(class = "fa fa-info-circle")
+        shiny::tags$i(class = "fa fa-info-circle"),
+        `aria-label` = "Information about trend analysis"
       )
     ),
     tags$a(
       shiny::actionButton(
         ns("next_page"),
         shiny::span(
-          style = "color: black;",
+          style = "font-weight: 400;",
           "Track participation",
           shiny::tags$i(
             class = "fa fa-arrow-right"
           ),
         ),
         class = "btn-primary m-2",
-          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
+          `aria-label` = "Go to Track participation page on Kent Wildlife Trust website (opens in new tab)"
       ),
       href = "https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter",
-      target = "_blank"
+      target = "_blank",
+      `aria-label` = "Go to Track participation page on Kent Wildlife Trust website (opens in new tab)"
     )
   )
 
@@ -89,7 +92,8 @@ mod_trends_ui <- function(id) {
             shiny::actionLink(
               ns("model_predicted_info"),
               shiny::tags$i(class = "fa fa-info-circle"),
-              style = "font-size: 1.5rem;"
+              style = "font-size: 1.5rem;",
+              `aria-label` = "Information about model predictions plot"
             ),
             "This plot shows the predicted splat counts from the Negative Binomial statistical model for each year. These are the most reliable results because the statistical model takes into account other factors that could affect how many insects are splatted.",
             placement = "bottom"
@@ -114,7 +118,8 @@ mod_trends_ui <- function(id) {
             shiny::actionLink(
               ns("cumulative_average_info"),
               shiny::tags$i(class = "fa fa-info-circle"),
-              style = "font-size: 1.5rem;"
+              style = "font-size: 1.5rem;",
+              `aria-label` = "Information about cumulative average plot"
             ),
             "This line plot shows how the mean splat rate changes over time. This result doesn't take into account all the other factors that could affect how many insects are splatted, so it should be interpreted with caution.",
             placement = "bottom"
@@ -149,9 +154,10 @@ mod_trends_ui <- function(id) {
             shiny::actionLink(
               ns("forest_info"),
               shiny::tags$i(class = "fa fa-info-circle"),
-              style = "font-size: 1.5rem;"
+              style = "font-size: 1.5rem;",
+              `aria-label` = "Information about forest plot"
             ),
-            "This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per km) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of ‘cars’.",
+            "This forest plot of incidence rate ratios from the Negative Binomial statistical model shows the quantity of change (a multiplier) in the splat rate (splats per cm per km) given a one-unit change in the independent variables, while holding other variables in the model constant. Significant relationships between splat rate and independent variables are shown by asterisks (* p < 0.05, ** p < 0.01, *** p < 0.001). Vehicle types are compared to the reference category of 'cars'.",
             placement = "bottom"
           )
         )
@@ -233,7 +239,8 @@ mod_trends_server <- function(id, conn, next_page) {
             shiny::actionLink(
               ns("close_modal"),
               shiny::tags$i(class = "fa fa-xmark-circle"),
-              style = "font-size: 1.5rem; margin-bottom: .5rem;"
+              style = "font-size: 1.5rem; margin-bottom: .5rem;",
+              `aria-label` = "Close modal dialog"
             )
           ),
           shiny::p(
@@ -390,7 +397,8 @@ mod_trends_server <- function(id, conn, next_page) {
         bslib::tooltip(
           shiny::a(
             "[1]",
-            class = "ref-link ref-link-nospace"
+            class = "ref-link ref-link-nospace ref-link-light",
+            `aria-label` = sprintf("Statistical information: 95%% confidence interval: %s to %s, p %s", vals$low, vals$high, vals$p_value)
           ),
           sprintf("%s confidence interval: %s to %s, p %s", "95%", vals$low, vals$high, vals$p_value),
           placement = "bottom"

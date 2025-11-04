@@ -41,7 +41,8 @@ mod_overview_ui <- function(id) {
               shiny::actionLink(
                 ns("global_stats_info"),
                 shiny::tags$i(class = "fa fa-info-circle"),
-                style = "font-size: 1.5rem;"
+                style = "font-size: 1.5rem;",
+                `aria-label` = "Information about global statistics"
               ),
               "These statistics are based on a cleaned dataset. Approximately one fifth of the data has been ommited.",
               placement = "bottom"
@@ -60,7 +61,7 @@ mod_overview_ui <- function(id) {
                   showcase = tags$i(class = "fa fa-route fa-solid"),
                   theme = bslib::value_box_theme(
                     bg = "#3C91E6",
-                    fg = "#FFF"
+                    fg = "#000"
                   ),
                   showcase_layout = "top right"
                 )
@@ -95,7 +96,7 @@ mod_overview_ui <- function(id) {
               )
             ),
             shiny::tags$br(),
-            bslib::navset_card_pill(
+            bslib::card(
               title = "Modelled yearly change in splat rate by region",
               bslib::card_body(
                 class = "p-0",
@@ -120,17 +121,17 @@ phenomenon’, a term given to the anecdotal observation that fewer insect splat
 the windscreens of cars now compared to a decade or
 several decades ago. These observations, which have also
 been reported from empirical data",
-            bslib::tooltip(shiny::a("[2]", class = "ref-link ref-link-nospace"), "Møller, 2019", placement = "top"),
+            bslib::tooltip(shiny::a("[2]", class = "ref-link ref-link-nospace", `aria-label` = "Reference: Møller, 2019"), "Møller, 2019", placement = "top"),
             ", have been
 interpreted as an indicator of major global declines in insect
 abundance."
           ),
           shiny::p(
             "A growing body of evidence",
-            bslib::tooltip(shiny::a("[3]", class = "ref-link"), "Fox et al., 2013; Hallmann et al.,
-2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas
-et al., 2019; van der Sluijs, 2020; Macadam et al., 2020;
-Outhwaite, McCann and Newbold, 2022", placement = "top"),
+            bslib::tooltip(shiny::a("[3]", class = "ref-link", `aria-label` = "Reference: Fox et al., 2013; Hallmann et al., 2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas et al., 2019; van der Sluijs, 2020; Macadam et al., 2020; Outhwaite, McCann and Newbold, 2022"), "Fox et al., 2013; Hallmann et al.,
+            2017; Goulson, D. 2019; Sánchez-Bayo et al., 2019; Thomas
+            et al., 2019; van der Sluijs, 2020; Macadam et al., 2020;
+            Outhwaite, McCann and Newbold, 2022", placement = "top"),
             "highlights population
 declines in insects and other invertebrates at UK and global
 scales. These declines, which are evident across all functional
@@ -162,13 +163,14 @@ greatest proportion of life on Earth."
             shiny::actionButton(
               ns("next_page"),
               shiny::span(
-                style = "color: black;",
+                style = "font-weight: 400;",
                 "Explore journeys",
                 shiny::tags$i(
                   class = "fa fa-arrow-right"
                 ),
               ),
-              class = "btn-primary m-2"
+              class = "btn-primary m-2",
+              `aria-label` = "Navigate to Explore journeys page"
             )
           )
         )
@@ -218,7 +220,8 @@ mod_overview_server <- function(id, conn, next_page) {
         bslib::tooltip(
           shiny::a(
             "[1]",
-            class = "ref-link ref-link-nospace"
+            class = "ref-link ref-link-nospace ref-link-light",
+            `aria-label` = sprintf("Statistical information: 95%% confidence interval: %s to %s, p %s", vals$low, vals$high, vals$p_value)
           ),
           sprintf("%s confidence interval: %s to %s, p %s", "95%", vals$low, vals$high, vals$p_value),
           placement = "bottom"

@@ -20,13 +20,14 @@ mod_participation_ui <- function(id) {
       shiny::span(id = ns("participation_title"), "Participation"),
       shiny::actionLink(
         ns("participation_info"),
-        shiny::tags$i(class = "fa fa-info-circle")
+        shiny::tags$i(class = "fa fa-info-circle"),
+        `aria-label` = "Information about participation"
       )
     ),
     shiny::actionButton(
       ns("next_page"),
       shiny::span(
-        style = "color: black;",
+        style = "font-weight: 400;",
         "Get involved",
         shiny::tags$i(
           class = "fa fa-up-right-from-square"
@@ -34,7 +35,8 @@ mod_participation_ui <- function(id) {
       ),
       class = "btn-primary m-2",
       style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
-      onclick = "window.open('https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter#how-to-take-part', '_blank');"
+      onclick = "window.open('https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter#how-to-take-part', '_blank');",
+      `aria-label` = "Get involved with Bugs Matter project on Kent Wildlife Trust website (opens in new tab)"
     )
   )
 
@@ -101,7 +103,8 @@ mod_participation_ui <- function(id) {
           shiny::actionLink(
             ns("cumulative_sign_ups_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about cumulative sign ups chart"
           ),
           "Lorem ipsum.",
           placement = "bottom"
@@ -127,7 +130,8 @@ mod_participation_ui <- function(id) {
           shiny::actionLink(
             ns("cumulative_distance_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about cumulative distance chart"
           ),
           "Lorem ipsum.",
           placement = "bottom"
@@ -153,7 +157,8 @@ mod_participation_ui <- function(id) {
           shiny::actionLink(
             ns("cumulative_journeys_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about cumulative journeys chart"
           ),
           "Lorem ipsum.",
           placement = "bottom"
@@ -214,7 +219,8 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
             shiny::actionLink(
               ns("close_modal"),
               shiny::tags$i(class = "fa fa-xmark-circle"),
-              style = "font-size: 1.5rem; margin-bottom: .5rem;"
+              style = "font-size: 1.5rem; margin-bottom: .5rem;",
+              `aria-label` = "Close modal dialog"
             )
           ),
           shiny::p(

@@ -9,7 +9,7 @@ theme <- function() {
   bslib::bs_theme(
     bg = "#F7F9FE",
     fg = "#0F0F0F",
-    primary = "#72DB41",
+    primary = "#147331",
     secondary = "#02606F",
     success = "#00A36A",
     warning = "#FFAB00",
@@ -27,7 +27,7 @@ theme <- function() {
     "dropdown-bg" = "#FFFFFF",
     "navbar-bg" = "#c4e8ff",
     "card-border-width" = "2px",
-    "card-border-color" = "#72DB41",
+    "card-border-color" = "#147331",
     "nav-link-active-font-weight" = 600,
     "font-size-lg" = "1.2rem"
   )

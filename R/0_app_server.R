@@ -43,7 +43,7 @@ app_server <- function(input, output, session) {
         selectInput("email_filter", "Organisation", choices = organisation_choices, selected = NULL),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_organisation", "Log in", class = "btn-primay")
+          actionButton("confirm_organisation", "Confirm", class = "btn-primary")
         ),
         size = "m",
         easyClose = TRUE
@@ -54,7 +54,7 @@ app_server <- function(input, output, session) {
         p("Journeys and Participation will no longer be restricted to your organisation."),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_log_out", "Log out", class = "btn-primary")
+          actionButton("confirm_log_out", "Confirm", class = "btn-primary")
         ),
         size = "m",
         easyClose = TRUE

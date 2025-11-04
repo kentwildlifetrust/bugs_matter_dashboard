@@ -5,43 +5,52 @@
 #' @import shiny
 #' @noRd
 app_ui <- function(request) {
-  shiny::tagList(
-    # Leave this function for adding external resources
-    golem_add_external_resources(),
-    # Your application UI logic
-    bslib::page_navbar(
-      id = "page_navbar",
-      title = shiny::tagList(
-        tags$img(src = "www/bm_bug_icon1.png", height = "30px"),
-        "Bugs",
-        shiny::span("Matter")
-      ),
-      bslib::nav_panel(
-        title = "Overview",
-        value = 1,
-        mod_overview_ui("overview_1")
-      ),
-      bslib::nav_panel(
-        title = "Journeys",
-        value = 2,
-        mod_explore_journeys_ui("explore_journeys_1")
-      ),
-      bslib::nav_panel(
-        title = "Trends",
-        value = 3,
-        mod_trends_ui("trends_1")
-      ),
-      bslib::nav_panel(
-        title = "Participation",
-        value = 4,
-        mod_participation_ui("participation_1")
-      ),
-      bslib::nav_item(
-        actionButton("log_in", "Log in")
-      ),
-      theme = theme()
-    )
+  shiny::tags$html(
+    lang = "en",
+    shiny::tagList(
+      # Leave this function for adding external resources
+      golem_add_external_resources(),
+      # Your application UI logic
+      bslib::page_navbar(
+        id = "page_navbar",
+        title = shiny::tagList(
+          tags$img(src = "www/bm_bug_logo.png", height = "28px", alt = "Bugs Matter Logo"),
+          "Bugs",
+          shiny::span("Matter")
+        ),
+        bslib::nav_panel(
+          title = "Overview",
+          value = 1,
+          mod_overview_ui("overview_1")
+        ),
+        bslib::nav_panel(
+          title = "Journeys",
+          value = 2,
+          mod_explore_journeys_ui("explore_journeys_1")
+        ),
+        bslib::nav_panel(
+          title = "Trends",
+          value = 3,
+          mod_trends_ui("trends_1")
+        ),
+        bslib::nav_panel(
+          title = "Participation",
+          value = 4,
+          mod_participation_ui("participation_1")
+        ),
+        bslib::nav_item(
+          actionButton(
+            "log_in",
+            "Log in",
+            class = "btn-primary",
+            style = "flex-grow: 0; height: min-content; margin: 0 !important; font-weight: 400;",
+            `aria-label` = "Log in to view organization-specific data"
+          )
+        ),
+        theme = theme()
+      )
 
+    )
   )
 }
 

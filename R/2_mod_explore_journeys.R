@@ -20,20 +20,22 @@ mod_explore_journeys_ui <- function(id) {
       shiny::span(id = ns("journeys_title"), "Journeys"),
       shiny::actionLink(
           ns("data_collection_info"),
-          shiny::tags$i(class = "fa fa-info-circle")
+          shiny::tags$i(class = "fa fa-info-circle"),
+          `aria-label` = "Information about data collection"
       )
     ),
     shiny::actionButton(
       ns("next_page"),
       shiny::span(
-        style = "color: black;",
+        style = "font-weight: 400;",
         "Analyse trends",
         shiny::tags$i(
           class = "fa fa-arrow-right"
         ),
       ),
       class = "btn-primary m-2",
-      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;"
+      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
+      `aria-label` = "Navigate to Analyse trends page"
     )
   )
 
@@ -79,7 +81,7 @@ mod_explore_journeys_ui <- function(id) {
         value = shiny::textOutput(ns("distance")),
         theme = bslib::value_box_theme(
           bg = "#72DB41",
-          fg = "#FFF"
+          fg = "#000"
         ),
         showcase_layout = "top right"
       )
@@ -114,7 +116,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("temperature_histogram_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about temperature histogram"
           ),
           "This histogram plot shows how many journeys were recorded in different ambient air temperatures.",
           placement = "bottom"
@@ -141,7 +144,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("distance_histogram_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about distance histogram"
           ),
           "This histogram plot shows how many journeys of different lengths were recorded. There tends to be more shorter journeys than longer journeys.",
           placement = "bottom"
@@ -168,7 +172,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("elevation_histogram_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about elevation histogram"
           ),
           "This histogram plot shows how many journeys were recorded at different elevation levels. The distribution shows the range of elevations where journeys typically occur.",
           placement = "bottom"
@@ -195,7 +200,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("day_of_year_histogram_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about day of year histogram"
           ),
           "This histogram plot shows how many journeys were recorded on different days of the year. The distribution shows seasonal patterns in journey activity.",
           placement = "bottom"
@@ -222,7 +228,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("speed_histogram_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about speed histogram"
           ),
           "This histogram plot shows how many journeys were recorded at different average speeds.",
           placement = "bottom"
@@ -250,7 +257,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("time_of_day_histogram_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about time of day histogram"
           ),
           "This histogram plot shows how many journeys were recorded at different times of the day. ",
           placement = "bottom"
@@ -278,7 +286,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("vehicle_bars_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about vehicle type bar chart"
           ),
           "This bar plot shows how many journeys were recorded in different vehicle types. Most journeys are recorded in cars.",
           placement = "bottom"
@@ -305,7 +314,8 @@ mod_explore_journeys_ui <- function(id) {
           shiny::actionLink(
             ns("land_cover_jitter_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
-            style = "font-size: 1.5rem;"
+            style = "font-size: 1.5rem;",
+            `aria-label` = "Information about land cover jitter plot"
           ),
           "This jitter plot shows the distribution of land cover proportions for each journey. Each point represents the proportion of a specific land cover type encountered during a journey.",
           placement = "bottom"
@@ -368,7 +378,8 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
             shiny::actionLink(
               ns("close_modal"),
               shiny::tags$i(class = "fa fa-xmark-circle"),
-              style = "font-size: 1.5rem; margin-bottom: .5rem;"
+              style = "font-size: 1.5rem; margin-bottom: .5rem;",
+              `aria-label` = "Close modal dialog"
             )
           ),
           shiny::p(
