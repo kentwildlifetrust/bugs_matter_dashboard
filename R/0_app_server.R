@@ -43,7 +43,7 @@ app_server <- function(input, output, session) {
         selectInput("email_filter", "Organisation", choices = organisation_choices, selected = NULL),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton("confirm_organisation", "Log in", class = "btn-primary")
+          actionButton("confirm_organisation", "Log in", class = "btn-primay")
         ),
         size = "m",
         easyClose = TRUE
