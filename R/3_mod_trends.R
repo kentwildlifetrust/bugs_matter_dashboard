@@ -24,23 +24,18 @@ mod_trends_ui <- function(id) {
         `aria-label` = "Information about trend analysis"
       )
     ),
-    tags$a(
-      shiny::actionButton(
-        ns("next_page"),
-        shiny::span(
-          style = "font-weight: 400;",
-          "Track participation",
-          shiny::tags$i(
-            class = "fa fa-arrow-right"
-          ),
+    shiny::actionButton(
+      ns("next_page"),
+      shiny::span(
+        style = "font-weight: 400;",
+        "Track participation",
+        shiny::tags$i(
+          class = "fa fa-arrow-right"
         ),
-        class = "btn-primary m-2",
-          style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
-          `aria-label` = "Go to Track participation page on Kent Wildlife Trust website (opens in new tab)"
       ),
-      href = "https://www.kentwildlifetrust.org.uk/get-involved/our-projects/bugs-matter",
-      target = "_blank",
-      `aria-label` = "Go to Track participation page on Kent Wildlife Trust website (opens in new tab)"
+      class = "btn-primary m-2",
+      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
+      `aria-label` = "Go to Track participation page"
     )
   )
 
@@ -179,7 +174,7 @@ mod_trends_ui <- function(id) {
         shiny::tagAppendAttributes(style = "position: relative;")
     )
   ) %>%
-  shiny::tagAppendAttributes(style = "flex: 1;")
+    shiny::tagAppendAttributes(style = "flex: 1;")
 
   bslib::page(
     data_header,
@@ -277,7 +272,7 @@ mod_trends_server <- function(id, conn, next_page) {
     })
 
     region_codes <- reactive({
-      #3 character values are country codes
+      # 3 character values are country codes
       if (input$region == "world") {
         bugsMatterDashboard::regions %>%
           dplyr::pull(code)
@@ -350,17 +345,17 @@ mod_trends_server <- function(id, conn, next_page) {
       )
       est2 <- -1 * (1 - exp(est1))
       est2 <- est2 %>%
-          as.data.frame() %>%
-          dplyr::mutate(term = row.names(est1)) %>%
-          dplyr::left_join(
-            pvals,
-            by = "term"
-          ) %>%
-          dplyr::rename(
-            low = "2.5 %",
-            high = "97.5 %",
-            estimate = "Estimate"
-          )
+        as.data.frame() %>%
+        dplyr::mutate(term = row.names(est1)) %>%
+        dplyr::left_join(
+          pvals,
+          by = "term"
+        ) %>%
+        dplyr::rename(
+          low = "2.5 %",
+          high = "97.5 %",
+          estimate = "Estimate"
+        )
       row.names(est2) <- est2$term
       est2 %>%
         dplyr::filter(!term %in% c("(Intercept)", "stats::offset(log_cm_km_offset)")) %>%
@@ -460,7 +455,8 @@ mod_trends_server <- function(id, conn, next_page) {
             sig_description,
             nonsig_description
           ),
-          confidence_interval = mapply(function(low, high) {
+          confidence_interval = mapply(
+            function(low, high) {
               interval <- sort(c(low, high))
               sprintf("%s to %s", round(interval[1], 3), round(interval[2], 3))
             },

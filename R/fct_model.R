@@ -6,12 +6,6 @@
 #'
 #' @noRd
 model <- function(journeys) {
-  journeys$vehicle_class <- as.factor(journeys$vehicle_class)
-  journeys$year <- as.integer(journeys$year)
-  journeys$time_of_day <- format(journeys$midpoint_time, "%H:%M:%S")
-  journeys$time_of_day <- as.numeric(lubridate::hms(journeys$time_of_day)) / 3600
-  journeys$temperature[is.na(journeys$temperature)] <- mean(journeys$temperature, na.rm = TRUE)
-
   journeys <- journeys %>%
     dplyr::rename(
       "Year" = year,

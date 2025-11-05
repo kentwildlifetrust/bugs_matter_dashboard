@@ -36,7 +36,7 @@ mod_overview_ui <- function(id) {
         shiny::div(
           class = "overview-body",
           shiny::h3(
-            "Global stats",
+            "Global Stats",
             bslib::popover(
               shiny::actionLink(
                 ns("global_stats_info"),
