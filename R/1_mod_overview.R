@@ -136,11 +136,25 @@ mod_overview_ui <- function(id) {
             "The Bugs Matter citizen science survey is adminstered by Kent Wildlife Trust and Buglife,
             in partnership with the RSPB, Openreach and Amazon Web Services.
             It has been running in the UK since 2021 and is gradually expanding to other countries.
-            The Bugs Matter app is available to download for free from the Apple App Store and Google Play.
-            The app was built by Natural Apptitude and uses the Coreo data collection system."
+            The Bugs Matter app is available to download for free from the",
+            tags$a(
+              "Apple App Store",
+              `aria-label` = "Bugs Matter on the Apple App Store (opens in new tab).",
+              target = "_blank",
+              href = "https://apps.apple.com/gb/app/bugs-matter/id1525891356"
+            ),
+            "and",
+            tags$a(
+              "Google Play",
+              `aria-label` = "Bugs Matter on the Google Play Store (opens in new tab).",
+              target = "_blank",
+              href = "https://play.google.com/store/apps/details?id=com.natural_apptitude.bugsmatter&pcampaignid=web_share",
+              style = "margin-right: -0.2rem;"
+            ),
+            ". The app was built by Natural Apptitude and uses the Coreo data collection system."
           ),
           shiny::div(
-            style = "display: flex; justify-content: right; margin-bottom: 60px;",
+            style = "display: flex; justify-content: right; margin-bottom: 30px;",
             shiny::actionButton(
               ns("next_page"),
               shiny::span(
@@ -153,6 +167,16 @@ mod_overview_ui <- function(id) {
               class = "btn-primary m-2",
               `aria-label` = "Navigate to Explore journeys page"
             )
+          ),
+          div(
+            style = "display: flex; justify-content: center; gap: 50px; align-items: center; margin-bottom: 30px;",
+            tags$img(src = "www/kwt-logo-landscape.png", width = 220, height = "100%"),
+            tags$img(src = "www/buglife-logo.png", height = 100, height = "100%"),
+            tags$img(src = "www/natural-apptitude-logo.png", width = 220, height = "100%")
+          ),
+          div(
+            style = "color: #515151; margin-bottom: 60px; text-align: center; max-width: 630px; margin-left: auto; margin-right: auto;",
+            "We’re always working to improve how we analyse the Bugs Matter data. This means the figures and trends shown here may change slightly as our methods develop."
           )
         )
       )
@@ -167,7 +191,7 @@ mod_overview_server <- function(id, conn, next_page) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    pal <- leaflet::colorNumeric("Spectral", -30:30)
+    pal <- leaflet::colorNumeric("Spectral", -40:40)
 
     output$distance <- shiny::renderText({
         "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS length FROM journeys.processed;" %>%

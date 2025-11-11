@@ -49,6 +49,7 @@ model <- function(journeys) {
     Proportion.arable +
     # Proportion.pasture +
     Proportion.urban +
+    (1|user_id) +
     offset(log_cm_km_offset),
     family = glmmTMB::nbinom2,
     data = journeys,

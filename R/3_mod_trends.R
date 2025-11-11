@@ -289,6 +289,7 @@ mod_trends_server <- function(id, conn, next_page) {
       journeys <- "SELECT year,
           distance,
           avg_speed_kmh,
+          user_id,
           vehicle_class,
           vehicle_height,
           time_of_day,
@@ -309,7 +310,8 @@ mod_trends_server <- function(id, conn, next_page) {
           log_cm_km_offset,
           splat_count
         FROM journeys.processed
-        WHERE region_code IS NOT NULL AND region_code IN ({region_codes*});" %>%
+        WHERE region_code IS NOT NULL AND region_code IN ({region_codes*})
+        AND end_timestamp >= '2021-06-01'::TIMESTAMP;" %>%
         glue::glue_data_sql(
           list(
             region_codes = region_codes()
@@ -656,6 +658,7 @@ mod_trends_server <- function(id, conn, next_page) {
       WHERE splat_rate IS NOT NULL AND midpoint_time IS NOT NULL
       AND region_code IN ({region_codes*})
       AND region_code IS NOT NULL
+      AND end_timestamp >= '2021-06-01'::TIMESTAMP
       ORDER BY
         midpoint_time;
       " %>%
