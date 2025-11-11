@@ -75,10 +75,10 @@ golem_add_external_resources <- function() {
 
   shiny::tags$head(
     tags$html(HTML(
-      '<script async src="https://www.googletagmanager.com/gtag/js?id=G-JM7YQ5GYG1"></script>'
+      '<script async src="https://www.googletagmanager.com/gtag/js?id=G-7TP3WRM9QZ"></script>'
     )),
     tags$script(
-      src = "https://cc.cdn.civiccomputing.com/9/cookieControl-9.x.min.js",
+      src = "https://cc.cdn.civiccomputing.com/9/cookieControl-9.10.1.min.js",
       type = "text/javascript"
     ),
     #
@@ -97,7 +97,7 @@ golem_add_external_resources <- function() {
         thirdPartyTitle : 'Warning: Some cookies require your attention',
         thirdPartyDescription : 'Consent for some third party cookies can not be automatically revoked. Please follow the link below if you want to opt out of them.'
       },
-      'necessaryCookies': ['rscid', 'rscid-legacy', 'rsconnect', 'rsconnect-legacy', 'RSC-XSRF', 'RSC-XSRF-legacy'],
+      'necessaryCookies': ['SESSION'],
       'optionalCookies': [{
         'name': 'analytics',
         'label': 'Analytical Cookies',
