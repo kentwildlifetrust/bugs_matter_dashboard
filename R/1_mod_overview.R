@@ -27,7 +27,9 @@ mod_overview_ui <- function(id) {
           shiny::tags$br(),
           shiny::p(
             class = "overview-lead",
-            "Stay up to date with", tags$strong("Bugs Matter"), " - the global citizen science survey tracking flying insect abundance through ‘bug splats’ on vehicle number plates.
+            "Stay up to date with",
+            tags$strong("Bugs Matter"),
+            " - the global citizen science survey tracking flying insect abundance through ‘bug splats’ on vehicle number plates.
             Explore where and how many journeys have been recorded, the distances travelled, and the types of vehicles used.
             Discover trends in bug splats across locations and time, and see how our global community of recorders is contributing to the project."
           )
@@ -44,7 +46,7 @@ mod_overview_ui <- function(id) {
                 style = "font-size: 1.5rem;",
                 `aria-label` = "Information about global statistics"
               ),
-              "These statistics are based on a cleaned dataset. Approximately one fifth of the data has been ommited.",
+              "These statistics are based on a cleaned dataset. Approximately one fifth of the data has been omitted.",
               placement = "bottom"
             )
           ),
@@ -133,7 +135,7 @@ mod_overview_ui <- function(id) {
             regional and global scales."
           ),
           shiny::p(
-            "The Bugs Matter citizen science survey is adminstered by Kent Wildlife Trust and Buglife,
+            "The Bugs Matter citizen science survey is administered by Kent Wildlife Trust and Buglife,
             in partnership with the RSPB, Openreach and Amazon Web Services.
             It has been running in the UK since 2021 and is gradually expanding to other countries.
             The Bugs Matter app is available to download for free from the",
@@ -169,14 +171,27 @@ mod_overview_ui <- function(id) {
             )
           ),
           div(
-            style = "display: flex; justify-content: center; gap: 50px; align-items: center; margin-bottom: 30px;",
-            tags$img(src = "www/kwt-logo-landscape.png", width = 220, height = "100%"),
-            tags$img(src = "www/buglife-logo.png", height = 100, height = "100%"),
-            tags$img(src = "www/natural-apptitude-logo.png", width = 220, height = "100%")
+            style = "display: flex; justify-content: center; column-gap: 40px; align-items: center; margin-bottom: 30px; flex-wrap: wrap;",
+            tags$img(
+              src = "www/kwt-logo-landscape.png",
+              width = 220,
+              height = "100%"
+            ),
+            tags$img(
+              src = "www/buglife-logo.png",
+              height = 100,
+              height = "100%"
+            ),
+            tags$img(
+              src = "www/natural-apptitude-logo.png",
+              width = 220,
+              height = "100%"
+            )
           ),
           div(
             style = "color: #515151; margin-bottom: 60px; text-align: center; max-width: 630px; margin-left: auto; margin-right: auto;",
-            "We’re always working to improve how we analyse the Bugs Matter data. This means the figures and trends shown here may change slightly as our methods develop."
+            "We’re always working to improve how we analyse the Bugs Matter data.
+            This means the figures and trends shown here may change slightly as our methods develop."
           )
         )
       )
@@ -194,7 +209,7 @@ mod_overview_server <- function(id, conn, next_page) {
     pal <- leaflet::colorNumeric("Spectral", -40:40)
 
     output$distance <- shiny::renderText({
-        "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS length FROM journeys.processed;" %>%
+      "SELECT ROUND(SUM(distance)::NUMERIC, 0) AS length FROM journeys.processed;" %>%
         DBI::dbGetQuery(conn, .) %>%
         dplyr::pull("length") %>%
         format(big.mark = ",") %>%
@@ -214,9 +229,9 @@ mod_overview_server <- function(id, conn, next_page) {
         "SELECT est, low, high, p_value FROM analysis.yearly_change WHERE region = 'global' LIMIT 1;"
       ) %>%
         dplyr::mutate(
-          est = paste0(round(est, 1), "%"),
-          low = paste0(round(low, 1), "%"),
-          high = paste0(round(high, 1), "%"),
+          est = paste0(format(round(est, 1), nsmall = 1), "%"),
+          low = paste0(format(round(low, 1), nsmall = 1), "%"),
+          high = paste0(format(round(high, 1), nsmall = 1), "%"),
           p_value = scales::pvalue(p_value, accuracy = 0.001)
         )
 
@@ -226,9 +241,20 @@ mod_overview_server <- function(id, conn, next_page) {
           shiny::a(
             "[1]",
             class = "ref-link ref-link-nospace ref-link-light",
-            `aria-label` = sprintf("Statistical information: 95%% confidence interval: %s to %s, p %s", vals$low, vals$high, vals$p_value)
+            `aria-label` = sprintf(
+              "Statistical information: 95%% confidence interval: %s to %s, p %s",
+              vals$low,
+              vals$high,
+              vals$p_value
+            )
           ),
-          sprintf("%s confidence interval: %s to %s, p %s", "95%", vals$low, vals$high, vals$p_value),
+          sprintf(
+            "%s confidence interval: %s to %s, p %s",
+            "95%",
+            vals$low,
+            vals$high,
+            vals$p_value
+          ),
           placement = "bottom"
         )
       )
@@ -272,11 +298,7 @@ mod_overview_server <- function(id, conn, next_page) {
             weight = 2
           ),
           popup = ~ mapply(
-            function(region_name,
-                     est,
-                     low,
-                     high,
-                     p_value) {
+            function(region_name, est, low, high, p_value) {
               if (!is.na(est)) {
                 sprintf(
                   '<div class="popup-title">%s</div>

@@ -34,7 +34,7 @@ mod_trends_ui <- function(id) {
         ),
       ),
       class = "btn-primary m-2",
-      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
+      style = "flex-grow: 0; height: min-content;",
       `aria-label` = "Go to Track participation page"
     )
   )
@@ -47,7 +47,7 @@ mod_trends_ui <- function(id) {
         ns("region"),
         "Region",
         choices = bugsMatterDashboard::region_choices,
-        selected = "world",
+        selected = "global",
         width = 250
       ),
       # uiOutput(ns("slider_input"))
@@ -243,8 +243,8 @@ mod_trends_server <- function(id, conn, next_page) {
             recorded by citizen scientists are converted to a ‘splat rate’ by dividing the insect splat count by
             the number plate sampling area and the journey distance, expressed in a unit of ‘splats per cm² per km’.
             This metric makes the data comparable between journeys and is defined as the number of insects sampled
-            per cm² of the number plate every kilometre. The response variable (insect count) shows a heavily right-skewed
-            distribution due to the high number of zero and low values, as is typical for count-derived data.
+            per cm² of the number plate every kilometre. The response variable (insect count) shows a heavily
+            right-skewed distribution due to the high number of zero and low values, as is typical for count-derived data.
             Therefore, a negative binomial generalized linear model (NB) was used to examine the relative effects
             of survey year, time of day of the journey, calendar date of the journey, average journey temperature,
             average journey speed, journey distance, vehicle type, elevation, local land cover, and road type, on
@@ -273,7 +273,7 @@ mod_trends_server <- function(id, conn, next_page) {
 
     region_codes <- reactive({
       # 3 character values are country codes
-      if (input$region == "world") {
+      if (input$region == "global") {
         bugsMatterDashboard::regions %>%
           dplyr::pull(code)
       } else if (nchar(input$region) == 3) {
@@ -285,107 +285,39 @@ mod_trends_server <- function(id, conn, next_page) {
       }
     })
 
-    mod <- shiny::reactive({
-      journeys <- "SELECT year,
-          distance,
-          avg_speed_kmh,
-          user_id,
-          vehicle_class,
-          vehicle_height,
-          time_of_day,
-          day_of_year,
-          elevation,
-          temperature,
-          center_lat,
-          center_lon,
-          midpoint_time,
-          forest * 100 AS forest,
-          shrubland * 100 AS shrubland,
-          grassland * 100 AS grassland,
-          wetland * 100 AS wetland,
-          arable * 100 AS arable,
-          urban * 100 AS urban,
-          pasture * 100 AS pasture,
-          marine * 100 AS marine,
-          log_cm_km_offset,
-          splat_count
-        FROM journeys.processed
-        WHERE region_code IS NOT NULL AND region_code IN ({region_codes*})
-        AND end_timestamp >= '2021-06-01'::TIMESTAMP;" %>%
-        glue::glue_data_sql(
-          list(
-            region_codes = region_codes()
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(
-          vehicle_class = as.factor(vehicle_class),
-          year = as.integer(year),
-          time_of_day = as.numeric(lubridate::hms(format(midpoint_time, "%H:%M:%S"))) / 3600,
-          temperature = ifelse(is.na(temperature), mean(.$temperature, na.rm = TRUE), temperature)
-        )
-      tryCatch(
-        model(journeys),
-        error = function(e) {
-          warning(paste("Model failed for region:", input$region, "Error:", e$message))
-          return(NULL)
-        }
-      )
+    estimates <- shiny::reactive({
+      "SELECT * FROM analysis.estimates
+      WHERE region = {input$region}" %>%
+        glue::glue_sql(.con = conn) %>%
+        DBI::dbGetQuery(conn = conn, .)
     })
 
-
     forest_data <- shiny::reactive({
-      est <- confint(mod(), parm = "beta_", level = 0.95) %>%
-        as.data.frame()
-      est1 <- est[rownames(est) != "(Intercept)", , drop = FALSE]
-      pvals <- summary(mod())$coefficients$cond[, 4]
-      pvals <- data.frame(
-        term = names(pvals),
-        p_value = unname(pvals)
-      )
-      est2 <- -1 * (1 - exp(est1))
-      est2 <- est2 %>%
-        as.data.frame() %>%
-        dplyr::mutate(term = row.names(est1)) %>%
-        dplyr::left_join(
-          pvals,
-          by = "term"
-        ) %>%
-        dplyr::rename(
-          low = "2.5 %",
-          high = "97.5 %",
-          estimate = "Estimate"
+      estimates() %>%
+        dplyr::arrange(est) %>%
+        dplyr::mutate(
+          variable = dplyr::case_when(
+            variable == "time_of_day" ~ "Time of Day",
+            variable == "temperature" ~ "Temperature",
+            variable == "vehicle_classLCV" ~ "Vehicle [LCV]",
+            variable == "vehicle_classOther" ~ "Vehicle [Other]",
+            variable == "vehicle_classHCV" ~ "Vehicle [HGV]",
+            variable == "day_of_year" ~ "Day of Year",
+            variable == "avg_speed_kmh" ~ "Average Speed (km/h)",
+            variable == "center_lat" ~ "Latitude",
+            variable == "center_lon" ~ "Longitude",
+            .default = snakecase::to_title_case(variable)
+          )
         )
-      row.names(est2) <- est2$term
-      est2 %>%
-        dplyr::filter(!term %in% c("(Intercept)", "stats::offset(log_cm_km_offset)")) %>%
-        dplyr::arrange(estimate) %>%
-        dplyr::mutate(term = dplyr::case_when(
-          term == "Time.of.day" ~ "Time of Day",
-          term == "Temperature" ~ "Temperature",
-          term == "Vehicle.typeLCV" ~ "Vehicle [LCV]",
-          term == "Vehicle.typeOther" ~ "Vehicle [Other]",
-          term == "Vehicle.typeHCV" ~ "Vehicle [HGV]",
-          term == "Day.of.year" ~ "Day of Year",
-          term == "Average.speed" ~ "Average Speed (km/h)",
-          .default = snakecase::to_title_case(term)
-        ))
-    }) %>%
-      shiny::bindCache(
-        x = .,
-        input$region,
-        cache = cachem::cache_disk("./.cache")
-      )
+    })
 
     output$trend <- shiny::renderUI({
       vals <- forest_data() %>%
-        dplyr::filter(term == "Year") %>%
+        dplyr::filter(variable == "Year") %>%
         dplyr::mutate(
-          est = paste0(round(estimate * 100, 1), "%"),
-          low = paste0(round(low * 100, 1), "%"),
-          high = paste0(round(high * 100, 1), "%"),
+          est = paste0(format(round(est, 1), nsmall = 1), "%"),
+          low = paste0(format(round(low, 1), nsmall = 1), "%"),
+          high = paste0(format(round(high, 1), nsmall = 1), "%"),
           p_value = scales::pvalue(p_value, accuracy = 0.001)
         )
 
@@ -395,9 +327,20 @@ mod_trends_server <- function(id, conn, next_page) {
           shiny::a(
             "[1]",
             class = "ref-link ref-link-nospace ref-link-light",
-            `aria-label` = sprintf("Statistical information: 95%% confidence interval: %s to %s, p %s", vals$low, vals$high, vals$p_value)
+            `aria-label` = sprintf(
+              "Statistical information: 95%% confidence interval: %s to %s, p %s",
+              vals$low,
+              vals$high,
+              vals$p_value
+            )
           ),
-          sprintf("%s confidence interval: %s to %s, p %s", "95%", vals$low, vals$high, vals$p_value),
+          sprintf(
+            "%s confidence interval: %s to %s, p %s",
+            "95%",
+            vals$low,
+            vals$high,
+            vals$p_value
+          ),
           placement = "bottom"
         )
       )
@@ -406,51 +349,154 @@ mod_trends_server <- function(id, conn, next_page) {
     output$predictors_table <- reactable::renderReactable({
       forest_data() %>%
         dplyr::mutate(
-          more_or_less = ifelse(estimate > 0, "more", "fewer"),
-          percentage = paste0(round(abs(estimate) * 100, 1), "%"),
+          more_or_less = ifelse(est > 0, "more", "fewer"),
+          percentage = paste0(format(round(abs(est), 1), nsmall = 1), "%"),
           sig_description = dplyr::case_when(
-            term == "Year" ~ sprintf("For each additional year, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Distance" ~ sprintf("For each additional kilometre of journey distance, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Average Speed (km/h)" ~ sprintf("For each additional km/h of average speed, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Vehicle [LCV]" ~ sprintf("Light commercial vehicles recorded %s %s insects than cars.", percentage, more_or_less),
-            term == "Vehicle [Other]" ~ sprintf("Other vehicle types recorded %s %s insects than cars.", percentage, more_or_less),
-            term == "Vehicle [HGV]" ~ sprintf("Heavy goods vehicles recorded %s %s insects than cars.", percentage, more_or_less),
-            term == "Time of Day" ~ sprintf("For each additional hour of the day, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Day of Year" ~ sprintf("For each additional day of the year, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Elevation" ~ sprintf("For each additional metre of elevation, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Temperature" ~ sprintf("For each one degree increase in temperature, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Longitude" ~ sprintf("For each additional degree of longitude, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Latitude" ~ sprintf("For each additional degree of latitude, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Proportion Forest" ~ sprintf("For each additional percentage point of forest cover, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Proportion Shrubland" ~ sprintf("For each additional percentage point of shrubland cover, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Proportion Grassland" ~ sprintf("For each additional percentage point of grassland cover, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Proportion Wetland" ~ sprintf("For each additional percentage point of wetland cover, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Proportion Marine" ~ sprintf("For each additional percentage point of marine cover, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Proportion Arable" ~ sprintf("For each additional percentage point of arable land cover, there were %s %s insects recorded.", percentage, more_or_less),
-            term == "Proportion Urban" ~ sprintf("For each additional percentage point of urban cover, there were %s %s insects recorded.", percentage, more_or_less),
-            .default = sprintf("For each unit increase in %s, there were %s %s insects recorded.", term, percentage, more_or_less)
+            variable == "Year" ~ sprintf(
+              "For each additional year, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Distance" ~ sprintf(
+              "For each additional kilometre of journey distance, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Average Speed (km/h)" ~ sprintf(
+              "For each additional km/h of average speed, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Vehicle [LCV]" ~ sprintf(
+              "Light commercial vehicles recorded %s %s insects than cars.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Vehicle [Other]" ~ sprintf(
+              "Other vehicle types recorded %s %s insects than cars.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Vehicle [HGV]" ~ sprintf(
+              "Heavy goods vehicles recorded %s %s insects than cars.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Time of Day" ~ sprintf(
+              "For each additional hour of the day, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Day of Year" ~ sprintf(
+              "For each additional day of the year, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Elevation" ~ sprintf(
+              "For each additional metre of elevation, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Temperature" ~ sprintf(
+              "For each one degree increase in temperature, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Longitude" ~ sprintf(
+              "For each additional degree of longitude, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Latitude" ~ sprintf(
+              "For each additional degree of latitude, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Proportion Forest" ~ sprintf(
+              "For each additional percentage point of forest cover, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Proportion Shrubland" ~ sprintf(
+              "For each additional percentage point of shrubland cover, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Proportion Grassland" ~ sprintf(
+              "For each additional percentage point of grassland cover, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Proportion Wetland" ~ sprintf(
+              "For each additional percentage point of wetland cover, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Proportion Marine" ~ sprintf(
+              "For each additional percentage point of marine cover, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Proportion Arable" ~ sprintf(
+              "For each additional percentage point of arable land cover, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            variable == "Proportion Urban" ~ sprintf(
+              "For each additional percentage point of urban cover, there were %s %s insects recorded.",
+              percentage,
+              more_or_less
+            ),
+            .default = sprintf(
+              "For each unit increase in %s, there were %s %s insects recorded.",
+              variable,
+              percentage,
+              more_or_less
+            )
           ),
           nonsig_description = dplyr::case_when(
-            term == "Year" ~ "The number of insects recorded did not change significantly with year.",
-            term == "Distance" ~ "The number of insects recorded did not change significantly with journey distance.",
-            term == "Average Speed (km/h)" ~ "The number of insects recorded did not change significantly with average speed.",
-            term == "Vehicle [LCV]" ~ "Light commercial vehicles did not record significantly different numbers of insects than cars.",
-            term == "Vehicle [Other]" ~ "Other vehicle types did not record significantly different numbers of insects than cars.",
-            term == "Vehicle [HGV]" ~ "Heavy goods vehicles did not record significantly different numbers of insects than cars.",
-            term == "Time of Day" ~ "The number of insects recorded did not change significantly with time of day.",
-            term == "Day of Year" ~ "The number of insects recorded did not change significantly with day of year.",
-            term == "Elevation" ~ "The number of insects recorded did not change significantly with elevation.",
-            term == "Temperature" ~ "The number of insects recorded did not change significantly with temperature.",
-            term == "Longitude" ~ "The number of insects recorded did not change significantly with longitude.",
-            term == "Latitude" ~ "The number of insects recorded did not change significantly with latitude.",
-            term == "Proportion Forest" ~ "The number of insects recorded did not change significantly with proportion of forest cover.",
-            term == "Proportion Shrubland" ~ "The number of insects recorded did not change significantly with proportion of shrubland cover.",
-            term == "Proportion Grassland" ~ "The number of insects recorded did not change significantly with proportion of grassland cover.",
-            term == "Proportion Wetland" ~ "The number of insects recorded did not change significantly with proportion of wetland cover.",
-            term == "Proportion Marine" ~ "The number of insects recorded did not change significantly with proportion of marine cover.",
-            term == "Proportion Arable" ~ "The number of insects recorded did not change significantly with proportion of arable land cover.",
-            term == "Proportion Urban" ~ "The number of insects recorded did not change significantly with proportion of urban cover.",
-            .default = sprintf("The number of insects recorded did not change significantly with %s.", term)
+            variable ==
+              "Year" ~ "The number of insects recorded did not change significantly with year.",
+            variable ==
+              "Distance" ~ "The number of insects recorded did not change significantly with journey distance.",
+            variable ==
+              "Average Speed (km/h)" ~ "The number of insects recorded did not change significantly with average speed.",
+            variable ==
+              "Vehicle [LCV]" ~ "Light commercial vehicles did not record significantly different numbers of insects than cars.",
+            variable ==
+              "Vehicle [Other]" ~ "Other vehicle types did not record significantly different numbers of insects than cars.",
+            variable ==
+              "Vehicle [HGV]" ~ "Heavy goods vehicles did not record significantly different numbers of insects than cars.",
+            variable ==
+              "Time of Day" ~ "The number of insects recorded did not change significantly with time of day.",
+            variable ==
+              "Day of Year" ~ "The number of insects recorded did not change significantly with day of year.",
+            variable ==
+              "Elevation" ~ "The number of insects recorded did not change significantly with elevation.",
+            variable ==
+              "Temperature" ~ "The number of insects recorded did not change significantly with temperature.",
+            variable ==
+              "Longitude" ~ "The number of insects recorded did not change significantly with longitude.",
+            variable ==
+              "Latitude" ~ "The number of insects recorded did not change significantly with latitude.",
+            variable ==
+              "Proportion Forest" ~ "The number of insects recorded did not change significantly with proportion of forest cover.",
+            variable ==
+              "Proportion Shrubland" ~ "The number of insects recorded did not change significantly with proportion of shrubland cover.",
+            variable ==
+              "Proportion Grassland" ~ "The number of insects recorded did not change significantly with proportion of grassland cover.",
+            variable ==
+              "Proportion Wetland" ~ "The number of insects recorded did not change significantly with proportion of wetland cover.",
+            variable ==
+              "Proportion Marine" ~ "The number of insects recorded did not change significantly with proportion of marine cover.",
+            variable ==
+              "Proportion Arable" ~ "The number of insects recorded did not change significantly with proportion of arable land cover.",
+            variable ==
+              "Proportion Urban" ~ "The number of insects recorded did not change significantly with proportion of urban cover.",
+            .default = sprintf(
+              "The number of insects recorded did not change significantly with %s.",
+              variable
+            )
           ),
           description = ifelse(
             p_value < 0.05,
@@ -460,34 +506,40 @@ mod_trends_server <- function(id, conn, next_page) {
           confidence_interval = mapply(
             function(low, high) {
               interval <- sort(c(low, high))
-              sprintf("%s to %s", round(interval[1], 3), round(interval[2], 3))
+              sprintf(
+                "%s to %s",
+                format(round(interval[1] / 100, 3), nsmall = 3),
+                format(round(interval[2] / 100, 3), nsmall = 3)
+              )
             },
             low,
             high
           ),
           p_value = scales::pvalue(p_value, accuracy = 0.001),
-          estimate = round(estimate, 3)
+          est = round(est / 100, 3)
         ) %>%
         dplyr::select(
-          term,
+          variable,
           description,
-          estimate,
+          est,
           confidence_interval,
           p_value
         ) %>%
         dplyr::arrange(
-          p_value > 0.05, dplyr::desc(abs(estimate)),
+          p_value > 0.05,
+          dplyr::desc(abs(est)),
         ) %>%
         reactable::reactable(
           columns = list(
-            term = reactable::colDef(
+            variable = reactable::colDef(
               name = "Variable"
             ),
             description = reactable::colDef(
               name = "Description"
             ),
-            estimate = reactable::colDef(
-              name = "Effect estimate"
+            est = reactable::colDef(
+              name = "Effect estimate",
+              format = reactable::colFormat(digits = 3)
             ),
             confidence_interval = reactable::colDef(
               name = "Effect confidence interval"
@@ -508,21 +560,20 @@ mod_trends_server <- function(id, conn, next_page) {
         )
     })
 
-
     add_forest_trace <- function(p, model_data, color) {
       plotly::add_trace(
         p,
         showlegend = FALSE,
         data = model_data,
-        x = ~estimate,
-        y = ~term,
+        x = ~est,
+        y = ~variable,
         type = "scatter",
         mode = "markers+text",
         error_x = list(
           type = "data",
           symmetric = FALSE,
-          array = model_data$estimate - model_data$low,
-          arrayminus = model_data$estimate - model_data$low,
+          array = model_data$est - model_data$low,
+          arrayminus = model_data$est - model_data$low,
           color = color
         ),
         marker = list(size = 10, color = color),
@@ -530,9 +581,17 @@ mod_trends_server <- function(id, conn, next_page) {
         textposition = "top center",
         hoverinfo = "text",
         hovertext = ~ paste0(
-          "Variable: ", term, "<br>",
-          "Estimate: ", label, "<br>",
-          "CI: [", round(low, 2), ", ", round(high, 2), "]<br>"
+          "Variable: ",
+          variable,
+          "<br>",
+          "Estimate: ",
+          label,
+          "<br>",
+          "CI: [",
+          round(low, 2),
+          ", ",
+          round(high, 2),
+          "]<br>"
         )
       )
     }
@@ -540,7 +599,7 @@ mod_trends_server <- function(id, conn, next_page) {
     output$forest <- plotly::renderPlotly({
       model_data <- forest_data() %>%
         dplyr::mutate(
-          term = factor(term, levels = term),
+          variable = factor(variable, levels = variable),
           sig = dplyr::case_when(
             p_value < 0.001 ~ "***",
             p_value < 0.01 ~ "**",
@@ -549,15 +608,14 @@ mod_trends_server <- function(id, conn, next_page) {
           ),
           color = dplyr::case_when(
             p_value > 0.05 ~ "darkgray",
-            estimate < 0 ~ "red",
-            estimate > 0 ~ "green",
+            est < 0 ~ "red",
+            est > 0 ~ "green",
             .default = "darkgray"
           )
         ) %>%
         dplyr::mutate(
-          label = paste(format(round(estimate, 2), nsmall = 2), sig)
+          label = paste(format(round(est, 2), nsmall = 2), sig)
         )
-      print(model_data)
       p <- plotly::plot_ly() %>%
         # Add green points (sig > 1)
         add_forest_trace(
@@ -585,7 +643,10 @@ mod_trends_server <- function(id, conn, next_page) {
           yaxis = list(title = "Explanatory variable"),
           shapes = list(list(
             type = "line",
-            x0 = 1, x1 = 1, y0 = -0.5, y1 = length(model_data$term) - 0.5,
+            x0 = 1,
+            x1 = 1,
+            y0 = -0.5,
+            y1 = length(model_data$variable) - 0.5,
             line = list(color = "lightgray", width = 1),
             layer = "below"
           )),
@@ -596,39 +657,45 @@ mod_trends_server <- function(id, conn, next_page) {
         )
     })
 
-    model_predictions <- shiny::reactive({
-      sjPlot::get_model_data(mod(), type = "pred", terms = "Year")
-    }) %>%
-      shiny::bindCache(
-        input$region,
-        cache = "app"
-      )
-
     output$model_predicted <- plotly::renderPlotly({
-      model_data <- as.data.frame(model_predictions()) %>%
-        dplyr::rename(low = conf.low, high = conf.high)
-      int_ticks <- sort(unique(model_data$x))
-      plotly::plot_ly(
-        showlegend = FALSE,
-        data = model_data,
-        x = ~x,
-        y = ~predicted,
-        type = "scatter",
-        error_y = list(
-          type = "data",
-          symmetric = FALSE,
-          array = model_data$high - model_data$low,
-          arrayminus = model_data$predicted - model_data$low,
-          color = "black"
-        ),
-        marker = list(size = 10, color = "black"),
-        hoverinfo = "text",
-        hovertext = ~ paste0(
-          "Year: ", x, "<br>",
-          "Predicted splat count: ", round(predicted, 2), "<br>",
-          "CI: [", round(low, 2), ", ", round(high, 2), "]<br>"
-        )
-      ) %>%
+      model_data <- "SELECT * FROM analysis.model_predictions WHERE region = {input$region};" %>%
+        glue::glue_sql(.con = conn) %>%
+        DBI::dbGetQuery(conn, .)
+
+      int_ticks <- sort(unique(model_data$year))
+      plotly::plot_ly(showlegend = FALSE) %>%
+        # Shaded confidence interval (ribbon)
+        plotly::add_ribbons(
+          data = model_data,
+          x = ~year,
+          ymin = ~low,
+          ymax = ~high,
+          line = list(color = "transparent"),
+          fillcolor = "rgba(0,0,0,0.2)",
+          name = "95% CI",
+          hoverinfo = "none"
+        ) %>%
+        # Line for predicted values
+        plotly::add_lines(
+          data = model_data,
+          x = ~year,
+          y = ~predicted,
+          line = list(color = "black", width = 3),
+          hoverinfo = "text",
+          hovertext = ~ paste0(
+            "Year: ",
+            year,
+            "<br>",
+            "Predicted splat count: ",
+            round(predicted, 2),
+            "<br>",
+            "CI: [",
+            round(low, 2),
+            ", ",
+            round(high, 2),
+            "]"
+          )
+        ) %>%
         plotly::layout(
           yaxis = list(
             title = "Splat count"
@@ -643,9 +710,7 @@ mod_trends_server <- function(id, conn, next_page) {
           ),
           dragmode = FALSE
         ) %>%
-        plotly::config(
-          displayModeBar = FALSE
-        )
+        plotly::config(displayModeBar = FALSE)
     })
 
     splat_rate_line_data <- shiny::reactive({
@@ -670,11 +735,7 @@ mod_trends_server <- function(id, conn, next_page) {
           .con = conn
         ) %>%
         DBI::dbGetQuery(conn, .)
-    }) %>%
-      shiny::bindCache(
-        input$region,
-        cache = "app"
-      )
+    })
 
     output$splat_rate_line <- plotly::renderPlotly({
       plotly::plot_ly(

@@ -28,7 +28,7 @@ app.use(cors({
 }));
 
 // world all years
-app.get('/tiles/world/:z/:x/:y.pbf', async (req, res) => {
+app.get('/tiles/global/:z/:x/:y.pbf', async (req, res) => {
   const { z, x, y } = req.params;
   // Build the SQL query with parameter substitution (using template literals or parameterized queries)
   const sql = `
@@ -41,16 +41,16 @@ app.get('/tiles/world/:z/:x/:y.pbf', async (req, res) => {
         SELECT
           public.ST_AsMVTGeom(
             public.ST_Simplify(
-              public.ST_Transform(r.geom, 3857), 
-              CASE 
-                WHEN $1 <= 3 THEN 4000  
-                WHEN $1 <= 4 THEN 2000 
+              public.ST_Transform(r.geom, 3857),
+              CASE
+                WHEN $1 <= 3 THEN 4000
+                WHEN $1 <= 4 THEN 2000
                 WHEN $1 <= 8 THEN 500
-                WHEN $1 <= 10 THEN 100 
-                WHEN $1 <= 12 THEN 20 
-                ELSE 5               
+                WHEN $1 <= 10 THEN 100
+                WHEN $1 <= 12 THEN 20
+                ELSE 5
               END
-            ), 
+            ),
             public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
@@ -93,16 +93,16 @@ app.get('/tiles/countries/:country/:z/:x/:y.pbf', async (req, res) => {
         SELECT
           public.ST_AsMVTGeom(
             public.ST_Simplify(
-              public.ST_Transform(r.geom, 3857), 
-              CASE 
-                WHEN $1 <= 3 THEN 4000  
-                WHEN $1 <= 4 THEN 2000 
+              public.ST_Transform(r.geom, 3857),
+              CASE
+                WHEN $1 <= 3 THEN 4000
+                WHEN $1 <= 4 THEN 2000
                 WHEN $1 <= 8 THEN 500
-                WHEN $1 <= 10 THEN 100 
-                WHEN $1 <= 12 THEN 20 
-                ELSE 5               
+                WHEN $1 <= 10 THEN 100
+                WHEN $1 <= 12 THEN 20
+                ELSE 5
               END
-            ), 
+            ),
             public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
@@ -133,7 +133,7 @@ app.get('/tiles/countries/:country/:z/:x/:y.pbf', async (req, res) => {
 });
 
 // world by year
-app.get('/tiles/world/years/:year/:z/:x/:y.pbf', async (req, res) => {
+app.get('/tiles/global/years/:year/:z/:x/:y.pbf', async (req, res) => {
   const { year, z, x, y } = req.params;
   // Build the SQL query with parameter substitution (using template literals or parameterized queries)
   const sql = `
@@ -146,16 +146,16 @@ app.get('/tiles/world/years/:year/:z/:x/:y.pbf', async (req, res) => {
         SELECT
           public.ST_AsMVTGeom(
             public.ST_Simplify(
-              public.ST_Transform(r.geom, 3857), 
-              CASE 
-                WHEN $1 <= 3 THEN 4000  
-                WHEN $1 <= 4 THEN 2000 
+              public.ST_Transform(r.geom, 3857),
+              CASE
+                WHEN $1 <= 3 THEN 4000
+                WHEN $1 <= 4 THEN 2000
                 WHEN $1 <= 8 THEN 500
-                WHEN $1 <= 10 THEN 100 
-                WHEN $1 <= 12 THEN 20 
-                ELSE 5               
+                WHEN $1 <= 10 THEN 100
+                WHEN $1 <= 12 THEN 20
+                ELSE 5
               END
-            ), 
+            ),
             public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
@@ -200,14 +200,14 @@ app.get('/tiles/countries/:country/years/:year/:z/:x/:y.pbf', async (req, res) =
         SELECT
           public.ST_AsMVTGeom(
             public.ST_Simplify(
-              public.ST_Transform(r.geom, 3857), 
-              CASE 
-                WHEN $1 <= 3 THEN 4000  
-                WHEN $1 <= 4 THEN 2000 
+              public.ST_Transform(r.geom, 3857),
+              CASE
+                WHEN $1 <= 3 THEN 4000
+                WHEN $1 <= 4 THEN 2000
                 WHEN $1 <= 8 THEN 500
-                WHEN $1 <= 10 THEN 100 
-                WHEN $1 <= 12 THEN 20 
-                ELSE 5               
+                WHEN $1 <= 10 THEN 100
+                WHEN $1 <= 12 THEN 20
+                ELSE 5
               END
             ),
             public.ST_TileEnvelope($1, $2, $3),
@@ -254,17 +254,17 @@ app.get('/tiles/regions/:region/:z/:x/:y.pbf', async (req, res) => {
         SELECT
           public.ST_AsMVTGeom(
             public.ST_Simplify(
-              public.ST_Transform(r.geom, 3857), 
-              CASE 
-                WHEN $1 <= 3 THEN 4000  
-                WHEN $1 <= 4 THEN 2000 
+              public.ST_Transform(r.geom, 3857),
+              CASE
+                WHEN $1 <= 3 THEN 4000
+                WHEN $1 <= 4 THEN 2000
                 WHEN $1 <= 8 THEN 500
-                WHEN $1 <= 10 THEN 100 
-                WHEN $1 <= 12 THEN 20 
-                ELSE 5               
+                WHEN $1 <= 10 THEN 100
+                WHEN $1 <= 12 THEN 20
+                ELSE 5
               END
             ),
-            public.ST_TileEnvelope($1, $2, $3), 
+            public.ST_TileEnvelope($1, $2, $3),
             4096, 64, true
           ) AS geom,
           r.id
@@ -307,14 +307,14 @@ app.get('/tiles/regions/:region/years/:year/:z/:x/:y.pbf', async (req, res) => {
         SELECT
           public.ST_AsMVTGeom(
             public.ST_Simplify(
-              public.ST_Transform(r.geom, 3857), 
-              CASE 
-                WHEN $1 <= 3 THEN 4000  
-                WHEN $1 <= 4 THEN 2000 
+              public.ST_Transform(r.geom, 3857),
+              CASE
+                WHEN $1 <= 3 THEN 4000
+                WHEN $1 <= 4 THEN 2000
                 WHEN $1 <= 8 THEN 500
-                WHEN $1 <= 10 THEN 100 
-                WHEN $1 <= 12 THEN 20 
-                ELSE 5               
+                WHEN $1 <= 10 THEN 100
+                WHEN $1 <= 12 THEN 20
+                ELSE 5
               END
             ),
             public.ST_TileEnvelope($1, $2, $3),

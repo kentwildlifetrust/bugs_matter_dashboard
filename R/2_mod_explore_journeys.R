@@ -34,7 +34,7 @@ mod_explore_journeys_ui <- function(id) {
         ),
       ),
       class = "btn-primary m-2",
-      style = "flex-grow: 0; height: min-content; margin-bottom: 1rem !important;",
+      style = "flex-grow: 0; height: min-content;",
       `aria-label` = "Navigate to Analyse trends page"
     )
   )
@@ -58,7 +58,7 @@ mod_explore_journeys_ui <- function(id) {
         ns("region"),
         "Region",
         choices = bugsMatterDashboard::region_choices,
-        selected = "world",
+        selected = "global",
         width = 250
       )
       # uiOutput(ns("slider_input"))
@@ -419,7 +419,7 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
 
     region_codes <- reactive({
       #3 character values are country codes
-      if (input$region == "world") {
+      if (input$region == "global") {
         bugsMatterDashboard::regions %>%
           dplyr::pull(code)
       } else if (nchar(input$region) == 3) {
@@ -554,8 +554,8 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
           lat2 = bbox$ymax
         )
 
-      region_param <- if (input$region == "world") {
-        "world"
+      region_param <- if (input$region == "global") {
+        "global"
       } else if (nchar(input$region) == 3) {
         paste0("countries/", input$region)
       } else {

@@ -142,6 +142,10 @@ p {
 .data-control-value-box {
   flex: 1;
   max-width: 300px;
+  min-width: 10rem;
+}
+.data-control-value-box > div {
+  padding: 0.5rem !important;
 }
 .data-control-value-box > div > div {
   padding: 5px !important;
@@ -215,7 +219,7 @@ hr.popup-hr {
 }
 
 .data-header {
-  margin: 30px 30px 5px;
+  margin: 12px 30px -5px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -226,7 +230,7 @@ hr.data-hr {
 }
 
 .data-control-row {
-  margin: 0 30px -28px;
+  margin: 0 12px -28px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;

@@ -133,7 +133,7 @@ region_choices <- lapply(
   setNames(countries$name)
 
 region_choices <- c(
-  list(`All regions` = "world"),
+  list(`All regions` = "global"),
   region_choices
 )
 
