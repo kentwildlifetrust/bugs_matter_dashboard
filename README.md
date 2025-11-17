@@ -1,13 +1,7 @@
-# blank_webapp
+# Bugs Matter Dashboard
 
-This is a template for a webapp, created KWT style. 
+An R Shiny dashboard for visualizing and analyzing car number plate insect splat counts as a measure of invertebrate abundance change over time.
 
-You'll need to: 
+## Description
 
-- Use this template to create a new repo on Github
-- Clone the repo locally with gitkraken 
-- Rename the project file 
-- Open the project and replace all instances of 'blank_webapp' with your project name 
-- Create an environment with usethis::edit_r_environ(scope="project") to add in your local database credentials 
-
-
+The Bugs Matter Dashboard provides tools for tracking and analyzing insect abundance using data collected from car number plate splat counts. This dashboard helps monitor changes in invertebrate populations over time, providing valuable insights into ecosystem health.
