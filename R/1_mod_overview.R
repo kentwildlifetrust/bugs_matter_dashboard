@@ -31,7 +31,7 @@ mod_overview_ui <- function(id) {
             tags$strong("Bugs Matter"),
             " - the global citizen science survey tracking flying insect abundance through ‘bug splats’ on vehicle number plates.
             Explore where and how many journeys have been recorded, the distances travelled, and the types of vehicles used.
-            Discover trends in bug splats across locations and time, and see how our global community of recorders is contributing to the project."
+            Discover trends in bug splats across locations and time, and see how our global community of recorders are contributing to the project."
           )
         ),
         shiny::tags$br(),
@@ -127,11 +127,15 @@ mod_overview_ui <- function(id) {
             and their decline could have catastrophic consequences for the Earth’s natural systems - and for human survival itself. "
           ),
           shiny::p(
-            "The Bugs Matter citizen science survey uses an innovative method for large-scale indiscriminate monitoring of flying insect populations.
+            "The Bugs Matter citizen science survey uses an innovative method
+            for large-scale indiscriminate monitoring of flying insect populations.
             Citizen scientists record the number of insect splats on their vehicle number plates following a journey,
-            having first removed any residual insects from previous journeys. The sampling technique is based on the ‘windscreen phenomenon’,
-            a term given to the anecdotal observation that fewer insect splats appear on the windscreens of cars now compared to a decade or several decades ago.
-            It has the potential to provide an efficient, standardised and scalable approach to monitor trends in insect abundance across local,
+            having first removed any residual insects from previous journeys.
+            The sampling technique is based on the ‘windscreen phenomenon’,
+            a term given to the anecdotal observation that fewer insect splats
+            appear on the windscreens of vehicles now compared to a decade or several decades ago.
+            It has the potential to provide an efficient,
+            standardised and scalable approach to monitor trends in insect abundance across local,
             regional and global scales."
           ),
           shiny::p(

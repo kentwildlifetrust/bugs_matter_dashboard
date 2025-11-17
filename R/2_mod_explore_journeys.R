@@ -291,7 +291,7 @@ mod_explore_journeys_ui <- function(id) {
             style = "font-size: 1.5rem;",
             `aria-label` = "Information about vehicle type bar chart"
           ),
-          "This bar plot shows how many journeys were recorded in different vehicle types. Most journeys are recorded in cars.",
+          "This bar plot shows how many journeys were recorded in different vehicle types. LCV: Light Commercial Vehicle, HGV: Heavy Goods Vehicle. Most journeys are recorded in cars.",
           placement = "bottom"
         )
       )

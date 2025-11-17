@@ -1,4 +1,4 @@
-#' journeys_map UI Function
+#' participation UI Function
 #'
 #' @description A shiny Module.
 #'
@@ -104,9 +104,9 @@ mod_participation_ui <- function(id) {
             ns("cumulative_sign_ups_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;",
-            `aria-label` = "Information about cumulative sign ups chart"
+            `aria-label` = "This line graph shows the cumulative number of registered users (those who signed up to the Bugs Matter app) over time."
           ),
-          "Lorem ipsum.",
+          "This line graph shows the cumulative number of registered users (those who signed up to the Bugs Matter app) over time.",
           placement = "bottom"
         )
       )
@@ -131,9 +131,9 @@ mod_participation_ui <- function(id) {
             ns("cumulative_distance_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;",
-            `aria-label` = "Information about cumulative distance chart"
+            `aria-label` = "This line graph shows the cumulative distance travelled over time."
           ),
-          "Lorem ipsum.",
+          "This line graph shows the cumulative distance travelled over time.",
           placement = "bottom"
         )
       )
@@ -158,9 +158,9 @@ mod_participation_ui <- function(id) {
             ns("cumulative_journeys_info"),
             shiny::tags$i(class = "fa fa-info-circle"),
             style = "font-size: 1.5rem;",
-            `aria-label` = "Information about cumulative journeys chart"
+            `aria-label` = "This line graph shows the cumulative number of journeys over time"
           ),
-          "Lorem ipsum.",
+          "This line graph shows the cumulative number of journeys over time",
           placement = "bottom"
         )
       )
@@ -186,7 +186,9 @@ mod_participation_ui <- function(id) {
         distance_panel,
         sign_ups_panel
       ) %>%
-        htmltools::tagAppendAttributes(style = "flex: 1; margin-bottom: 0; min-height: 600px;")
+        htmltools::tagAppendAttributes(
+          style = "flex: 1; margin-bottom: 0; min-height: 600px;"
+        )
     )
   )
 }
@@ -194,16 +196,26 @@ mod_participation_ui <- function(id) {
 #' journeys_map Server Functions
 #'
 #' @noRd
-mod_participation_server <- function(id, conn, next_page, email_filter, organisation_choices) {
+mod_participation_server <- function(
+  id,
+  conn,
+  next_page,
+  email_filter,
+  organisation_choices
+) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    shiny::observeEvent(email_filter(),
+    shiny::observeEvent(
+      email_filter(),
       {
         title <- if (is.null(email_filter())) {
           "Participation"
         } else {
-          paste0("Participation - ", names(organisation_choices[organisation_choices == email_filter()]))
+          paste0(
+            "Participation - ",
+            names(organisation_choices[organisation_choices == email_filter()])
+          )
         }
         shinyjs::html(id = "participation_title", html = title)
       },
@@ -264,63 +276,143 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
     #---------------------leaderboard_table-----------------------#
 
     output$region_leaderboard <- reactable::renderReactable({
-      data <- "
-        WITH sign_up_counts AS (
-          SELECT s.region_code,
-          COUNT(*) AS n_sign_ups
-          FROM sign_ups.with_region s
-          WHERE s.year in ({years*})
-            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
-          GROUP BY s.region_code
-        ), participants_counts AS (
-          SELECT s.region_code,
-          COUNT(DISTINCT j.user_id) AS n_participants
-          FROM journeys.processed j
-          LEFT JOIN sign_ups.with_region s ON j.user_id = s.id
-          WHERE s.year in ({years*})
-            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
-          GROUP BY s.region_code
-        ), journey_counts AS (
-          SELECT SUM(distance) AS distance,
-          COUNT(*) AS n_journeys,
-          region_code
-          FROM journeys.processed j
-          LEFT JOIN sign_ups.raw s ON j.user_id = s.id
-          WHERE j.year in ({years*})
-            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
-          GROUP BY j.region_code
-        ), total_journey_counts AS (
-          SELECT COUNT(*) AS n_journeys,
-          region_code
-          FROM journeys.processed j
-          LEFT JOIN sign_ups.raw s ON j.user_id = s.id
-          GROUP BY j.region_code
-        )
-          SELECT r.name,
-          r.country_name,
-          COALESCE(s.n_sign_ups, 0) AS n_sign_ups,
-          COALESCE(p.n_participants, 0) AS n_participants,
-          100 * COALESCE(p.n_participants, 0::NUMERIC) / s.n_sign_ups AS conversion_rate,
-          COALESCE(j.n_journeys, 0) AS n_journeys,
-          ROUND(COALESCE(j.distance, 0::NUMERIC)) AS distance
-          FROM ref.regions r
-          LEFT JOIN journey_counts j ON r.code = j.region_code
-          LEFT JOIN total_journey_counts jt ON r.code = jt.region_code
-          LEFT JOIN sign_up_counts s ON r.code = s.region_code
-          LEFT JOIN participants_counts p ON r.code = p.region_code
-          ORDER BY COALESCE(j.n_journeys, 0) DESC, COALESCE(jt.n_journeys, 0) DESC, r.country_name ASC, r.name ASC;
-        " %>%
-        glue::glue_data_sql(
-          list(
-            years = years(),
-            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(rank = 1:nrow(.)) %>%
-        dplyr::select(rank, name, country_name, n_sign_ups, n_participants, conversion_rate, n_journeys, distance)
+      if (is.null(email_filter())) {
+        query_string <- "
+          WITH sign_up_counts AS (
+            SELECT s.region_code,
+            COUNT(*) AS n_sign_ups
+            FROM sign_ups.with_region s
+            WHERE s.year in ({years*})
+            GROUP BY s.region_code
+          ), participants_counts AS (
+            SELECT s.region_code,
+            COUNT(DISTINCT j.user_id) AS n_participants
+            FROM journeys.processed j
+            LEFT JOIN sign_ups.with_region s ON j.user_id = s.id
+            WHERE s.year in ({years*})
+            GROUP BY s.region_code
+          ), journey_counts AS (
+            SELECT SUM(distance) AS distance,
+            COUNT(*) AS n_journeys,
+            region_code
+            FROM journeys.processed j
+            WHERE j.year in ({years*})
+            GROUP BY j.region_code
+          ), total_journey_counts AS (
+            SELECT COUNT(*) AS n_journeys,
+            region_code
+            FROM journeys.processed j
+            GROUP BY j.region_code
+          )
+            SELECT r.name,
+            r.country_name,
+            COALESCE(s.n_sign_ups, 0) AS n_sign_ups,
+            COALESCE(p.n_participants, 0) AS n_participants,
+            100 * COALESCE(p.n_participants, 0::NUMERIC) / s.n_sign_ups AS conversion_rate,
+            COALESCE(j.n_journeys, 0) AS n_journeys,
+            ROUND(COALESCE(j.distance, 0::NUMERIC)) AS distance
+            FROM ref.regions r
+            LEFT JOIN journey_counts j ON r.code = j.region_code
+            LEFT JOIN total_journey_counts jt ON r.code = jt.region_code
+            LEFT JOIN sign_up_counts s ON r.code = s.region_code
+            LEFT JOIN participants_counts p ON r.code = p.region_code
+            ORDER BY COALESCE(j.n_journeys, 0) DESC, COALESCE(jt.n_journeys, 0) DESC, r.country_name ASC, r.name ASC;
+          " %>%
+          glue::glue_data_sql(
+            list(years = years()),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        data <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[region_leaderboard] Query time:", round(elapsed, 3), "seconds\n")
+        data <- data %>%
+          dplyr::mutate(rank = seq_len(nrow(.))) %>%
+          dplyr::select(
+            rank,
+            name,
+            country_name,
+            n_sign_ups,
+            n_participants,
+            conversion_rate,
+            n_journeys,
+            distance
+          )
+      } else {
+        query_string <- "
+          WITH sign_up_counts AS (
+            SELECT s.region_code,
+            COUNT(*) AS n_sign_ups
+            FROM sign_ups.with_region s
+            WHERE s.year in ({years*})
+              AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
+            GROUP BY s.region_code
+          ), participants_counts AS (
+            SELECT s.region_code,
+            COUNT(DISTINCT j.user_id) AS n_participants
+            FROM journeys.processed j
+            LEFT JOIN sign_ups.with_region s ON j.user_id = s.id
+            WHERE s.year in ({years*})
+              AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
+            GROUP BY s.region_code
+          ), journey_counts AS (
+            SELECT SUM(distance) AS distance,
+            COUNT(*) AS n_journeys,
+            region_code
+            FROM journeys.processed j
+            LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+            WHERE j.year in ({years*})
+              AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
+            GROUP BY j.region_code
+          ), total_journey_counts AS (
+            SELECT COUNT(*) AS n_journeys,
+            region_code
+            FROM journeys.processed j
+            LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+            GROUP BY j.region_code
+          )
+            SELECT r.name,
+            r.country_name,
+            COALESCE(s.n_sign_ups, 0) AS n_sign_ups,
+            COALESCE(p.n_participants, 0) AS n_participants,
+            100 * COALESCE(p.n_participants, 0::NUMERIC) / s.n_sign_ups AS conversion_rate,
+            COALESCE(j.n_journeys, 0) AS n_journeys,
+            ROUND(COALESCE(j.distance, 0::NUMERIC)) AS distance
+            FROM ref.regions r
+            LEFT JOIN journey_counts j ON r.code = j.region_code
+            LEFT JOIN total_journey_counts jt ON r.code = jt.region_code
+            LEFT JOIN sign_up_counts s ON r.code = s.region_code
+            LEFT JOIN participants_counts p ON r.code = p.region_code
+            ORDER BY COALESCE(j.n_journeys, 0) DESC, COALESCE(jt.n_journeys, 0) DESC, r.country_name ASC, r.name ASC;
+          " %>%
+          glue::glue_data_sql(
+            list(
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        data <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[region_leaderboard] Query time:", round(elapsed, 3), "seconds\n")
+        data <- data %>%
+          dplyr::mutate(rank = seq_len(nrow(.))) %>%
+          dplyr::select(
+            rank,
+            name,
+            country_name,
+            n_sign_ups,
+            n_participants,
+            conversion_rate,
+            n_journeys,
+            distance
+          )
+      }
       # Configure table columns based on view type
       reactable::reactable(
         data,
@@ -369,31 +461,65 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
     })
 
     output$user_leaderboard <- reactable::renderReactable({
-      data <- "
-        SELECT 'User in ' || r.name AS name,
-        EXTRACT(YEAR FROM s.user_created_at)::INT AS sign_up_year,
-        COALESCE(COUNT(j.id), 0) AS n_journeys,
-        ROUND(COALESCE(SUM(j.distance), 0)::NUMERIC) AS distance
-        FROM sign_ups.with_region s
-        LEFT JOIN journeys.processed j ON s.id = j.user_id
-          AND j.year in ({years*})
-          AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
-        LEFT JOIN ref.regions r ON s.region_code = r.code
-        GROUP BY s.user_username, r.name, EXTRACT(YEAR FROM s.user_created_at)
-        ORDER BY COALESCE(COUNT(j.id), 0) DESC
-        LIMIT 20;
-        " %>%
-        glue::glue_data_sql(
-          list(
-            years = years(),
-            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(rank = 1:nrow(.)) %>%
-        dplyr::select(rank, name, sign_up_year, n_journeys, distance)
+      if (is.null(email_filter())) {
+        query_string <- "
+          SELECT 'User in ' || r.name AS name,
+          EXTRACT(YEAR FROM s.user_created_at)::INT AS sign_up_year,
+          COALESCE(COUNT(j.id), 0) AS n_journeys,
+          ROUND(COALESCE(SUM(j.distance), 0)::NUMERIC) AS distance
+          FROM sign_ups.with_region s
+          LEFT JOIN journeys.processed j ON s.id = j.user_id
+            AND j.year in ({years*})
+          LEFT JOIN ref.regions r ON s.region_code = r.code
+          GROUP BY s.user_username, r.name, EXTRACT(YEAR FROM s.user_created_at)
+          ORDER BY COALESCE(COUNT(j.id), 0) DESC
+          LIMIT 20;
+          " %>%
+          glue::glue_data_sql(
+            list(years = years()),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        data <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[user_leaderboard] Query time:", round(elapsed, 3), "seconds\n")
+        data <- data %>%
+          dplyr::mutate(rank = seq_len(nrow(.))) %>%
+          dplyr::select(rank, name, sign_up_year, n_journeys, distance)
+      } else {
+        query_string <- "
+          SELECT 'User in ' || r.name AS name,
+          EXTRACT(YEAR FROM s.user_created_at)::INT AS sign_up_year,
+          COALESCE(COUNT(j.id), 0) AS n_journeys,
+          ROUND(COALESCE(SUM(j.distance), 0)::NUMERIC) AS distance
+          FROM sign_ups.with_region s
+          LEFT JOIN journeys.processed j ON s.id = j.user_id
+            AND j.year in ({years*})
+            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
+          LEFT JOIN ref.regions r ON s.region_code = r.code
+          GROUP BY s.user_username, r.name, EXTRACT(YEAR FROM s.user_created_at)
+          ORDER BY COALESCE(COUNT(j.id), 0) DESC
+          LIMIT 20;
+          " %>%
+          glue::glue_data_sql(
+            list(
+              years = years(),
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        data <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[user_leaderboard] Query time:", round(elapsed, 3), "seconds\n")
+        data <- data %>%
+          dplyr::mutate(rank = seq_len(nrow(.))) %>%
+          dplyr::select(rank, name, sign_up_year, n_journeys, distance)
+      }
 
       reactable::reactable(
         data,
@@ -445,7 +571,53 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
         max_date <- sprintf("%s-10-30", end_year)
       }
 
-      counts <- "
+      if (is.null(email_filter())) {
+        query_string <- "
+          WITH daily_counts AS (
+            SELECT
+              j.end_timestamp::DATE AS date,
+              COUNT(*) AS daily_count
+            FROM journeys.processed j
+            LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+            WHERE EXTRACT(YEAR FROM j.end_timestamp) IN ({years*})
+            GROUP BY j.end_timestamp::DATE
+          ), date_bounds AS (
+            SELECT
+              {min_date}::DATE AS min_date,
+              {max_date}::DATE AS max_date
+          ),
+          all_dates AS (
+            SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
+            FROM date_bounds
+          )
+          SELECT
+            all_dates.date,
+            COALESCE(daily_counts.daily_count, 0) AS daily_count,
+            SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
+              ORDER BY all_dates.date
+              ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            ) AS cumulative_count
+          FROM all_dates
+          LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
+          ORDER BY all_dates.date;" %>%
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        counts <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[cumulative_journeys] Query time:", round(elapsed, 3), "seconds\n")
+        counts <- counts %>%
+          dplyr::mutate(date = as.Date(date))
+      } else {
+        query_string <- "
           WITH daily_counts AS (
             SELECT
               j.end_timestamp::DATE AS date,
@@ -474,18 +646,24 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
           FROM all_dates
           LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
           ORDER BY all_dates.date;" %>%
-        glue::glue_data_sql(
-          list(
-            years = years_vec,
-            min_date = min_date,
-            max_date = max_date,
-            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(date = as.Date(date))
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date,
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        counts <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[cumulative_journeys] Query time:", round(elapsed, 3), "seconds\n")
+        counts <- counts %>%
+          dplyr::mutate(date = as.Date(date))
+      }
 
       plotly::plot_ly(
         type = "scatter",
@@ -513,7 +691,6 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
         )
     })
 
-
     #---------------------distance travelled------------------------#
     output$cumulative_distance <- plotly::renderPlotly({
       years_vec <- if (nchar(input$year) > 4) {
@@ -532,7 +709,53 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
         max_date <- sprintf("%s-10-30", end_year)
       }
 
-      counts <- "
+      if (is.null(email_filter())) {
+        query_string <- "
+          WITH daily_counts AS (
+            SELECT
+              j.end_timestamp::DATE AS date,
+              SUM(j.distance) AS daily_distance
+            FROM journeys.processed j
+            LEFT JOIN sign_ups.raw s ON j.user_id = s.id
+            WHERE EXTRACT(YEAR FROM j.end_timestamp) IN ({years*})
+            GROUP BY j.end_timestamp::DATE
+          ), date_bounds AS (
+            SELECT
+              {min_date}::DATE AS min_date,
+              {max_date}::DATE AS max_date
+          ),
+          all_dates AS (
+            SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
+            FROM date_bounds
+          )
+          SELECT
+            all_dates.date,
+            COALESCE(daily_counts.daily_distance, 0) AS daily_distance,
+            SUM(COALESCE(daily_counts.daily_distance, 0)) OVER (
+              ORDER BY all_dates.date
+              ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            ) AS cumulative_distance
+          FROM all_dates
+          LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
+          ORDER BY all_dates.date;" %>%
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        counts <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[cumulative_distance] Query time:", round(elapsed, 3), "seconds\n")
+        counts <- counts %>%
+          dplyr::mutate(date = as.Date(date))
+      } else {
+        query_string <- "
           WITH daily_counts AS (
             SELECT
               j.end_timestamp::DATE AS date,
@@ -561,18 +784,24 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
           FROM all_dates
           LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
           ORDER BY all_dates.date;" %>%
-        glue::glue_data_sql(
-          list(
-            years = years_vec,
-            min_date = min_date,
-            max_date = max_date,
-            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
-          ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(date = as.Date(date))
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date,
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        counts <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[cumulative_distance] Query time:", round(elapsed, 3), "seconds\n")
+        counts <- counts %>%
+          dplyr::mutate(date = as.Date(date))
+      }
 
       plotly::plot_ly(
         type = "scatter",
@@ -600,7 +829,6 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
         )
     })
 
-
     #---------------signed up users----------------------------------#
     output$cumulative_sign_ups <- plotly::renderPlotly({
       years_vec <- if (nchar(input$year) > 4) {
@@ -619,46 +847,97 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
         max_date <- sprintf("%s-10-30", end_year)
       }
 
-      counts <- "
-        WITH daily_counts AS (
-          SELECT
-            s.user_created_at::DATE AS date,
-            COUNT(*) AS daily_count
-          FROM sign_ups.raw s
-          WHERE EXTRACT(YEAR FROM s.user_created_at) IN ({years*})
-            AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
-          GROUP BY s.user_created_at::DATE
-        ), date_bounds AS (
-          SELECT
-            {min_date}::DATE AS min_date,
-            {max_date}::DATE AS max_date
-        ),
-        all_dates AS (
-          SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
-          FROM date_bounds
-        )
-        SELECT
-          all_dates.date,
-          COALESCE(daily_counts.daily_count, 0) AS daily_count,
-          SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
-            ORDER BY all_dates.date
-            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-          ) AS cumulative_count
-        FROM all_dates
-        LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
-        ORDER BY all_dates.date;" %>%
-        glue::glue_data_sql(
-          list(
-            years = years_vec,
-            min_date = min_date,
-            max_date = max_date,
-            email_pattern = paste0("%", if (is.null(email_filter())) "" else email_filter(), "%")
+      if (is.null(email_filter())) {
+        query_string <- "
+          WITH daily_counts AS (
+            SELECT
+              s.user_created_at::DATE AS date,
+              COUNT(*) AS daily_count
+            FROM sign_ups.raw s
+            WHERE EXTRACT(YEAR FROM s.user_created_at) IN ({years*})
+            GROUP BY s.user_created_at::DATE
+          ), date_bounds AS (
+            SELECT
+              {min_date}::DATE AS min_date,
+              {max_date}::DATE AS max_date
           ),
-          .,
-          .con = conn
-        ) %>%
-        DBI::dbGetQuery(conn, .) %>%
-        dplyr::mutate(date = as.Date(date))
+          all_dates AS (
+            SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
+            FROM date_bounds
+          )
+          SELECT
+            all_dates.date,
+            COALESCE(daily_counts.daily_count, 0) AS daily_count,
+            SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
+              ORDER BY all_dates.date
+              ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            ) AS cumulative_count
+          FROM all_dates
+          LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
+          ORDER BY all_dates.date;" %>%
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        counts <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[cumulative_sign_ups] Query time:", round(elapsed, 3), "seconds\n")
+        counts <- counts %>%
+          dplyr::mutate(date = as.Date(date))
+      } else {
+        query_string <- "
+          WITH daily_counts AS (
+            SELECT
+              s.user_created_at::DATE AS date,
+              COUNT(*) AS daily_count
+            FROM sign_ups.raw s
+            WHERE EXTRACT(YEAR FROM s.user_created_at) IN ({years*})
+              AND ({email_pattern} = '%%' OR s.user_email LIKE {email_pattern})
+            GROUP BY s.user_created_at::DATE
+          ), date_bounds AS (
+            SELECT
+              {min_date}::DATE AS min_date,
+              {max_date}::DATE AS max_date
+          ),
+          all_dates AS (
+            SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
+            FROM date_bounds
+          )
+          SELECT
+            all_dates.date,
+            COALESCE(daily_counts.daily_count, 0) AS daily_count,
+            SUM(COALESCE(daily_counts.daily_count, 0)) OVER (
+              ORDER BY all_dates.date
+              ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+            ) AS cumulative_count
+          FROM all_dates
+          LEFT JOIN daily_counts ON all_dates.date = daily_counts.date
+          ORDER BY all_dates.date;" %>%
+          glue::glue_data_sql(
+            list(
+              years = years_vec,
+              min_date = min_date,
+              max_date = max_date,
+              email_pattern = paste0("%", email_filter(), "%")
+            ),
+            .,
+            .con = conn
+          )
+        start_time <- Sys.time()
+        counts <- DBI::dbGetQuery(conn, query_string)
+        end_time <- Sys.time()
+        elapsed <- as.numeric(difftime(end_time, start_time, units = "secs"))
+        cat("[cumulative_sign_ups] Query time:", round(elapsed, 3), "seconds\n")
+        counts <- counts %>%
+          dplyr::mutate(date = as.Date(date))
+      }
 
       plotly::plot_ly(
         type = "scatter",
@@ -686,11 +965,9 @@ mod_participation_server <- function(id, conn, next_page, email_filter, organisa
         )
     })
 
-
     shiny::observeEvent(input$next_page, {
       next_page(next_page() + 1)
     })
-
 
     # output$map <- leaflet::renderLeaflet({
     #   map <- leaflet::leaflet() %>%

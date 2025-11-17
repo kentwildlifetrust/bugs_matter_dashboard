@@ -42,15 +42,15 @@ app_ui <- function(request) {
           value = 4,
           mod_participation_ui("participation_1")
         ),
-        bslib::nav_item(
-          actionButton(
-            "log_in",
-            "Log in",
-            class = "btn-primary",
-            style = "flex-grow: 0; height: min-content; margin: 0 !important; font-weight: 400;",
-            `aria-label` = "Log in to view organization-specific data"
-          )
-        ),
+        # bslib::nav_item(
+        #   actionButton(
+        #     "log_in",
+        #     "Log in",
+        #     class = "btn-primary",
+        #     style = "flex-grow: 0; height: min-content; margin: 0 !important; font-weight: 400;",
+        #     `aria-label` = "Log in to view organization-specific data"
+        #   )
+        # ),
         theme = theme()
       )
     )
