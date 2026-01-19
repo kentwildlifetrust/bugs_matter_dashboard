@@ -85,4 +85,12 @@ wsl --install
 
 You should choose Ubuntu as the distro. See the [WSL docs](https://learn.microsoft.com/en-us/windows/wsl/install) for more information, including [how to connect via VS Code](https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode).
 
-Once you have a WSL terminal open, cd to the `vector-tile-server` folder (might have to find the C drive in `mnt`). 
+Once you have VS Code connected to WSL, install git, create a git folder and follow the [instructions to install the EB CLI](https://github.com/aws/aws-elastic-beanstalk-cli-setup). Also clone this repository into WSL.
+
+#### Deployment
+
+[Initial deployment](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html) is carried out using `eb init`.
+
+#### Updates
+
+To update the deployment, first commit any changes and then run `eb deploy`.
