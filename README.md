@@ -89,8 +89,10 @@ Once you have VS Code connected to WSL, install git, create a git folder and fol
 
 #### Deployment
 
-[Initial deployment](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html) is carried out using `eb init`.
+[Initial deployment](https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-configuration.html) was carried out using `eb init`, which set up the environment `journeys-env` and the application `bugs-matter-journeys-vector-tile-server`. You may need to configure AWS Single Sign-on first with `aws sso configure`. After that a domain name was purchased via Route 53 and an SSL certificate set up with Certificate Manager. In future it may be better to manage the domain via Ionos, along with all the other domains, however initially it was easier to set up on AWS.
 
 #### Updates
 
-To update the deployment, first commit any changes and then run `eb deploy`.
+To update the deployment, first commit any changes and then run `eb deploy`. If necessary authorise AWS using `aws sso login`.
+
+Environment variables are manually configured for `journeys-env` in the AWS Console. Go to Environment: journeys-env > Updates, monitoring and logging > Configuration.
