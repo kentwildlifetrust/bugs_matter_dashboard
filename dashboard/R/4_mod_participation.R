@@ -268,9 +268,9 @@ mod_participation_server <- function(
 
     years <- reactive({
       if (nchar(input$year) > 4) {
-        return(bugsMatterDashboard::years)
+        return(as.character(bugsMatterDashboard::years))
       } else {
-        as.numeric(input$year)
+        as.character(input$year)
       }
     })
     #---------------------leaderboard_table-----------------------#
@@ -564,12 +564,6 @@ mod_participation_server <- function(
       start_year <- min(years_vec, na.rm = TRUE)
       end_year <- max(years_vec, na.rm = TRUE)
 
-      min_date <- sprintf("%s-04-01", start_year)
-      if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
-        max_date <- format(Sys.Date(), "%Y-%m-%d")
-      } else {
-        max_date <- sprintf("%s-10-30", end_year)
-      }
 
       if (is.null(email_filter())) {
         query_string <- "
@@ -583,8 +577,11 @@ mod_participation_server <- function(
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
-              {min_date}::DATE AS min_date,
-              {max_date}::DATE AS max_date
+              MAX(user_created_at)::DATE AS max_date,
+              MIN(user_created_at)::DATE AS min_date
+            FROM sign_ups.raw
+            WHERE user_created_at >= {start_date}::DATE
+              AND user_created_at <= {end_date}::DATE
           ),
           all_dates AS (
             SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
@@ -603,8 +600,8 @@ mod_participation_server <- function(
           glue::glue_data_sql(
             list(
               years = years_vec,
-              min_date = min_date,
-              max_date = max_date
+              start_date = sprintf("%s-01-01", start_year),
+              end_date = sprintf("%s-12-31", end_year)
             ),
             .,
             .con = conn
@@ -629,8 +626,11 @@ mod_participation_server <- function(
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
-              {min_date}::DATE AS min_date,
-              {max_date}::DATE AS max_date
+              MAX(user_created_at)::DATE AS max_date,
+              MIN(user_created_at)::DATE AS min_date
+            FROM sign_ups.raw
+            WHERE user_created_at >= {start_date}::DATE
+              AND user_created_at <= {end_date}::DATE
           ),
           all_dates AS (
             SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
@@ -649,8 +649,8 @@ mod_participation_server <- function(
           glue::glue_data_sql(
             list(
               years = years_vec,
-              min_date = min_date,
-              max_date = max_date,
+              start_date = sprintf("%s-01-01", start_year),
+              end_date = sprintf("%s-12-31", end_year),
               email_pattern = paste0("%", email_filter(), "%")
             ),
             .,
@@ -702,13 +702,6 @@ mod_participation_server <- function(
       start_year <- min(years_vec, na.rm = TRUE)
       end_year <- max(years_vec, na.rm = TRUE)
 
-      min_date <- sprintf("%s-04-01", start_year)
-      if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
-        max_date <- format(Sys.Date(), "%Y-%m-%d")
-      } else {
-        max_date <- sprintf("%s-10-30", end_year)
-      }
-
       if (is.null(email_filter())) {
         query_string <- "
           WITH daily_counts AS (
@@ -721,8 +714,11 @@ mod_participation_server <- function(
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
-              {min_date}::DATE AS min_date,
-              {max_date}::DATE AS max_date
+              MAX(user_created_at)::DATE AS max_date,
+              MIN(user_created_at)::DATE AS min_date
+            FROM sign_ups.raw
+            WHERE user_created_at >= {start_date}::DATE
+              AND user_created_at <= {end_date}::DATE
           ),
           all_dates AS (
             SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
@@ -741,8 +737,8 @@ mod_participation_server <- function(
           glue::glue_data_sql(
             list(
               years = years_vec,
-              min_date = min_date,
-              max_date = max_date
+              start_date = sprintf("%s-01-01", start_year),
+              end_date = sprintf("%s-12-31", end_year)
             ),
             .,
             .con = conn
@@ -767,8 +763,11 @@ mod_participation_server <- function(
             GROUP BY j.end_timestamp::DATE
           ), date_bounds AS (
             SELECT
-              {min_date}::DATE AS min_date,
-              {max_date}::DATE AS max_date
+              MAX(user_created_at)::DATE AS max_date,
+              MIN(user_created_at)::DATE AS min_date
+            FROM sign_ups.raw
+            WHERE user_created_at >= {start_date}::DATE
+              AND user_created_at <= {end_date}::DATE
           ),
           all_dates AS (
             SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
@@ -787,8 +786,8 @@ mod_participation_server <- function(
           glue::glue_data_sql(
             list(
               years = years_vec,
-              min_date = min_date,
-              max_date = max_date,
+              start_date = sprintf("%s-01-01", start_year),
+              end_date = sprintf("%s-12-31", end_year),
               email_pattern = paste0("%", email_filter(), "%")
             ),
             .,
@@ -840,13 +839,6 @@ mod_participation_server <- function(
       start_year <- min(years_vec, na.rm = TRUE)
       end_year <- max(years_vec, na.rm = TRUE)
 
-      min_date <- sprintf("%s-04-01", start_year)
-      if (end_year == as.numeric(format(Sys.Date(), "%Y"))) {
-        max_date <- format(Sys.Date(), "%Y-%m-%d")
-      } else {
-        max_date <- sprintf("%s-10-30", end_year)
-      }
-
       if (is.null(email_filter())) {
         query_string <- "
           WITH daily_counts AS (
@@ -858,8 +850,11 @@ mod_participation_server <- function(
             GROUP BY s.user_created_at::DATE
           ), date_bounds AS (
             SELECT
-              {min_date}::DATE AS min_date,
-              {max_date}::DATE AS max_date
+              MAX(user_created_at)::DATE AS max_date,
+              MIN(user_created_at)::DATE AS min_date
+            FROM sign_ups.raw
+            WHERE user_created_at >= {start_date}::DATE
+              AND user_created_at <= {end_date}::DATE
           ),
           all_dates AS (
             SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
@@ -878,8 +873,8 @@ mod_participation_server <- function(
           glue::glue_data_sql(
             list(
               years = years_vec,
-              min_date = min_date,
-              max_date = max_date
+              start_date = sprintf("%s-01-01", start_year),
+              end_date = sprintf("%s-12-31", end_year)
             ),
             .,
             .con = conn
@@ -903,8 +898,11 @@ mod_participation_server <- function(
             GROUP BY s.user_created_at::DATE
           ), date_bounds AS (
             SELECT
-              {min_date}::DATE AS min_date,
-              {max_date}::DATE AS max_date
+              MAX(user_created_at)::DATE AS max_date,
+              MIN(user_created_at)::DATE AS min_date
+            FROM sign_ups.raw
+            WHERE user_created_at >= {start_date}::DATE
+              AND user_created_at <= {end_date}::DATE
           ),
           all_dates AS (
             SELECT generate_series(min_date, max_date, interval '1 day')::date AS date
@@ -923,8 +921,8 @@ mod_participation_server <- function(
           glue::glue_data_sql(
             list(
               years = years_vec,
-              min_date = min_date,
-              max_date = max_date,
+              start_date = sprintf("%s-01-01", start_year),
+              end_date = sprintf("%s-12-31", end_year),
               email_pattern = paste0("%", email_filter(), "%")
             ),
             .,
@@ -968,129 +966,6 @@ mod_participation_server <- function(
     shiny::observeEvent(input$next_page, {
       next_page(next_page() + 1)
     })
-
-    # output$map <- leaflet::renderLeaflet({
-    #   map <- leaflet::leaflet() %>%
-    #     leaflet::addProviderTiles("CartoDB.Positron") %>%
-    #     leaflet::setView(lng = -3.244293, lat = 54.350497, zoom = 6)
-    # })
-
-    # shiny::observeEvent(input$year, {
-    #   map <- leaflet::leafletProxy(ns("map")) %>%
-    #     leaflet::clearGroup(input$map_groups)
-    #   i <- which(bugsMatterDashboard::years %in% as.numeric(input$year))
-    #   for (j in seq_len(length(bugsMatterDashboard::journeys[i][[1]]$data))) {
-    #     map <- map %>%
-    #       leaflet::hideGroup(as.character(bugsMatterDashboard::journeys[i][[1]]$dates))
-    #     map <- map %>%
-    #       leaflet::addPolylines(
-    #         data = bugsMatterDashboard::journeys[i][[1]]$data[[j]]$lines,
-    #         color = "#147331",
-    #         group = bugsMatterDashboard::journeys[i][[1]]$data[[j]]$group,
-    #         weight = 3,
-    #         opacity = 0.2
-    #       )
-    #   }
-    #   shinyjs::enable("year")
-    #   shinyjs::enable("date")
-    # })
-
-    # values <- shiny::reactiveValues()
-
-    # shiny::observe({
-    #   values$p <- plotly::plot_ly(
-    #     type = "scatter",
-    #     mode = "lines"
-    #   ) %>%
-    #     plotly::add_trace(
-    #       y = c(0, 0),
-    #       x = as.Date(
-    #         c(
-    #           sprintf("%s-04-29", input$year),
-    #           sprintf("%s-04-30", input$year)
-    #         )
-    #       ),
-    #       line = list(
-    #         color = "#147331",
-    #         width = 3
-    #       )
-    #     ) %>%
-    #     plotly::layout(
-    #       yaxis = list(range = c(0, max(bugsMatterDashboard::cumulative_count$cumulative_count)))
-    #     )
-    # })
-
-    # output$plot <- plotly::renderPlotly({
-    #   values$p
-    # })
-
-    # dates_in_year <- shiny::reactive({
-    #   year_index <- which(bugsMatterDashboard::years %in% as.numeric(input$year))
-    #   bugsMatterDashboard::journeys[year_index][[1]]$dates
-    # })
-
-    # prev_date <- shiny::reactiveVal(as.Date("2025-04-30"))
-
-    # shiny::observeEvent(input$year,
-    #   {
-    #     prev_date(sprintf("%s-04-30", input$year))
-    #     shiny::updateSliderInput(
-    #       session,
-    #       "date",
-    #       min = as.Date(sprintf("%s-05-01", input$year)),
-    #       max = as.Date(sprintf("%s-10-01", input$year)),
-    #       value = as.Date(sprintf("%s-05-01", input$year))
-    #     )
-    #   },
-    #   ignoreInit = TRUE
-    # )
-
-    # shiny::observeEvent(c(input$date, dates_in_year()),
-    #   {
-    #     if (format(input$date, "%Y") != input$year) return()
-    #     showing_dates <- dates_in_year()[which(dates_in_year() <= input$date)]
-    #     map <- leaflet::leafletProxy(ns("map"))
-
-    #     dates_to_show <- setdiff(
-    #       as.character(showing_dates),
-    #       input$map_groups
-    #     )
-    #     dates_to_hide <- input$map_groups[!input$map_groups %in% showing_dates]
-
-    #     map <- map %>%
-    #       leaflet::hideGroup(dates_to_hide) %>%
-    #       leaflet::showGroup(dates_to_show)
-
-    #     if (prev_date() <= input$date) {
-    #       points_to_add <- bugsMatterDashboard::cumulative_count %>%
-    #         dplyr::filter(date <= input$date & date > prev_date())
-    #       plotly::plotlyProxy("plot", session, deferUntilFlush = FALSE) %>%
-    #         plotly::plotlyProxyInvoke("extendTraces", list(
-    #           x = list(as.list(points_to_add$date)),
-    #           y = list(as.list(points_to_add$cumulative_count))
-    #         ), list(1))
-    #     } else {
-    #       points_to_add <- bugsMatterDashboard::cumulative_count %>%
-    #         dplyr::filter(
-    #           date <= input$date &
-    #           date >= as.Date(sprintf("%s-05-01", input$year))
-    #         )
-
-    #       plotly::plotlyProxy("plot", session, deferUntilFlush = FALSE) %>%
-    #         plotly::plotlyProxyInvoke("deleteTraces", list(1)) %>% # remove old line
-    #         plotly::plotlyProxyInvoke("addTraces", list(
-    #           list(
-    #             x = points_to_add$date,
-    #             y = points_to_add$cumulative_count,
-    #             type = "scatter",
-    #             mode = "lines"
-    #           )
-    #         ))
-    #     }
-    #     prev_date(input$date)
-    #   },
-    #   ignoreInit = TRUE
-    # )
   })
 }
 

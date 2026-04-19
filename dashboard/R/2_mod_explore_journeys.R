@@ -51,7 +51,7 @@ mod_explore_journeys_ui <- function(id) {
           "All years",
           bugsMatterDashboard::years
         ),
-        selected = "2025",
+        selected = "2026",
         width = 150
       ),
       shiny::selectInput(
@@ -433,9 +433,9 @@ mod_explore_journeys_server <- function(id, conn, next_page, email_filter, organ
 
     years <- reactive({
       if (nchar(input$year) > 4) {
-        return(bugsMatterDashboard::years)
+        return(as.character(bugsMatterDashboard::years))
       } else {
-        as.numeric(input$year)
+        as.character(input$year)
       }
     })
 

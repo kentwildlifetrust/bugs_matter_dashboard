@@ -93,7 +93,7 @@ conn <- DBI::dbConnect(
 )
 
 #years - for selecting data by year
-years <- c(2025:2021)
+years <- c(2026:2021)
 usethis::use_data(years, overwrite = TRUE)
 
 #regions - for selecting data by country & region

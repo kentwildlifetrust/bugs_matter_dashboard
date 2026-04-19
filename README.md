@@ -2,17 +2,23 @@
 
 An R Shiny dashboard for visualizing and analyzing car number plate insect splat counts as a measure of invertebrate abundance change over time.
 
-## Description
+## About
 
 The Bugs Matter Dashboard provides tools for tracking and analyzing insect abundance using data collected from car number plate splat counts. This dashboard helps monitor changes in invertebrate populations over time, providing valuable insights into ecosystem health. Extra considerations have been taken to manage performance and scalability compared to other KWT Shiny apps, owing to the international significance and expected user demand.
 
 ## How it works
 
-The dashboard is a golem-based R Shiny app using {bslib}, with journeys and sign up data held in the `bugs_matter` database in PostgreSQL. The database is updated on a schedule by scraping the Coreo API provided by Natural Apptitude, using ETL pipelines found in [Bugs Matter Pipelines](https://github.com/kentwildlifetrust/bugs-matter-pipelines) repository.
+The dashboard (`/dashboard`) is a golem-based R Shiny app using {bslib}, with journeys and sign up data held in the `bugs_matter` database in PostgreSQL. The database is updated on a schedule by scraping the Coreo API provided by Natural Apptitude, using ETL pipelines found in [Bugs Matter Pipelines](https://github.com/kentwildlifetrust/bugs-matter-pipelines) repository.
 
 The dashboard aims to be as scalable and responsive as possible, by minimising the data processing carried out in the server. Any heavy data processing is either carried out in the database, or in pre-processing data pipelines. For example, the Analysis tab shows figures that have been pre-generated and saved to the database. This avoids users having to wait for the model to run (30s +) while interacting with the drop downs. This approach is also favoured over `bindCache` as it allows more direct control over model configuration and when to run updates, without disruption to the live dashboard.
 
-### Journeys Map
+Extract, Transform, Load (ETL) data pipelines (`/etl`) provide data for the dashboard. These use the package {targets} and three of them (temperature, journeys and sign-ups) are deployed to AWS to run on a schedule.
+
+A vector tile server (`/vector-tile-server`) serves Protobuf tiles for the journey route map on the dashboard.
+
+### Dashboard
+
+#### Journeys Map
 
 The Explore Journeys tab of the dashboard shows journeys routes on a map, to show the extensiveness of survey coverage. There are too many journeys for standard rendering using `sf::addPolyLines()`. This relies on a lot of processing by the browser and risks slowing the app down or even crashing it. So, a vector tile approach is used instead, which provides tiles pre-processed to show the appropriate amount of detail for the zoom level. A simple Express JS server, deployed to [https://journeys.bugsmatter.org](https://journeys.bugsmatter.org) provides these vector tiles in [Protobuf (PBF) format](https://docs.mapbox.com/data/tilesets/guides/vector-tiles-standards/). These are added to the Leaflet map using a JavaScript snippet applied via `htmlwidgets::onRender`:
 
@@ -51,11 +57,12 @@ map %>%
 
 The opacity of the lines is set to 0.3, so that routes with more sampling appear darker. Because tiles contain a lot of overlapping lines, rendering can still be slow at low zoom levels (zoomed out). These may be better displayed as some sort of heatmap raster.
 
-## Vector Tile Sever (`/vector-tile-serer`)
+
+### Vector Tile Sever (`/vector-tile-serer`)
 
 The Vector Tile Server is an Express JS app using the PostGIS functions `public.ST_AsMVTGeom()` and `public.ST_AsMVT()` to serve pre-processed tiles on the fly. This approach is reasonably performant while avoiding the need to pregenerate a large number of tiles. However, it does risk putting strain on the database should demand be high. It also performs less well for low zoom levels (zoomed out), in which case a pre-generated heat map raster would be more suitable.
 
-### Environment variables
+#### Environment variables
 
 Environment variables should be added to a gitignored file `vector-tile-server/.env`:
 - `DB_USER` - `BugsMatterReadOnly`
@@ -96,3 +103,34 @@ Once you have VS Code connected to WSL, install git, create a git folder and fol
 To update the deployment, first commit any changes and then run `eb deploy`. If necessary authorise AWS using `aws sso login`.
 
 Environment variables are manually configured for `journeys-env` in the AWS Console. Go to Environment: journeys-env > Updates, monitoring and logging > Configuration.
+
+
+
+2. Snapshot dependencies
+
+```R
+renv::snapshot(
+    lockfile = "renv.lock.prod",
+    repos = c(CRAN = "https://p3m.dev/cran/__linux__/noble/latest")
+)
+## renv changes the repo url for some reason and breaks the lockfile
+readLines("renv.lock.prod") |>
+    stringr::str_replace("https://p3m.dev/cran/latest", "https://p3m.dev/cran/__linux__/noble/latest") |>
+    writeLines("renv.lock.prod")
+
+##get system dependencies
+pak::pkg_install("desc")
+sys_deps <- renv::dependencies() |>
+    dplyr::pull(Package) |>
+    unique() |>
+    pak::pkg_sysreqs(sysreqs_platform = "ubuntu")
+sys_deps
+```
+
+Make sure all the system dependencies `sys_deps` are included in the Dockerfile.
+
+3. Build docker image
+
+```powershell
+cd etl\pipelines && .\deploy.ps1 -PipelineName bugs-matter-sign-ups
+```

@@ -10,7 +10,7 @@ WORKDIR /build
 
 # Install remotes and renv
 RUN R -q -e "options(warn=2); install.packages('remotes')"
-RUN R -q -e 'options(warn=2); remotes::install_version("renv", version = "1.1.5")'
+RUN R -q -e 'options(warn=2); remotes::install_version("renv", version = "1.2.2")'
 
 #private GitHub dependencies - we need to pass in GITHUB_PAT to be used by renv::restore()
 #don't forget to adjust docker-build.yml
@@ -19,7 +19,7 @@ RUN R -q -e 'options(warn=2); remotes::install_version("renv", version = "1.1.5"
 
 # Copy renv.lock into image directory and restore packages
 COPY renv.lock.prod renv.lock
-RUN R -q -e 'options(warn=2); renv::restore()'
+RUN R -q -e 'options(warn=2); renv::restore(repos="https://p3m.dev/cran/__linux__/noble/latest")'
 RUN rm -rf renv.lock
 
 # add all app files not in .dockerignore to /app_pkg within the image directory
