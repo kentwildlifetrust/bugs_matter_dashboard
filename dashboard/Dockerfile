@@ -18,7 +18,7 @@ RUN R -q -e 'options(warn=2); remotes::install_version("renv", version = "1.2.2"
 #ARG GITHUB_PAT
 
 # Copy renv.lock into image directory and restore packages
-COPY renv.lock.prod renv.lock
+COPY renv.lock renv.lock
 RUN R -q -e 'options(warn=2); renv::restore(repos="https://p3m.dev/cran/__linux__/noble/latest")'
 RUN rm -rf renv.lock
 
